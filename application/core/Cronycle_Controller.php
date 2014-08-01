@@ -24,14 +24,14 @@ class Cronycle_Controller extends CI_Controller
 
   protected function load_user()
   {
-    $this->user->authenticate($this->input->get_post('auth_token'));
+    return $this->user->authenticate($this->input->get_post('auth_token'));
   }
 
   protected function require_token()
   {
     if (!$this->load_user())
     {
-      $this->json(400);
+      $this->json(400, array('errors' => ['Auth token not valid']));
       return false;
     }
 

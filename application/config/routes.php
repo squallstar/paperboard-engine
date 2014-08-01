@@ -44,5 +44,7 @@ $route['404_override'] = '';
 $route['v3/sign_in'] = 'v3/user/sign_in';
 $route['v3/sign_up'] = 'v3/user/sign_up';
 
+$route['v3/favourite_collection/links'] = 'v3/collections/favourite_collection_links';
+
 /* End of file routes.php */
 /* Location: ./application/config/routes.php */

@@ -10,7 +10,7 @@
  *
  */
 
-class Manage extends Cronycle_Controller
+class Manage_Controller extends Cronycle_Controller
 {
 
 	public function __construct()
@@ -39,16 +39,21 @@ class Manage extends Cronycle_Controller
 
 	public function recreate()
 	{
-		//1.clear
 		$this->db->drop();
 
-		//2.collections and indexes
-
-		//2.1 users
 		$users = new MongoCollection($this->db, 'users');
 		$users->ensureIndex(array('email' => 1), array('unique' => true));
 		$users->ensureIndex(array('password' => 1));
 		$users->ensureIndex(array('auth_token' => 1), array('unique' => true));
+
+		$cats = new MongoCollection($this->db, 'categories');
+		$cats->ensureIndex(array('id' => 1), array('unique' => true));
+		$cats->ensureIndex(array('slug' => 1), array('unique' => true));
+
+		collection('categories')->save(array('id' => campid('c'), 'name' => 'Featured', 'slug' => 'top-picks', 'collection_count' => 0));
+		collection('categories')->save(array('id' => campid('c'), 'name' => 'Tech', 'slug' => 'tech', 'collection_count' => 0));
+		collection('categories')->save(array('id' => campid('c'), 'name' => 'Business', 'slug' => 'business', 'collection_count' => 0));
+		collection('categories')->save(array('id' => campid('c'), 'name' => 'Sport', 'slug' => 'sport', 'collection_count' => 0));
 
 		//$users->ensureIndex(array('username' => 1), array('unique' => TRUE));
 		//$users->ensureIndex(array('name' => 1)); //To order users

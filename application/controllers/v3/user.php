@@ -10,11 +10,11 @@
  *
  */
 
-class User extends Cronycle_Controller
+class User_Controller extends Cronycle_Controller
 {
   public function index()
   {
-    $this->require_token();
+    if (!$this->require_token()) return;
 
     $this->json(200, $this->user->find($this->user->get('_id')));
   }
@@ -40,11 +40,13 @@ class User extends Cronycle_Controller
 
   public function sign_in()
   {
+    if ($this->method != 'post') return;
+
     $this->set_body_request();
 
     if ($this->request->user)
     {
-      $user = $this->user->authenticate(
+      $user = $this->user->sign_in(
         $this->request->user->email,
         $this->request->user->password
       );

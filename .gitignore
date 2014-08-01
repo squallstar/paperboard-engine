@@ -3,3 +3,4 @@
 */cache/*
 */cache/!index.html
 */cache/!.htaccess
+error.log

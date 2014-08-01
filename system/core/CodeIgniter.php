@@ -261,7 +261,7 @@
  *  loader class can be called via the URI, nor can
  *  controller functions that begin with an underscore
  */
-	$class  = $RTR->fetch_class();
+	$class  = $RTR->fetch_class() . '_Controller';
 	$method = $RTR->fetch_method();
 
 	if ( ! class_exists($class)
