@@ -19,10 +19,15 @@ Class Model_collections extends CI_Model
 
   private function _prepare($data = array())
   {
+    $data = array_intersect_key($data, array(
+      'name', 'position', 'publicly_visible', 'settings', 'filters')
+    );
+
     return array_replace_recursive(array(
       'id' => newid(),
-      'private_id' => newid('p')
+      'private_id' => newid('p'),
       'name' => 'New collection',
+      'description' => '',
       'position' => 0,
       'owned_collection' => true,
       'publicly_visible' => true,
@@ -54,6 +59,8 @@ Class Model_collections extends CI_Model
   public function save($data = array())
   {
     $data = $this->_prepare($data);
+
     $res = collection('collections')->save($data, array('safe' => true));
     return $res ? $data : false;
   }
+}
