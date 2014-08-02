@@ -19,9 +19,19 @@ Class Model_collections extends CI_Model
 
   private function _prepare($data = array())
   {
-    $data = array_intersect_key($data, array(
-      'name', 'position', 'publicly_visible', 'settings', 'filters')
+    $data = array_intersect_key(
+      $data,
+      array(
+        'name' => true,
+        'position' => true,
+        'publicly_visible' => true,
+        'settings' => true,
+        'filters' => true,
+        'sources' => true
+      )
     );
+
+    var_dump($data);die;
 
     return array_replace_recursive(array(
       'id' => newid(),

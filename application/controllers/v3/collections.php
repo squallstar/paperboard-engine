@@ -20,15 +20,18 @@ class Collections_Controller extends Cronycle_Controller
 
   public function index()
   {
-    if ($this->method == 'options') return;
-
     if (!$this->require_token()) return;
 
     if ($this->method == 'post') return $this->create();
 
-    $this->json(200, collection('collections')->find(array(
-      'user.id' => $this->users->get('_id')
-    )));
+    $this->json(200, array_values(iterator_to_array(collection('collections')->find(
+      array(
+        'user.id' => $this->users->get('_id')
+      ),
+      array(
+        '_id' => false
+      )
+    ))));
   }
 
   public function create()

@@ -12,7 +12,6 @@
 
 class Manage_Controller extends Cronycle_Controller
 {
-
 	public function __construct()
 	{
 		parent::__construct();
@@ -31,11 +30,6 @@ class Manage_Controller extends Cronycle_Controller
 	{
 		echo 'alive';
 	}
-
-	// public function schema()
-	// {
-	// 	$this->view->render('misc/schema');
-	// }
 
 	public function recreate()
 	{
@@ -58,6 +52,7 @@ class Manage_Controller extends Cronycle_Controller
 		$col = new MongoCollection($this->db, 'collections');
 		$col->ensureIndex(array('id' => 1), array('unique' => true));
 		$col->ensureIndex(array('private_id' => 1), array('unique' => true));
+		$col->ensureIndex(array('user.id' => 1));
 
 		//$users->ensureIndex(array('username' => 1), array('unique' => TRUE));
 		//$users->ensureIndex(array('name' => 1)); //To order users
