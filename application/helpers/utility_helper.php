@@ -28,7 +28,7 @@ function helper($name) {
 }
 
 //Unique id
-function campid($str = '') {
+function newid($str = '') {
 	return $str . rand(0,9) . uniqid(rand(0,999));
 }
 

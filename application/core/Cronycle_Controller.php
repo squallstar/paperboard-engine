@@ -19,12 +19,12 @@ class Cronycle_Controller extends CI_Controller
     $this->method = strtolower($this->input->server('REQUEST_METHOD'));
 
 		//These models are always available
-		$this->load->model('model_user', 'user');
+		$this->load->model('model_users', 'users');
 	}
 
   protected function load_user()
   {
-    return $this->user->authenticate($this->input->get_post('auth_token'));
+    return $this->users->authenticate($this->input->get_post('auth_token'));
   }
 
   protected function require_token()
@@ -40,7 +40,7 @@ class Cronycle_Controller extends CI_Controller
 
   protected function set_body_request()
   {
-    $this->request = json_decode(file_get_contents('php://input'));
+    $this->request = json_decode(file_get_contents('php://input'), true);
   }
 
   protected function json($code = 200, $data = null)

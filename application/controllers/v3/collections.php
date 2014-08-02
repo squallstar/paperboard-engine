@@ -16,6 +16,31 @@ class Collections_Controller extends Cronycle_Controller
   {
     if (!$this->require_token()) return;
 
+    if ($this->method == 'post') return $this->create();
+
+    $this->json(200, array());
+  }
+
+  public function create()
+  {
+
+  }
+
+  public function view($collection_id)
+  {
+    if (strpos($collection_id, 'p') !== 0) {
+      if (!$this->require_token()) return;
+    }
+
+    $this->json(200);
+  }
+
+  public function view_links($collection_id)
+  {
+    if (strpos($collection_id, 'p') !== 0) {
+      if (!$this->require_token()) return;
+    }
+
     $this->json(200, array());
   }
 

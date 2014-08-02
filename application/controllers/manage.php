@@ -50,10 +50,14 @@ class Manage_Controller extends Cronycle_Controller
 		$cats->ensureIndex(array('id' => 1), array('unique' => true));
 		$cats->ensureIndex(array('slug' => 1), array('unique' => true));
 
-		collection('categories')->save(array('id' => campid('c'), 'name' => 'Featured', 'slug' => 'top-picks', 'collection_count' => 0));
-		collection('categories')->save(array('id' => campid('c'), 'name' => 'Tech', 'slug' => 'tech', 'collection_count' => 0));
-		collection('categories')->save(array('id' => campid('c'), 'name' => 'Business', 'slug' => 'business', 'collection_count' => 0));
-		collection('categories')->save(array('id' => campid('c'), 'name' => 'Sport', 'slug' => 'sport', 'collection_count' => 0));
+		collection('categories')->save(array('id' => newid('c'), 'name' => 'Featured', 'slug' => 'top-picks', 'collection_count' => 0));
+		collection('categories')->save(array('id' => newid('c'), 'name' => 'Tech', 'slug' => 'tech', 'collection_count' => 0));
+		collection('categories')->save(array('id' => newid('c'), 'name' => 'Business', 'slug' => 'business', 'collection_count' => 0));
+		collection('categories')->save(array('id' => newid('c'), 'name' => 'Sport', 'slug' => 'sport', 'collection_count' => 0));
+
+		$col = new MongoCollection($this->db, 'collections');
+		$col->ensureIndex(array('id' => 1), array('unique' => true));
+		$col->ensureIndex(array('private_id' => 1), array('unique' => true));
 
 		//$users->ensureIndex(array('username' => 1), array('unique' => TRUE));
 		//$users->ensureIndex(array('name' => 1)); //To order users

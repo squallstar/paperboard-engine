@@ -10,7 +10,7 @@
  *
  */
 
-Class Model_user extends CI_Model
+Class Model_users extends CI_Model
 {
   private $_user;
 
@@ -61,7 +61,7 @@ Class Model_user extends CI_Model
     $u = collection('users')->findOne(
       array(
         'email' => $email,
-        'password' => $password
+        'password' => md5($password)
       ),
       array(
         'password' => false
@@ -87,7 +87,7 @@ Class Model_user extends CI_Model
       array(
         'auth_token' => $token
       ),
-      array('_id')
+      array('_id', 'full_name', 'avatar.small')
     );
 
     return $this->_user ? true : false;
@@ -106,7 +106,7 @@ Class Model_user extends CI_Model
   public function sign_up($data)
   {
     $data = array(
-      '_id'            => campid('u'),
+      '_id'            => newid(),
       'created_at'     => time(),
       'logged_at'      => '',
       'email'          => $data['email'],
