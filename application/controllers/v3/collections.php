@@ -38,6 +38,11 @@ class Collections_Controller extends Cronycle_Controller
   {
     $this->set_body_request();
 
+    if (!isset($this->request['collection']))
+    {
+      return $this->json(400);
+    }
+
     $res = $this->collections->save($this->request['collection']);
 
     if ($res)
@@ -50,11 +55,14 @@ class Collections_Controller extends Cronycle_Controller
 
   public function view($collection_id)
   {
-    if (strpos($collection_id, 'p') !== 0) {
-      if (!$this->require_token()) return;
-    }
+    $collection = $this->collections->find($collection_id);
 
-    $this->json(200);
+    if ($collection)
+    {
+      $this->json(200, $collection);
+    } else {
+      $this->json(404);
+    }
   }
 
   public function view_links($collection_id)

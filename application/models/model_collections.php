@@ -31,8 +31,6 @@ Class Model_collections extends CI_Model
       )
     );
 
-    var_dump($data);die;
-
     return array_replace_recursive(array(
       'id' => newid(),
       'private_id' => newid('p'),
@@ -72,5 +70,25 @@ Class Model_collections extends CI_Model
 
     $res = collection('collections')->save($data, array('safe' => true));
     return $res ? $data : false;
+  }
+
+  public function find($collection_id)
+  {
+    if (strpos($collection_id, 'p') === 0)
+    {
+      $q = array('private_id' => $collection_id);
+    } else {
+      if ($this->users->load_user())
+      {
+        $q = array(
+          'id' => $collection_id,
+          'user.id' => $this->users->get('_id')
+        );
+      } else {
+        return false;
+      }
+    }
+
+    return collection('collections')->findOne($q);
   }
 }

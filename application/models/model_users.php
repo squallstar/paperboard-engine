@@ -81,6 +81,11 @@ Class Model_users extends CI_Model
     }
   }
 
+  public function load_user()
+  {
+    $this->authenticate($this->input->get_post('auth_token'));
+  }
+
   public function authenticate($token)
   {
     $this->_user = collection('users')->findOne(

@@ -24,7 +24,7 @@ class Cronycle_Controller extends CI_Controller
 
   protected function load_user()
   {
-    return $this->users->authenticate($this->input->get_post('auth_token'));
+    return $this->users->load_user();
   }
 
   protected function require_token()
