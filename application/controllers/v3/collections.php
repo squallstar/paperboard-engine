@@ -53,6 +53,35 @@ class Collections_Controller extends Cronycle_Controller
     }
   }
 
+  pubic function reorder()
+  {
+    if (!$this->require_token() || $this->method != 'post') return;
+
+    $this->set_body_request();
+
+    if (is_array($this->request['collection_ids']))
+    {
+      $pos = 0;
+
+      foreach ($this->request['collection_ids'] as $id)
+      {
+        if ($id == 'favourite_collection')
+        {
+          $this->collections->update($id, array('position' => $pos));
+        } else {
+          $this->users->update_current(array(
+            'favourite_collection_position' => $pos
+          ));
+        }
+
+        $pos++;
+      }
+
+    } else {
+      $this->json(422, array('errors' => ['Collection IDs are required']));
+    }
+  }
+
   public function view($collection_id)
   {
     $collection = $this->collections->find($collection_id);

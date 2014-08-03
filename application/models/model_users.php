@@ -56,6 +56,14 @@ Class Model_users extends CI_Model
     }
   }
 
+  public function update_current($data = array()
+  {
+    return collection('users')->update(
+      array('_id' => $this->get('_id')),
+      array('$set' => $data)
+    );
+  }
+
   public function sign_in($email, $password)
   {
     $u = collection('users')->findOne(
@@ -83,6 +91,7 @@ Class Model_users extends CI_Model
 
   public function load_user()
   {
+    if ($this->_user) return;
     $this->authenticate($this->input->get_post('auth_token'));
   }
 
