@@ -56,7 +56,7 @@ Class Model_users extends CI_Model
     }
   }
 
-  public function update_current($data = array()
+  public function update_current($data = array())
   {
     return collection('users')->update(
       array('_id' => $this->get('_id')),
