@@ -13,7 +13,10 @@ $route['v3/collections/(p?[A-z0-9]+)/source_management'] = 'v1/source_management
 
 $route['v3/favourite_collection/links'] = 'v3/collections/favourite_collection_links';
 
+$route['v1/source_management/add_feed_category'] = 'v1/source_management/add_category';
 $route['v1/source_management/([A-z0-9]+)/add_feed'] = 'v1/source_management/add_feed/$1';
+$route['v1/source_management/([A-z0-9]+)/rename'] = 'v1/source_management/rename_category/$1';
+$route['v1/source_management/([A-z0-9]+)'] = 'v1/source_management/node/$1';
 
 /* End of file routes.php */
 /* Location: ./application/config/routes.php */

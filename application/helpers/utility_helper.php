@@ -43,11 +43,6 @@ function newid($str = '') {
 	return $str . rand(0,9) . uniqid(rand(0,999));
 }
 
-function newintid()
-{
-	return time();
-}
-
 //Adds the saxon genitive
 function add_s($username = '') {
 	return substr($username, -1) == 's' ? $username . "'" : $username . "'s";

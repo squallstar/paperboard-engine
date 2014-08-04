@@ -105,7 +105,25 @@ class Collections_Controller extends Cronycle_Controller
       if (!$this->require_token()) return;
     }
 
-    $this->json(200, array());
+    $this->json(200, [
+      [
+        'id' => 1,
+        'url' => 'http://cronycle.com',
+        'name' => 'Lorem ipsum',
+        'description' => 'dolor sit amet',
+        'content' => '<p>Looorem ipsum!</p>',
+        'sources' => [
+          [
+            'full_name' => 'Cronycle',
+            'screen_name' => 'wearecronycle',
+            'profile_image_url' => 'https://pbs.twimg.com/profile_images/378800000851024662/11a229c4131c81e81195ac8be9aff116_normal.jpeg',
+            'published_at' => time(),
+            'external_id' => 1,
+            'type' => 'TwitterUser'
+          ]
+        ]
+      ]
+    ]);
   }
 
   public function favourite_collection_links()

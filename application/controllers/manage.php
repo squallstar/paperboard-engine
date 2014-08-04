@@ -57,7 +57,12 @@ class Manage_Controller extends Cronycle_Controller
 		$cat = new MongoCollection($this->db, 'user_categories');
 		$cat->ensureIndex(array('id' => 1), array('unique' => true));
 		$cat->ensureIndex(array('user_id' => 1));
-		$cat->ensureIndex(array('source_uri' => 1));
+		$cat->ensureIndex(array('children.id' => 1));
+
+		$cat = new MongoCollection($this->db, 'feeds');
+		$cat->ensureIndex(array('url' => 1), array('unique' => true));
+		$cat->ensureIndex(array('processed_at' => 1));
+		$cat->ensureIndex(array('failed_count' => 1));
 
 		$counters = new MongoCollection($this->db, 'counters');
 		$counters->insert(array('_id' => 'user_id', 'seq' => 0));

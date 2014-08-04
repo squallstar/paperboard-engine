@@ -42,9 +42,11 @@ class Source_management_Controller extends Cronycle_Controller
 
     if ($collection)
     {
+      $tree = $this->sources->tree(array_values($collection['sources']));
+
       $this->json(200, array(
         'twitter' => array(),
-        'feed' => $collection['sources']
+        'feed' => $tree
       ));
     }
     else
@@ -53,7 +55,7 @@ class Source_management_Controller extends Cronycle_Controller
     }
   }
 
-  public function add_feed_category()
+  public function add_category()
   {
     if ($this->method != 'post' || !$this->require_token()) return;
 
@@ -74,8 +76,65 @@ class Source_management_Controller extends Cronycle_Controller
     }
   }
 
+  public function node($node_id)
+  {
+    if (!$this->require_token()) return;
+
+    if ($this->method == 'delete') return $this->delete_node($node_id);
+  }
+
+  public function delete_node($node_id)
+  {
+    $res = $this->sources->delete($node_id);
+
+    if ($res)
+    {
+      $this->json(200);
+    }
+    else
+    {
+      $this->json(404);
+    }
+  }
+
   public function add_feed($category_id)
   {
+    if ($this->method != 'post' || !$this->require_token()) return;
 
+    $this->set_body_request();
+
+    if ($this->request['feed'] && filter_var($this->request['feed']['url'], FILTER_VALIDATE_URL) !== false)
+    {
+      $feed = $this->sources->add_feed($category_id, $this->request['feed']['title'], $this->request['feed']['url']);
+
+      if ($feed)
+      {
+        $this->json(201, $feed);
+      }
+      else
+      {
+        $this->json(422, ['errors' => ['Could not add the feed']]);
+      }
+    }
+    else
+    {
+      $this->json(422, ['errors' => ['Feed URL not in a valid format']]);
+    }
+  }
+
+  public function rename_category($category_id)
+  {
+    if ($this->method != 'post' || !$this->require_token()) return;
+
+    $name = $this->input->get_post('text');
+
+    if (strlen($name) > 0 && $this->sources->rename_category($category_id, $name))
+    {
+      $this->json(200);
+    }
+    else
+    {
+      $this->json(400);
+    }
   }
 }
