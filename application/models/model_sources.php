@@ -148,8 +148,17 @@ Class Model_sources extends CI_Model
     $res = collection('user_categories')->find(
       array(
         'user_id' => $this->users->get('_id'),
-        'id' => [
-          '$in' => $categories
+        '$or' => [
+          [
+            'id' => [
+              '$in' => $categories
+            ]
+          ],
+          [
+            'children.id' => [
+              '$in' => $feeds
+            ]
+          ]
         ]
       ),
       array(
@@ -168,6 +177,7 @@ Class Model_sources extends CI_Model
           ]
         ],
         'children.id' => true,
+        'children.text' => true,
         'children.type' => true,
         'children.source_uri' => true
       )

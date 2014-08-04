@@ -89,13 +89,37 @@ class Collections_Controller extends Cronycle_Controller
 
   public function view($collection_id)
   {
-    $collection = $this->collections->find($collection_id);
+    $collection = $this->collections->find($collection_id, array(
+      '_id' => false,
+      'sources' => false
+    ));
 
     if ($collection)
     {
+      if ($this->method == 'delete')
+      {
+        if ($collection['user']['id'] == $this->users->get('_id'))
+        {
+          if ($this->collections->delete($collection['id']))
+          {
+            return $this->json(200);
+          }
+          else
+          {
+            return $this->json(422, ['errors' => ['Cannot delete the collection']]);
+          }
+        }
+        else
+        {
+          return $this->json(400, ['errors' => ['You do not own this collection']]);
+        }
+      }
+
       $this->json(200, $collection);
-    } else {
-      $this->json(404);
+    }
+    else
+    {
+      $this->json(404, ['errors' => ['The collection was not found']]);
     }
   }
 

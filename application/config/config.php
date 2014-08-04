@@ -22,7 +22,7 @@ $config['base_url']	= '';
 |--------------------------------------------------------------------------
 |
 */
-define('DBCONN', 'localhost:27025');
+define('DBCONN', '127.0.0.1:27017');
 define('DBNAME', 'cronyclesandbox');
 
 /*

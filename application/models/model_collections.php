@@ -86,6 +86,18 @@ Class Model_collections extends CI_Model
     return collection('collections')->update($q, array('$set' => $data));
   }
 
+  public function delete($collection_id)
+  {
+    return collection('collections')->remove(
+      array(
+        'id' => $collection_id
+      ),
+      array(
+        'justOne' => true
+      )
+    ) ? true : false;
+  }
+
   public function find($collection_id, $fields = array())
   {
     $q = $this->_where_id($collection_id);
@@ -98,6 +110,7 @@ Class Model_collections extends CI_Model
     {
       return array('private_id' => $collection_id);
     } else {
+      $this->users->load_user();
       return array(
         'id' => intval($collection_id),
         'user.id' => $this->users->get('_id')
