@@ -29,7 +29,8 @@ class Collections_Controller extends Cronycle_Controller
         'user.id' => $this->users->get('_id')
       ),
       array(
-        '_id' => false
+        '_id' => false,
+        'sources' => false
       )
     ))));
   }
@@ -53,7 +54,7 @@ class Collections_Controller extends Cronycle_Controller
     }
   }
 
-  pubic function reorder()
+  public function reorder()
   {
     if (!$this->require_token() || $this->method != 'post') return;
 
@@ -65,10 +66,12 @@ class Collections_Controller extends Cronycle_Controller
 
       foreach ($this->request['collection_ids'] as $id)
       {
-        if ($id == 'favourite_collection')
+        if ($id != 'favourite_collection')
         {
           $this->collections->update($id, array('position' => $pos));
-        } else {
+        }
+        else
+        {
           $this->users->update_current(array(
             'favourite_collection_position' => $pos
           ));
@@ -76,6 +79,8 @@ class Collections_Controller extends Cronycle_Controller
 
         $pos++;
       }
+
+      die;
 
     } else {
       $this->json(422, array('errors' => ['Collection IDs are required']));

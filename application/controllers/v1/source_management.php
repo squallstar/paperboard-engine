@@ -30,16 +30,27 @@ class Source_management_Controller extends Cronycle_Controller
     ));
   }
 
-  public function collection_nodes()
+  public function collection_nodes($collection_id)
   {
     if ($this->method != 'get') return;
 
     if (!$this->require_token()) return;
 
-    $this->json(200, array(
-      'twitter' => array(),
-      'feed' => $this->sources->get_user_feed_categories()
-    ));
+    $this->load->model('model_collections', 'collections');
+
+    $collection = $this->collections->find($collection_id, array('sources'));
+
+    if ($collection)
+    {
+      $this->json(200, array(
+        'twitter' => array(),
+        'feed' => $collection['sources']
+      ));
+    }
+    else
+    {
+      $this->json(404);
+    }
   }
 
   public function add_feed_category()

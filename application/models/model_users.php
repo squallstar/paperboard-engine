@@ -91,8 +91,8 @@ Class Model_users extends CI_Model
 
   public function load_user()
   {
-    if ($this->_user) return;
-    $this->authenticate($this->input->get_post('auth_token'));
+    if ($this->_user) return true;
+    return $this->authenticate($this->input->get_post('auth_token'));
   }
 
   public function authenticate($token)
@@ -120,7 +120,7 @@ Class Model_users extends CI_Model
   public function sign_up($data)
   {
     $data = array(
-      '_id'            => newid(),
+      '_id'            => next_id('user'),
       'created_at'     => time(),
       'logged_at'      => '',
       'email'          => $data['email'],
@@ -153,7 +153,7 @@ Class Model_users extends CI_Model
       'total_links_count' => 0
     );
 
-    $res = collection('users')->save($data, array('safe' => true));
+    $res = collection('users')->save($data);
 
     if ($res)
     {

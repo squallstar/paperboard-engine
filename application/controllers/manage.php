@@ -55,9 +55,13 @@ class Manage_Controller extends Cronycle_Controller
 		$col->ensureIndex(array('user.id' => 1));
 
 		$cat = new MongoCollection($this->db, 'user_categories');
-		$col->ensureIndex(array('id' => 1), array('unique' => true));
-		$col->ensureIndex(array('user_id' => 1));
-		$col->ensureIndex(array('source_uri' => 1));
+		$cat->ensureIndex(array('id' => 1), array('unique' => true));
+		$cat->ensureIndex(array('user_id' => 1));
+		$cat->ensureIndex(array('source_uri' => 1));
+
+		$counters = new MongoCollection($this->db, 'counters');
+		$counters->insert(array('_id' => 'user_id', 'seq' => 0));
+		$counters->insert(array('_id' => 'collection_id', 'seq' => 0));
 
 		//$users->ensureIndex(array('username' => 1), array('unique' => TRUE));
 		//$users->ensureIndex(array('name' => 1)); //To order users

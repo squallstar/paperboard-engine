@@ -32,7 +32,7 @@ Class Model_collections extends CI_Model
     );
 
     return array_replace_recursive(array(
-      'id' => newid(),
+      'id' => next_id('collection'),
       'private_id' => newid('p'),
       'name' => 'New collection',
       'description' => '',
@@ -68,22 +68,28 @@ Class Model_collections extends CI_Model
   {
     $data = $this->_prepare($data);
 
-    $res = collection('collections')->save($data, array('safe' => true));
-    return $res ? $data : false;
+    $res = collection('collections')->save($data);
+
+    if ($res)
+    {
+      unset($data['_id']);
+      return $data;
+    }
+
+    return false;
   }
 
-  public function update($id, $data = array())
+  public function update($collection_id, $data = array())
   {
     $q = $this->_where_id($collection_id);
 
     return collection('collections')->update($q, array('$set' => $data));
   }
 
-  public function find($collection_id)
+  public function find($collection_id, $fields = array())
   {
     $q = $this->_where_id($collection_id);
-
-    return collection('collections')->findOne($q);
+    return collection('collections')->findOne($q, $fields);
   }
 
   private function _where_id($collection_id)
@@ -93,7 +99,7 @@ Class Model_collections extends CI_Model
       return array('private_id' => $collection_id);
     } else {
       return array(
-        'id' => $collection_id,
+        'id' => intval($collection_id),
         'user.id' => $this->users->get('_id')
       );
     }

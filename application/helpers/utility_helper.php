@@ -9,12 +9,23 @@ function debug($obj) {
 function collection($key = FALSE) {
 	$APP =& get_instance();
 	if (!isset($APP->db)) {
-		$APP->connection = new Mongo(DBCONN);
+		$APP->connection = new MongoClient(DBCONN);
 		// Select a database
 		$a = DBNAME;
 		$APP->db = $APP->connection->$a;
 	}
 	return $key ? $APP->db->$key : $APP->db;
+}
+
+function next_id($name) {
+	$ret = collection('counters')->findAndModify(
+		array('_id' => $name . '_id'),
+		array('$inc' => array('seq' => 1)),
+		null,
+		array('new' => true)
+	);
+
+	return $ret['seq'];
 }
 
 //Loads a file inside models/helpers folder
@@ -30,6 +41,11 @@ function helper($name) {
 //Unique id
 function newid($str = '') {
 	return $str . rand(0,9) . uniqid(rand(0,999));
+}
+
+function newintid()
+{
+	return time();
 }
 
 //Adds the saxon genitive
