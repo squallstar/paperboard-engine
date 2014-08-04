@@ -99,7 +99,11 @@ Class Model_sources extends CI_Model
     $res2 = collection('user_categories')->update(
       array(
         'user_id' => $this->users->get('_id'),
-        'children.id' => $node_id
+        'children' => array(
+          '$elemMatch' => array(
+            'id' => $node_id
+          )
+        )
       ),
       array(
         '$pull' => array(
@@ -169,20 +173,35 @@ Class Model_sources extends CI_Model
         'source_uri' => true,
         'child_count' => true,
         'broken' => true,
-        'children' => [
-          '$elemMatch' => [
-            'id' => [
-              '$in' => $feeds
-            ]
-          ]
-        ],
+        'can_be_deleted' => true,
         'children.id' => true,
         'children.text' => true,
         'children.type' => true,
-        'children.source_uri' => true
+        'children.source_uri' => true,
+        'children.sub_text' => true,
+        'children.can_be_deleted' => true,
+        'children.can_be_renamed' => true,
+        'children.can_be_feed_parent' => true,
+        'children.can_be_hidden' => true,
+        'children.broken' => true
       )
     );
 
-    return iterator_to_array($res, false);
+    $nodes = array();
+
+    // MongoDB doesn't support multiple results using $elemMatch, so we need to filter feeds
+    // after the extraction
+
+    foreach ($res as $category)
+    {
+      $category['children'] = array_values(array_filter($category['children'], function($feed) use($feeds)
+      {
+        return in_array($feed['id'], $feeds);
+      }));
+
+      $nodes[]=$category;
+    }
+
+    return $nodes;
   }
 }
