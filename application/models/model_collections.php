@@ -17,9 +17,14 @@ Class Model_collections extends CI_Model
     parent::__construct();
   }
 
-  private function _prepare($data = array())
+  private function _default_excluded_fields()
   {
-    $data = array_intersect_key(
+    return array('_id' => false, 'sources' => false);
+  }
+
+  private function _filter_fields($data = array())
+  {
+    return array_intersect_key(
       $data,
       array(
         'name' => true,
@@ -30,6 +35,11 @@ Class Model_collections extends CI_Model
         'sources' => true
       )
     );
+  }
+
+  private function _prepare($data = array())
+  {
+    $data = $this->_filter_fields($data);
 
     return array_replace_recursive(array(
       'id' => next_id('collection'),
@@ -79,11 +89,24 @@ Class Model_collections extends CI_Model
     return false;
   }
 
-  public function update($collection_id, $data = array())
+  public function update($collection_id, $data = array(), $return = false)
   {
     $q = $this->_where_id($collection_id);
+    $data = $this->_filter_fields($data);
 
-    return collection('collections')->update($q, array('$set' => $data));
+    if ($return)
+    {
+      return collection('collections')->findAndModify(
+        $q,
+        array('$set' => $data),
+        $this->_default_excluded_fields(),
+        array('new' => true)
+      );
+    }
+    else
+    {
+      return collection('collections')->update($q, array('$set' => $data));
+    }
   }
 
   public function delete($collection_id)
@@ -102,6 +125,19 @@ Class Model_collections extends CI_Model
   {
     $q = $this->_where_id($collection_id);
     return collection('collections')->findOne($q, $fields);
+  }
+
+  public function find_mine()
+  {
+    return iterator_to_array(
+      collection('collections')->find(
+        array(
+          'user.id' => $this->users->get('_id')
+        ),
+        $this->collections->_default_excluded_fields()
+      ),
+      false
+    );
   }
 
   private function _where_id($collection_id)

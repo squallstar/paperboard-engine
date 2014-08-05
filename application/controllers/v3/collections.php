@@ -24,15 +24,7 @@ class Collections_Controller extends Cronycle_Controller
 
     if ($this->method == 'post') return $this->create();
 
-    $this->json(200, array_values(iterator_to_array(collection('collections')->find(
-      array(
-        'user.id' => $this->users->get('_id')
-      ),
-      array(
-        '_id' => false,
-        'sources' => false
-      )
-    ))));
+    $this->json(200, $this->collections->find_mine());
   }
 
   public function create()
@@ -51,6 +43,25 @@ class Collections_Controller extends Cronycle_Controller
       $this->json(201, $res);
     } else {
       $this->json(422, array('errors' => ['Cannot create the collection']));
+    }
+  }
+
+  public function update($collection_id)
+  {
+    $this->set_body_request();
+
+    if (!isset($this->request['collection']))
+    {
+      return $this->json(400);
+    }
+
+    $res = $this->collections->update($collection_id, $this->request['collection'], true);
+
+    if ($res)
+    {
+      $this->json(200, $res);
+    } else {
+      $this->json(422, array('errors' => ['Cannot update the collection']));
     }
   }
 
@@ -89,6 +100,8 @@ class Collections_Controller extends Cronycle_Controller
 
   public function view($collection_id)
   {
+    if ($this->method == 'put') return $this->update($collection_id);
+
     $collection = $this->collections->find($collection_id, array(
       '_id' => false,
       'sources' => false
