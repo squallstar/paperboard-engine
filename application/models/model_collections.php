@@ -81,6 +81,8 @@ Class Model_collections extends CI_Model
     $this->load->model('model_sources', 'sources');
     $data['feeds'] = $this->sources->tree($data['sources'], true);
 
+    $data['total_links_count'] = $this->links($data, FALSE)->count();
+
     $res = collection('collections')->insert($data);
 
     if ($res)
@@ -115,6 +117,11 @@ Class Model_collections extends CI_Model
     }
 
     $data['last_updated_at'] = time();
+
+    if (isset($data['feeds']) && isset($data['filters']))
+    {
+      $data['total_links_count'] = $this->links($data, FALSE)->count();
+    }
 
     if ($return)
     {
@@ -220,18 +227,19 @@ Class Model_collections extends CI_Model
       }
     }
 
-    return collection('articles')->find(
+    $cursor = collection('articles')->find(
       $conditions,
       array(
         '_id' => false,
         'source' => false
       )
-    )
-    ->limit($limit)
-    ->sort(
-      array(
-        'published_at' => -1
-      )
     );
+
+    if ($limit !== FALSE)
+    {
+      $cursor->limit($limit)->sort(['published_at' => -1]);
+    }
+
+    return $cursor;
   }
 }
