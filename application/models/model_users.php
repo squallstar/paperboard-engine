@@ -135,9 +135,7 @@ Class Model_users extends CI_Model
         'small'  => 'http://cronycle-staging-avatar.s3.amazonaws.com/uploads/small_cronycle-logo.png'
       ),
 
-      'bucket' => array(
-
-      ),
+      'bucket' => new stdClass,
 
       'connected_accounts' => array(
 

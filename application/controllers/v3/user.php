@@ -108,4 +108,22 @@ class User_Controller extends Cronycle_Controller
       return $this->json(500, array('errors' => ['Could not create the user']));
     }
   }
+
+  public function bucket($key)
+  {
+    if (!$this->require_token()) return;
+
+    if ($this->method == 'put')
+    {
+      $this->set_body_request();
+
+      $data = [];
+      $data['bucket.' . $key] = $this->request['value'];
+
+      if ($this->users->update_current($data))
+      {
+
+      }
+    }
+  }
 }

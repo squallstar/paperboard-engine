@@ -19,7 +19,7 @@ Class Model_collections extends CI_Model
 
   private function _default_excluded_fields()
   {
-    return array('_id' => false, 'sources' => false);
+    return array('_id' => false, 'sources' => false, 'feeds' => false);
   }
 
   private function _filter_fields($data = array())
@@ -69,30 +69,52 @@ Class Model_collections extends CI_Model
         'full_name' => $this->users->get('full_name'),
         'image_url' => $this->users->get('avatar')['small']
       ),
-      'sources' => array(
-      )
+      'sources' => array(),
+      'feeds' => array()
     ), $data);
   }
 
-  public function save($data = array())
+  public function create($data = array())
   {
     $data = $this->_prepare($data);
 
-    $res = collection('collections')->save($data);
+    $this->load->model('model_sources', 'sources');
+    $data['feeds'] = $this->sources->tree($data['sources'], true);
+
+    $res = collection('collections')->insert($data);
 
     if ($res)
     {
       unset($data['_id']);
+      unset($data['feeds']);
       return $data;
     }
 
     return false;
   }
 
+  public function update_single_field($collection_id, $field, $value)
+  {
+    $q = $this->_where_id($collection_id);
+
+    $data = [];
+    $data[$field] = $value;
+
+    return collection('collections')->update($q, array('$set' => $data));
+  }
+
   public function update($collection_id, $data = array(), $return = false)
   {
     $q = $this->_where_id($collection_id);
     $data = $this->_filter_fields($data);
+
+    if (isset($data['sources']))
+    {
+      $this->load->model('model_sources', 'sources');
+      $data['feeds'] = $this->sources->tree($data['sources'], true);
+    }
+
+    $data['last_updated_at'] = time();
 
     if ($return)
     {
@@ -152,5 +174,47 @@ Class Model_collections extends CI_Model
         'user.id' => $this->users->get('_id')
       );
     }
+  }
+
+  public function links($collection, $limit = 30, $max_timestamp = null, $min_timestamp = null)
+  {
+    $limit = $limit ? intval($limit) : 30;
+
+    $conditions = array(
+      'source' => array(
+        '$in' => $collection['feeds']
+      )
+    );
+
+    if ($max_timestamp)
+    {
+      $conditions['published_at'] = array(
+        '$lt' => intval($max_timestamp)
+      );
+    }
+
+    if ($min_timestamp)
+    {
+      $conditions['published_at'] = array(
+        '$gt' => intval($min_timestamp)
+      );
+    }
+
+    return iterator_to_array(
+      collection('articles')->find(
+        $conditions,
+        array(
+          '_id' => false,
+          'source' => false
+        )
+      )
+      ->limit($limit)
+      ->sort(
+        array(
+          'published_at' => -1
+        )
+      )
+      , false
+    );
   }
 }

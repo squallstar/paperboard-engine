@@ -72,7 +72,7 @@ Class Model_sources extends CI_Model
         'id' => $category_id
       ),
       array(
-        '$push' => [
+        '$addToSet' => [
           'children' => $data
         ],
         '$inc' => [
@@ -81,7 +81,33 @@ Class Model_sources extends CI_Model
       )
     );
 
-    return $res ? $data : false;
+    if ($res)
+    {
+      // Updates the feed ids inside collections that selected this category
+      $collections = collection('collections')->find(array(
+        'user.id' => $this->users->get('_id'),
+        'sources' => 'category:' . $category_id
+        ),
+        array(
+          'private_id' => true,
+          'sources' => true
+        )
+      );
+
+      if ($collections->count())
+      {
+        $this->load->model('model_collections', 'collections');
+
+        foreach ($collections as $collection)
+        {
+          $this->collections->update($collection['private_id'], $collection);
+        }
+      }
+
+      return $data;
+    }
+
+    return false;
   }
 
   public function delete($node_id)
@@ -139,33 +165,45 @@ Class Model_sources extends CI_Model
     ), false);
   }
 
-  public function tree($sources = array())
+  public function tree($sources = array(), $return_only_ids = false)
   {
+    if (!is_array($sources) || count($sources) == 0)
+    {
+      return array();
+    }
+
     $categories = [];
     $feeds = [];
 
     foreach ($sources as $source) {
-      if (strpos($source, 'category:') === 0) array_push($categories, str_replace('category:', '', $source));
-      else if (strpos($source, 'feed:') === 0) array_push($feeds, str_replace('feed:', '', $source));
+      if (strpos($source, 'category:') === 0) $categories[] = str_replace('category:', '', $source);
+      else if (strpos($source, 'feed:') === 0) $feeds[] = str_replace('feed:', '', $source);
     }
 
-    $res = collection('user_categories')->find(
-      array(
-        'user_id' => $this->users->get('_id'),
-        '$or' => [
-          [
-            'id' => [
-              '$in' => $categories
-            ]
-          ],
-          [
-            'children.id' => [
-              '$in' => $feeds
-            ]
-          ]
-        ]
-      ),
-      array(
+    if ($return_only_ids)
+    {
+      if (count($categories) == 0)
+      {
+        // When no folders are selected, it's not necessary to run all the code below
+        // as we already know all the ids
+        $nodes = [];
+
+        foreach ($feeds as $feed) {
+          $nodes[] = str_replace('feed:', '', $feed);
+        }
+
+        return $nodes;
+      }
+
+      $fields = array(
+        '_id' => false,
+        'id' => true,
+        'children.id' => true
+      );
+    }
+    else
+    {
+      $fields = array(
         '_id' => false,
         'id' => true,
         'type' => true,
@@ -184,24 +222,69 @@ Class Model_sources extends CI_Model
         'children.can_be_feed_parent' => true,
         'children.can_be_hidden' => true,
         'children.broken' => true
-      )
+      );
+    }
+
+    $res = collection('user_categories')->find(
+      array(
+        'user_id' => $this->users->get('_id'),
+        '$or' => [
+          [
+            'id' => [
+              '$in' => $categories
+            ]
+          ],
+          [
+            'children.id' => [
+              '$in' => $feeds
+            ]
+          ]
+        ]
+      ),
+      $fields
     );
 
     $nodes = array();
 
-    // MongoDB doesn't support multiple results using $elemMatch, so we need to filter feeds
-    // after the extraction
-
-    foreach ($res as $category)
+    if ($return_only_ids)
     {
-      $category['children'] = array_values(array_filter($category['children'], function($feed) use($feeds)
+      foreach ($res as $category)
       {
-        return in_array($feed['id'], $feeds);
-      }));
+        if (in_array($category['id'], $categories))
+        {
+          // Folder is fully selected
+          foreach ($category['children'] as $feed) $nodes[] = $feed['id'];
+        }
+        else
+        {
+          foreach ($category['children'] as $feed)
+          {
+            if (in_array($feed['id'], $feeds))
+            {
+              $nodes[] = $feed['id'];
+            }
+          }
+        }
+      }
+    }
+    else
+    {
+      foreach ($res as $category)
+      {
+        $category['children'] = array_values(array_filter($category['children'], function($feed) use($feeds)
+        {
+          return in_array($feed['id'], $feeds);
+        }));
 
-      $nodes[]=$category;
+        $nodes[] = $category;
+      }
     }
 
     return $nodes;
+  }
+
+  public function source_ids($sources = array())
+  {
+
   }
 }

@@ -36,7 +36,7 @@ class Collections_Controller extends Cronycle_Controller
       return $this->json(400);
     }
 
-    $res = $this->collections->save($this->request['collection']);
+    $res = $this->collections->create($this->request['collection']);
 
     if ($res)
     {
@@ -79,7 +79,7 @@ class Collections_Controller extends Cronycle_Controller
       {
         if ($id != 'favourite_collection')
         {
-          $this->collections->update($id, array('position' => $pos));
+          $this->collections->update_single_field($id, 'position', $pos);
         }
         else
         {
@@ -142,25 +142,25 @@ class Collections_Controller extends Cronycle_Controller
       if (!$this->require_token()) return;
     }
 
-    $this->json(200, [
-      [
-        'id' => 1,
-        'url' => 'http://cronycle.com',
-        'name' => 'Lorem ipsum',
-        'description' => 'dolor sit amet',
-        'content' => '<p>Looorem ipsum!</p>',
-        'sources' => [
-          [
-            'full_name' => 'Cronycle',
-            'screen_name' => 'wearecronycle',
-            'profile_image_url' => 'https://pbs.twimg.com/profile_images/378800000851024662/11a229c4131c81e81195ac8be9aff116_normal.jpeg',
-            'published_at' => time(),
-            'external_id' => 1,
-            'type' => 'TwitterUser'
-          ]
-        ]
-      ]
-    ]);
+    $collection = $this->collections->find($collection_id, array(
+      'feeds' => true
+    ));
+
+    if ($collection)
+    {
+      $links = $this->collections->links(
+        $collection,
+        $this->input->get('per_page'),
+        $this->input->get('max_timestamp'),
+        $this->input->get('min_timestamp')
+      );
+
+      $this->json(200, $links);
+    }
+    else
+    {
+      $this->json(404, ['errors' => ['The collection was not found']]);
+    }
   }
 
   public function favourite_collection_links()

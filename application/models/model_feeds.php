@@ -12,6 +12,8 @@
 
 Class Model_feeds extends CI_Model
 {
+  private $_is_downloading;
+
   public function save($title, $url)
   {
     $feed = collection('feeds')->findAndModify(
@@ -29,9 +31,11 @@ Class Model_feeds extends CI_Model
       $data = array(
         'title' => $title,
         'url' => $url,
+        'type' => 'feed',
         'processed_at' => 0,
         'failed_count' => 0,
-        'added_count' => 1
+        'added_count' => 1,
+        'articles_count' => 0
       );
 
       $res = collection('feeds')->insert($data);
@@ -55,5 +59,38 @@ Class Model_feeds extends CI_Model
         ]
       )
     );
+  }
+
+  public function download($limit = 30)
+  {
+    if ($this->_is_downloading) return;
+
+    $feeds = collection('feeds')->find(
+      array(
+        'processed_at' => [
+          '$lt' => time() - 3600
+        ],
+        'failed_count' => [
+          '$lt' => 5
+        ]
+      ),
+      array(
+        'url' => true,
+        'type' => true
+      )
+    )->limit($limit);
+
+    $feeds = iterator_to_array($feeds, false);
+
+    if (count($feeds) == 0) return 0;
+
+    $this->load->model('model_articles_downloader', 'downloader');
+
+    $this->_is_downloading = true;
+    $this->downloader->update_sources($feeds);
+
+    $this->_is_downloading = false;
+
+    return count($feeds);
   }
 }
