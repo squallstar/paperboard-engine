@@ -143,7 +143,8 @@ class Collections_Controller extends Cronycle_Controller
     }
 
     $collection = $this->collections->find($collection_id, array(
-      'feeds' => true
+      'feeds' => true,
+      'filters' => true
     ));
 
     if ($collection)
@@ -155,7 +156,7 @@ class Collections_Controller extends Cronycle_Controller
         $this->input->get('min_timestamp')
       );
 
-      $this->json(200, $links);
+      $this->json(200, iterator_to_array($links, false));
     }
     else
     {

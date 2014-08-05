@@ -29,7 +29,7 @@ class Imports_Controller extends Cronycle_Controller
 
     $this->load->model('model_sources', 'sources');
 
-    $file = file_get_contents(APPPATH . '../feedly.opml');
+    $file = file_get_contents($_FILES['file']['tmp_name']);
 
     $xml = new SimpleXMLElement($file, LIBXML_NOERROR);
 
@@ -69,8 +69,8 @@ class Imports_Controller extends Cronycle_Controller
     $this->json(200, array(
       'collection_count' => $n_cat,
       'feed_count' => $n_feed,
-      'job_id' => 1,
-      'status' => 'working'
+      'job_id' => null,
+      'status' => 'complete'
     ));
   }
 }

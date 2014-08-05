@@ -200,21 +200,38 @@ Class Model_collections extends CI_Model
       );
     }
 
-    return iterator_to_array(
-      collection('articles')->find(
-        $conditions,
-        array(
-          '_id' => false,
-          'source' => false
-        )
+    if (count($collection['filters']))
+    {
+      $text_filters = [];
+
+      foreach ($collection['filters'] as $filter)
+      {
+        if (in_array($filter['context'], array('keywords', 'phrase')))
+        {
+          $text_filters[] = $filter['filter_value'];
+        }
+      }
+
+      if (count($text_filters))
+      {
+        $conditions['$text'] = array(
+          '$search' => implode(' ', $text_filters)
+        );
+      }
+    }
+
+    return collection('articles')->find(
+      $conditions,
+      array(
+        '_id' => false,
+        'source' => false
       )
-      ->limit($limit)
-      ->sort(
-        array(
-          'published_at' => -1
-        )
+    )
+    ->limit($limit)
+    ->sort(
+      array(
+        'published_at' => -1
       )
-      , false
     );
   }
 }
