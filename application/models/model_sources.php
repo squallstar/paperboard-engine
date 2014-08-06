@@ -282,4 +282,28 @@ Class Model_sources extends CI_Model
 
     return $nodes;
   }
+
+  public function tree_ids()
+  {
+    $res = collection('user_categories')->find(
+      array(
+        'user_id' => $this->users->get('_id')
+      ),
+      array(
+        'children.id'
+      )
+    );
+
+    $ids = [];
+
+    foreach ($res as $category)
+    {
+      foreach ($category['children'] as $feed)
+      {
+        $ids[] = $feed['id'];
+      }
+    }
+
+    return $ids;
+  }
 }

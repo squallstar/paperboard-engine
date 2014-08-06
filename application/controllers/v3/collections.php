@@ -239,6 +239,10 @@ class Collections_Controller extends Cronycle_Controller
 
   public function search_links()
   {
+    if (!$this->require_token()) return;
+
+    $this->load->model('model_sources', 'sources');
+
     $links = $this->collections->links(
       array(
         'filters' => array(
@@ -246,7 +250,8 @@ class Collections_Controller extends Cronycle_Controller
             'context' => 'keywords',
             'filter_value' => $this->input->get('search_query')
           )
-        )
+        ),
+        'feeds' => $this->sources->tree_ids()
       ),
       $this->input->get('per_page'),
       $this->input->get('max_timestamp'),

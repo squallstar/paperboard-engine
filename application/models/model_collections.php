@@ -234,13 +234,15 @@ Class Model_collections extends CI_Model
 
       foreach ($collection['filters'] as $filter)
       {
+        $negate = isset($filter['negate']) ? $negate : false;
+
         if ($filter['context'] == 'keywords')
         {
-          $text_filters[] = $filter['negate'] == false ? $filter['filter_value'] : '-' . $filter['filter_value'];
+          $text_filters[] = $negate == false ? $filter['filter_value'] : '-' . $filter['filter_value'];
         }
         else if ($filter['context'] == 'phrase')
         {
-          if ($filter['negate'] == false)
+          if ($negate == false)
           {
             $text_filters[] = "\"" . $filter['filter_value'] . "\"";
           } else {
