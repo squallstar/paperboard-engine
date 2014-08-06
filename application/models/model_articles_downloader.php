@@ -349,11 +349,21 @@ class Model_articles_downloader extends CI_Model
       'url_host'     => $domain,
       'lead_image'   => NULL,
       'assets'       => array(),
-      'tags'         => $entry->categories,
+      'tags'         => array(),
       'lead_image_in_content' => false,
       'show_external_url' => true,
       'fetched'      => false
     );
+
+    if (count($entry->categories))
+    {
+      foreach ($entry->categories as $tag)
+      {
+        $data['tags'][] = array(
+          'name' => $tag
+        );
+      }
+    }
 
     if (strlen($data['description']) >= self::ARTICLE_CONTENT_LENGTH)
     {

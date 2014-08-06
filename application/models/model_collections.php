@@ -82,6 +82,7 @@ Class Model_collections extends CI_Model
     $data['feeds'] = $this->sources->tree($data['sources'], true);
 
     $data['total_links_count'] = $this->links($data, FALSE)->count();
+    $data['total_source_count'] = count($data['feeds']);
 
     $res = collection('collections')->insert($data);
 
@@ -121,6 +122,7 @@ Class Model_collections extends CI_Model
     if (isset($data['feeds']) && isset($data['filters']))
     {
       $data['total_links_count'] = $this->links($data, FALSE)->count();
+      $data['total_source_count'] = count($data['feeds']);
     }
 
     if ($return)
