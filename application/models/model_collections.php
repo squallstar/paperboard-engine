@@ -220,7 +220,12 @@ Class Model_collections extends CI_Model
       {
         if (in_array($filter['context'], array('keywords', 'phrase')))
         {
-          $text_filters[] = $filter['filter_value'];
+          if ($filter['negate'] == false)
+          {
+            $text_filters[] = $filter['filter_value'];
+          } else {
+            $text_filters[] = '-' . $filter['filter_value'];
+          }
         }
       }
 
