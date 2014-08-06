@@ -187,11 +187,14 @@ Class Model_collections extends CI_Model
   {
     $limit = $limit ? intval($limit) : 30;
 
-    $conditions = array(
-      'source' => array(
+    $conditions = [];
+
+    if (isset($collection['feeds']))
+    {
+      $conditions['source'] = array(
         '$in' => $collection['feeds']
-      )
-    );
+      );
+    }
 
     if ($max_timestamp)
     {

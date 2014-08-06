@@ -164,6 +164,25 @@ class Collections_Controller extends Cronycle_Controller
     }
   }
 
+  public function search_links()
+  {
+    $links = $this->collections->links(
+      array(
+        'filters' => array(
+          array(
+            'context' => 'keywords',
+            'filter_value' => $this->input->get('search_query')
+          )
+        )
+      ),
+      $this->input->get('per_page'),
+      $this->input->get('max_timestamp'),
+      $this->input->get('min_timestamp')
+    );
+
+    $this->json(200, iterator_to_array($links, false));
+  }
+
   public function favourite_collection_links()
   {
     if (!$this->require_token()) return;
