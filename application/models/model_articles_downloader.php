@@ -122,7 +122,7 @@ class Model_articles_downloader extends CI_Model
 
   private function _g_url(&$source)
   {
-    return "https://www.google.com/uds/Gfeeds?hl=en&num=25&v=1.0&output=json&q=" . urlencode($source['url']) . "&nocache=" . (time()-1200);
+    return "https://www.google.com/uds/Gfeeds?hl=en&num=50&v=1.0&output=json&q=" . urlencode($source['url']) . "&nocache=" . (time()-3600);
   }
 
   private function _get_feed_rss(&$source)
