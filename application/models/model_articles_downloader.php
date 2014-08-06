@@ -16,6 +16,8 @@ class Model_articles_downloader extends CI_Model
 
   public function update_sources($sources = array())
   {
+    _log("Started to download " . count($sources) . " sources");
+
     // multi curl
     $mh = curl_multi_init();
     $ch = array();
@@ -59,6 +61,9 @@ class Model_articles_downloader extends CI_Model
 
       $this->update_source($source);
     }
+
+    unset($ch);
+    unset($sources);
   }
 
   public function update_source($source)
@@ -77,19 +82,28 @@ class Model_articles_downloader extends CI_Model
     if ($entries === false)
     {
       //Failed to update
+      _log("Failed to update source " . $source['url']);
       return;
     }
 
-    if (count($entries))
+    $count = count($entries);
+
+    if ($count)
     {
       //Filter entries that have been already added to the DB
       $this->_filter_entries($entries);
 
-      if (count($entries))
+      $count = count($entries);
+
+      if ($count)
       {
         $this->_insert_articles($entries, $source);
       }
     }
+
+    unset($entries);
+
+    _log("Source " . $source['_id']->{'$id'} . " updated with " . $count . " new articles");
 
     collection('feeds')->update(
       array(
@@ -100,7 +114,7 @@ class Model_articles_downloader extends CI_Model
           'processed_at' => time()
         ),
         '$inc' => array(
-          'articles_count' => count($entries)
+          'articles_count' => $count
         )
       )
     );
@@ -190,6 +204,8 @@ class Model_articles_downloader extends CI_Model
         }
       }
     }
+
+    unset($dbArticles);
   }
 
   private function _source_failed($source, $response)
@@ -310,6 +326,8 @@ class Model_articles_downloader extends CI_Model
 
     $ts = strtotime($entry->publishedDate);
 
+    $content = trim($entry->content);
+
     $data = array(
       'id'           => $entry->hash,
       'source'       => $source['_id']->{'$id'},
@@ -318,27 +336,28 @@ class Model_articles_downloader extends CI_Model
           'external_id'  => $source['_id']->{'$id'},
           'full_name'    => $source['title'],
           'published_at' => $now < $ts ? $now : $ts,
-          'type'         => 'Feed'
+          'type'         => 'Feed',
+          'screen_name'  => strip_tags($entry->author)
         )
       ),
       'name'         => $entry->title,
       'url'          => $entry->link,
-      'author'       => strip_tags($entry->author),
-      'description'  => trim(strip_tags($entry->content)),
-      'content'      => strip_tags($entry->content),
+      'description'  => strip_tags($content),
+      'content'      => $content,
       'published_at' => $now < $ts ? $now : $ts,
       'processed_at' => $now,
       'url_host'     => $domain,
       'lead_image'   => NULL,
       'assets'       => array(),
+      'tags'         => $entry->categories,
       'lead_image_in_content' => false,
       'show_external_url' => true,
-      'tags' => array()
+      'fetched'      => false
     );
 
     if (strlen($data['description']) >= self::ARTICLE_CONTENT_LENGTH)
     {
-      $data['description'] = substr($data['content'], 0, self::ARTICLE_CONTENT_LENGTH-1) . '...';
+      $data['description'] = substr($data['description'], 0, self::ARTICLE_CONTENT_LENGTH-1) . '...';
     }
 
     $img = images_from_string($entry->content);
@@ -368,23 +387,24 @@ class Model_articles_downloader extends CI_Model
           }
         }
       }
+
+      unset($media);
     }
+
+    unset($content);
 
     if ($img)
     {
       if ($img[0] == '/')
       {
-        //Image is relative. We must add the domain
-        $data['lead_image'] = array(
-          'url_original' => $source['host'] . $img
-        );
+        $img = $source['host'] . $img;
       }
-      else
-      {
-        $data['lead_image'] = array(
-          'url_original' => $img
-        );
-      }
+
+      $data['lead_image'] = array(
+        'type' => 'image',
+        'url_original' => $img,
+        'url_archived_small' => $img
+      );
     }
 
     return $data;

@@ -213,7 +213,7 @@ Class Model_collections extends CI_Model
 
       foreach ($collection['filters'] as $filter)
       {
-        if (in_array($filter['context'], array('keywords', 'phrase')))
+        if ($filter['negate'] != false && in_array($filter['context'], array('keywords', 'phrase')))
         {
           $text_filters[] = $filter['filter_value'];
         }
@@ -231,7 +231,8 @@ Class Model_collections extends CI_Model
       $conditions,
       array(
         '_id' => false,
-        'source' => false
+        'source' => false,
+        'fetched' => false
       )
     );
 

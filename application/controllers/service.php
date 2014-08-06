@@ -20,12 +20,17 @@ class Service_Controller extends CI_Controller
   public function start_downloader()
   {
     set_time_limit(0);
+    ini_set("memory_limit", "256M");
 
     $this->load->model('model_feeds', 'feeds');
 
+    _log("Downloader worker started!");
+
     while (true) {
-      $this->feeds->download();
-      sleep(2);
+      if (!$this->feeds->download())
+      {
+        sleep(5);
+      }
     }
   }
 }

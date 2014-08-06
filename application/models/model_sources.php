@@ -282,9 +282,4 @@ Class Model_sources extends CI_Model
 
     return $nodes;
   }
-
-  public function source_ids($sources = array())
-  {
-
-  }
 }

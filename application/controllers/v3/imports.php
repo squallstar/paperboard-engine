@@ -55,15 +55,18 @@ class Imports_Controller extends Cronycle_Controller
         $cat = $this->sources->add_feed_category($title);
       }
 
-      foreach ($outline->outline as $rss)
+      if ($cat && $cat['id'])
       {
-        if ($rss['type'] != 'rss') continue;
+        foreach ($outline->outline as $rss)
+        {
+          if ($rss['type'] != 'rss') continue;
 
-        $this->sources->add_feed($cat['id'], (string)$rss['title'], (string)$rss['xmlUrl']);
-        $n_feed++;
+          $this->sources->add_feed($cat['id'], (string)$rss['title'], (string)$rss['xmlUrl']);
+          $n_feed++;
+        }
+
+        $n_cat++;
       }
-
-      $n_cat++;
     }
 
     $this->json(200, array(

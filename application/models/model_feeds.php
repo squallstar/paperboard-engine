@@ -81,16 +81,22 @@ Class Model_feeds extends CI_Model
     )->limit($limit);
 
     $feeds = iterator_to_array($feeds, false);
+    $count = count($feeds);
 
-    if (count($feeds) == 0) return 0;
+    if ($count == 0) {
+      unset($feeds);
+      return FALSE;
+    }
 
     $this->load->model('model_articles_downloader', 'downloader');
 
     $this->_is_downloading = true;
+
     $this->downloader->update_sources($feeds);
 
     $this->_is_downloading = false;
 
-    return count($feeds);
+    unset($feeds);
+    return $count == $limit;
   }
 }

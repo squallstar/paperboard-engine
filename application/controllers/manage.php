@@ -69,7 +69,8 @@ class Manage_Controller extends Cronycle_Controller
 		$art->ensureIndex(array('id' => 1), array('unique' => true));
 		$art->ensureIndex(array('source' => 1));
 		$art->ensureIndex(array('published_at' => -1));
-		$art->ensureIndex(array('name' => 'text', 'content' => 'text'));
+		$art->ensureIndex(array('fetched' => 1));
+		$art->ensureIndex(array('name' => 'text', 'description' => 'text'));
 
 		echo 'done';
 

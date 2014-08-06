@@ -17,6 +17,10 @@ function collection($key = FALSE) {
 	return $key ? $APP->db->$key : $APP->db;
 }
 
+function _log($message) {
+	echo date("Y-m-d H:i:s ") . $message, PHP_EOL;
+}
+
 function next_id($name) {
 	$ret = collection('counters')->findAndModify(
 		array('_id' => $name . '_id'),
