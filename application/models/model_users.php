@@ -141,7 +141,7 @@ Class Model_users extends CI_Model
 
       ),
 
-      'favourite_collection_position' => 0,
+      'favourite_collection_position' => 99,
       'has_password' => true,
       'has_to_wait' => false,
       'is_pro' => true,

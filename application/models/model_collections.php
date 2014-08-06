@@ -181,7 +181,7 @@ Class Model_collections extends CI_Model
           'user.id' => $this->users->get('_id')
         ),
         $this->collections->_default_excluded_fields()
-      ),
+      )->sort(['position' => 1]),
       false
     );
   }
@@ -248,8 +248,16 @@ Class Model_collections extends CI_Model
         }
       }
 
-      if (count($text_filters))
+      $c = count($text_filters);
+
+      if ($c)
       {
+        if ($c == 1 && strpos($text_filters[0], '-') === 0)
+        {
+          // Mongo can't search only negated documents
+          array_unshift($text_filters, "");
+        }
+
         $conditions['$text'] = array(
           '$search' => implode(' ', $text_filters)
         );

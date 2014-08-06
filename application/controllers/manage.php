@@ -23,11 +23,41 @@ class Manage_Controller extends Cronycle_Controller
 
 	public function index()
 	{
-		echo 'alive';
+		$this->status();
+	}
+
+	private function _worker_running($name)
+	{
+		exec("ps -aux | grep start_downloader", $worker);
+		return count($worker) > 0 && strpos($worker[0], '/php') !== FALSE;
+	}
+
+	public function status()
+	{
+		$this->json(200, array(
+			'collections' => array(
+				'count' => collection('collections')->count(),
+				'public' => collection('collections')->count(array('publicly_available' => true))
+			),
+			'feeds' => array(
+				'count'         => collection('feeds')->count(),
+				'processed'     => collection('feeds')->count(array('processed_at' => array('$gt' => 1))),
+				'not_processed' => collection('feeds')->count(array('processed_at' => 0))
+			),
+			'articles' => array(
+				'count' => collection('articles')->count(),
+				'fetched' => collection('articles')->count(array('fetched' => true))
+			),
+			'workers' => array(
+				'downloader' => $this->_worker_running('start_downloader') ? 'running' : 'stopped'
+			)
+		));
 	}
 
 	public function recreate()
 	{
+		if (!$this->input->is_cli_request()) die('Please run this from CLI');
+
 		ini_set("memory_limit","128M");
 
 		$this->db->drop();
@@ -50,6 +80,8 @@ class Manage_Controller extends Cronycle_Controller
 		$col->ensureIndex(array('id' => 1), array('unique' => true));
 		$col->ensureIndex(array('private_id' => 1), array('unique' => true));
 		$col->ensureIndex(array('user.id' => 1));
+		$col->ensureIndex(array('position' => 1));
+		$col->ensureIndex(array('publicly_available' => 1));
 
 		$cat = new MongoCollection($this->db, 'user_categories');
 		$cat->ensureIndex(array('id' => 1), array('unique' => true));
