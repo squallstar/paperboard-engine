@@ -119,10 +119,25 @@ Class Model_collections extends CI_Model
 
     $data['last_updated_at'] = time();
 
-    if (isset($data['feeds']) && isset($data['filters']))
+    $is_changing_feeds = isset($data['feeds']);
+
+    if ($is_changing_feeds || isset($data['filters']))
     {
+      if (!$is_changing_feeds)
+      {
+        $tmp = collection('collections')->findOne(
+          $q,
+          array('_id' => false, 'feeds' => true)
+        );
+
+        $data['feeds'] = $tmp['feeds'];
+        unset($tmp);
+      }
+
       $data['total_links_count'] = $this->links($data, FALSE)->count();
       $data['total_source_count'] = count($data['feeds']);
+
+      if (!$is_changing_feeds) unset($data['feeds']);
     }
 
     if ($return)
