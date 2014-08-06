@@ -112,8 +112,7 @@ class Collections_Controller extends Cronycle_Controller
 
     $slug = $this->request['category_id'];
     $cat = collection('categories')->findOne(
-      array('slug' => $slug),
-      array('_id' => false, 'collection_count' => 0)
+      array('slug' => $slug)
     );
 
     if (!$cat)
@@ -123,7 +122,11 @@ class Collections_Controller extends Cronycle_Controller
 
     if ($this->collections->update($collection_id, array(
       'publicly_visible' => true,
-      'category' => $cat,
+      'category' => array(
+        'id'   => $cat['id'],
+        'name' => $cat['name'],
+        'slug' => $cat['slug']
+      ),
       'description' => strip_tags($this->request['description'])
     )))
     {

@@ -82,6 +82,7 @@ class Manage_Controller extends Cronycle_Controller
 		$col->ensureIndex(array('user.id' => 1));
 		$col->ensureIndex(array('position' => 1));
 		$col->ensureIndex(array('publicly_visible' => 1));
+		$col->ensureIndex(array('category.slug' => 1));
 
 		$cat = new MongoCollection($this->db, 'user_categories');
 		$cat->ensureIndex(array('id' => 1), array('unique' => true));

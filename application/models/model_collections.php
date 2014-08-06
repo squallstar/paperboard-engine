@@ -27,12 +27,13 @@ Class Model_collections extends CI_Model
     return array_intersect_key(
       $data,
       array(
-        'name' => true,
-        'position' => true,
+        'name'             => true,
+        'position'         => true,
         'publicly_visible' => true,
-        'settings' => true,
-        'filters' => true,
-        'sources' => true
+        'settings'         => true,
+        'filters'          => true,
+        'sources'          => true,
+        'category'         => true
       )
     );
   }
@@ -279,5 +280,22 @@ Class Model_collections extends CI_Model
     }
 
     return $cursor;
+  }
+
+  public function find_by_category($slug, $limit = 30)
+  {
+    return collection('collections')->find(
+      array(
+        'publicly_visible' => true,
+        'category.slug' => $slug
+      ),
+      array(
+        '_id' => false,
+        'feeds' => false,
+        'sources' => false,
+        'position' => false,
+        'owned_collection' => false
+      )
+    )->limit($limit);
   }
 }
