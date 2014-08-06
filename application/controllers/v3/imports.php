@@ -46,7 +46,8 @@ class Imports_Controller extends Cronycle_Controller
           'text' => $title
         ),
         array(
-          '_id' => true
+          '_id' => true,
+          'id' => true
         )
       );
 
@@ -55,7 +56,7 @@ class Imports_Controller extends Cronycle_Controller
         $cat = $this->sources->add_feed_category($title);
       }
 
-      if ($cat && $cat['id'])
+      if ($cat && isset($cat['id']))
       {
         foreach ($outline->outline as $rss)
         {

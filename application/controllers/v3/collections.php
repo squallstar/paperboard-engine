@@ -82,6 +82,59 @@ class Collections_Controller extends Cronycle_Controller
     }
   }
 
+  public function publish($collection_id)
+  {
+    if (!$this->require_token()) return;
+
+
+    if ($this->method == 'delete')
+    {
+      if ($this->collections->update($collection_id, array(
+        'publicly_visible' => false,
+        'category' => null
+      )))
+      {
+        return $this->json(200);
+      }
+      else
+      {
+        return $this->json(500);
+      }
+    }
+    else if ($this->method != 'post') return;
+
+    $this->set_body_request();
+
+    if (!isset($this->request['category_id']))
+    {
+      return $this->json(422);
+    }
+
+    $slug = $this->request['category_id'];
+    $cat = collection('categories')->findOne(
+      array('slug' => $slug),
+      array('_id' => false, 'collection_count' => 0)
+    );
+
+    if (!$cat)
+    {
+      return $this->json(400, ['errors' => ['Category not found']]);
+    }
+
+    if ($this->collections->update($collection_id, array(
+      'publicly_visible' => true,
+      'category' => $cat,
+      'description' => strip_tags($this->request['description'])
+    )))
+    {
+      return $this->json(200);
+    }
+    else
+    {
+      return $this->json(500);
+    }
+  }
+
   public function reorder()
   {
     if (!$this->require_token() || $this->method != 'post') return;

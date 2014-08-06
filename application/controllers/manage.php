@@ -37,7 +37,7 @@ class Manage_Controller extends Cronycle_Controller
 		$this->json(200, array(
 			'collections' => array(
 				'count' => collection('collections')->count(),
-				'public' => collection('collections')->count(array('publicly_available' => true))
+				'public' => collection('collections')->count(array('publicly_visible' => true))
 			),
 			'feeds' => array(
 				'count'         => collection('feeds')->count(),
@@ -81,7 +81,7 @@ class Manage_Controller extends Cronycle_Controller
 		$col->ensureIndex(array('private_id' => 1), array('unique' => true));
 		$col->ensureIndex(array('user.id' => 1));
 		$col->ensureIndex(array('position' => 1));
-		$col->ensureIndex(array('publicly_available' => 1));
+		$col->ensureIndex(array('publicly_visible' => 1));
 
 		$cat = new MongoCollection($this->db, 'user_categories');
 		$cat->ensureIndex(array('id' => 1), array('unique' => true));

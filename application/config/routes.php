@@ -9,6 +9,7 @@ $route['v3/sign_up'] = 'v3/user/sign_up';
 $route['v3/collections/reorder'] = 'v3/collections/reorder';
 $route['v3/collections/(p?[A-z0-9]+)'] = 'v3/collections/view/$1';
 $route['v3/collections/(p?[A-z0-9]+)/links'] = 'v3/collections/view_links/$1';
+$route['v3/collections/(p?[A-z0-9]+)/publish'] = 'v3/collections/publish/$1';
 $route['v3/collections/(p?[A-z0-9]+)/source_management'] = 'v1/source_management/collection_nodes/$1';
 $route['v3/search_collection/links'] = 'v3/collections/search_links';
 
