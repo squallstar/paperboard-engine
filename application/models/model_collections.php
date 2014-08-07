@@ -174,14 +174,17 @@ Class Model_collections extends CI_Model
     return collection('collections')->findOne($q, $fields);
   }
 
-  public function find_mine()
+  public function find_mine($include_feeds = false)
   {
+    $fields = $this->collections->_default_excluded_fields();
+    if ($include_feeds && isset($fields['feeds'])) unset($fields['feeds']);
+
     return iterator_to_array(
       collection('collections')->find(
         array(
           'user.id' => $this->users->get('_id')
         ),
-        $this->collections->_default_excluded_fields()
+        $fields
       )->sort(['position' => 1]),
       false
     );
@@ -201,7 +204,7 @@ Class Model_collections extends CI_Model
     }
   }
 
-  public function links($collection, $limit = 30, $max_timestamp = null, $min_timestamp = null)
+  public function links(&$collection, $limit = 30, $max_timestamp = null, $min_timestamp = null)
   {
     $limit = $limit ? intval($limit) : 30;
 

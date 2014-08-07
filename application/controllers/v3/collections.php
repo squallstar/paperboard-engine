@@ -24,15 +24,18 @@ class Collections_Controller extends Cronycle_Controller
 
     if ($this->method == 'post') return $this->create();
 
-    $collections = $this->collections->find_mine();
+    $include_links = $this->input->get('include_links');
 
-    if ($this->input->get('include_links'))
+    $collections = $this->collections->find_mine($include_links);
+
+    if ($include_links)
     {
       $how_many = intval($this->input->get('include_first'));
 
       foreach ($collections as &$collection)
       {
         $collection['links'] = iterator_to_array($this->collections->links($collection, 10), false);
+        unset($collection['feeds']);
 
         $how_many--;
         if ($how_many == 0) break;
