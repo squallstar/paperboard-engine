@@ -29,7 +29,7 @@ class Service_Controller extends CI_Controller
     while (true) {
       if (!$this->feeds->download())
       {
-        sleep(4);
+        sleep(5);
       }
     }
   }

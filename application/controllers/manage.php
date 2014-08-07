@@ -26,30 +26,57 @@ class Manage_Controller extends Cronycle_Controller
 		$this->status();
 	}
 
-	private function _worker_running($name)
+	private function _process_is_running($name)
 	{
-		exec("ps -aux | grep start_downloader", $worker);
+		exec("ps -aux | grep $name", $worker);
 		return count($worker) > 0 && strpos($worker[0], '/php') !== FALSE;
 	}
 
 	public function status()
 	{
+		$today = strtotime("00:00:00");
+
+		$avg = collection('collections')->aggregate([
+			'$group' => [
+				'_id' => '$type',
+				'avg_links'   => ['$avg' => '$total_links_count'],
+				'avg_sources' => ['$avg' => '$total_source_count'],
+				'max_links'   => ['$max' => '$total_links_count'],
+				'max_sources' => ['$max' => '$total_source_count']
+			]
+		])['result'][0];
+
 		$this->json(200, array(
 			'collections' => array(
 				'count' => collection('collections')->count(),
-				'public' => collection('collections')->count(array('publicly_visible' => true))
+				'public' => collection('collections')->count(array('publicly_visible' => true)),
+				'average' => [
+					'links'   => round($avg['avg_links']),
+					'sources' => round($avg['avg_sources'])
+				],
+				'max' => [
+					'links' => round($avg['max_links']),
+					'sources' => round($avg['max_sources'])
+				]
 			),
 			'feeds' => array(
 				'count'         => collection('feeds')->count(),
-				'processed'     => collection('feeds')->count(array('processed_at' => array('$gt' => 1))),
-				'not_processed' => collection('feeds')->count(array('processed_at' => 0))
+				'processed'     => collection('feeds')->count(array('processed_at' => ['$gt' => 1])),
+				'not_processed' => collection('feeds')->count(array('processed_at' => 0)),
+				'outdated'      => collection('feeds')->count(array('processed_at' => ['$lt' => time() - 3600])),
+				'broken'        => collection('feeds')->count(array('failed_count' => ['$gt' => 4]))
 			),
 			'articles' => array(
 				'count' => collection('articles')->count(),
-				'fetched' => collection('articles')->count(array('fetched' => true))
+				'fetched' => collection('articles')->count(array('fetched' => true)),
+				'added' => [
+					'today' => collection('articles')->count(['processed_at' => ['$gt' => $today]]),
+					'yesterday' => collection('articles')->count(['processed_at' => ['$lt' => $today, '$gt' => strtotime("-1 day", $today)]]),
+				],
+				'average_per_feed' => round(collection('articles')->count() / collection('feeds')->count())
 			),
 			'workers' => array(
-				'downloader' => $this->_worker_running('start_downloader') ? 'running' : 'stopped'
+				'downloader' => $this->_process_is_running('start_downloader') ? 'running' : 'stopped'
 			)
 		));
 	}

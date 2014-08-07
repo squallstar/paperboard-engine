@@ -78,7 +78,7 @@ Class Model_feeds extends CI_Model
         'url' => true,
         'type' => true
       )
-    )->limit($limit);
+    )->limit($limit)->sort(array('processed_at' => 1));
 
     $feeds = iterator_to_array($feeds, false);
     $count = count($feeds);
