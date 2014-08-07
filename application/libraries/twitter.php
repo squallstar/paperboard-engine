@@ -201,162 +201,96 @@ Class Twitter
 
 			return json_encode($users);
 		});
-
 	}
 
-	public function get_tweets($data = array())
+	public function get_tweets($limit = 200)
 	{
+		$code = $this->t->request('GET', $this->t->url('1.1/statuses/home_timeline'), array(
+			'count' => $limit,
+			'exclude_replies' => true
+		));
 
-		$query = isset($data['query']) ? $data['query'] : false;
-
-		$cb = function() use($query, $data)
+		if ($code != 200)
 		{
-			$params = array();
+			log_message('error', 'Error while searching for tweets: ' . $code);
+			return FALSE;
+		}
 
-			if ($query)
+		$data = json_decode($this->t->response['response']);
+
+		$now = time();
+
+		foreach ($data as &$tweet)
+		{
+			if (!isset($tweet->entities)) continue;
+			if (!$tweet->entities->urls) continue;
+
+			$ts = strtotime($tweet->created_at);
+
+			$url = $tweet->entities->urls[0]->expanded_url;
+
+			$d = array(
+				'id' => $tweet->id,
+				'type' => 'tweet',
+				'fetched_at' => 0,
+				'processed_at' => $now,
+				'published_at' => $ts,
+				'name' => $tweet->text,
+				'description' => null,
+				'content' => null,
+				'url' => $url,
+				'url_host' => parse_url($url)['host'],
+				'lead_image' => null,
+				'lead_image_in_content' => false,
+				'show_external_url' => true,
+				'assets' => [],
+				'tags' => [],
+				'sources' => array(
+					[
+						'external_id' => $tweet->user->id,
+						'full_name' => $tweet->user->name,
+						'screen_name' => $tweet->user->screen_name,
+						'type' => 'TwitterUser',
+						'profile_image_url' => $tweet->user->profile_background_image_url_https,
+						'published_at' => $ts
+					]
+				)
+			);
+
+			if (isset($tweet->entities->media))
 			{
-				$path = 'search/tweets';
-				$params['q'] = $query;
-				$params['count'] = 40;
-				//$params['result_type'] = 'popular';
-
-				if (substr($params['q'], 0, 1) == '@')
+				foreach ($tweet->entities->media as &$media)
 				{
-					$path = 'statuses/user_timeline';
-					$params['screen_name'] = substr($params['q'], 1);
-					unset($params['q']);
-				}
-			}
-			else
-			{
-				$path = 'statuses/home_timeline';
-				$params['count'] = 15;
-				$params['exclude_replies'] = true;
-			}
-
-			if ($data['max_id'])
-			{
-				$params['max_id'] = $data['max_id'];
-				$params['count'] = 18;
-			}
-
-			$code = $this->t->request('GET', $this->t->url('1.1/' . $path), $params);
-
-			if ($code != 200)
-			{
-				log_message('error', 'Error while searching for tweets: ' . $code);
-				return null;
-			}
-
-			if ($query && !isset($params['screen_name']))
-			{
-				$data = json_decode($this->t->response['response'])->statuses;
-			}
-			else
-			{
-				$data = json_decode($this->t->response['response']);
-			}
-
-			$colors = $this->config->item('colors');
-			$tweets = array();
-
-			$notEncodedUrls = array();
-			$urls = array();
-
-			foreach ($data as $tweet)
-			{
-				if (!$tweet->entities) continue;
-				if (!$tweet->entities->urls) continue;
-
-				$txt = preg_replace('/https?:\/\/[\w\-\.!~?&+\*\'"(),\/]+/','<i>$0</i>', $tweet->text);
-				$txt = preg_replace('/@[A-z0-9_-]+/','<i>$0</i>', $txt);
-
-				$d = array(
-					'id'	  => $tweet->id,
-					'source' => 0,
-					'kind'  => 'tweet',
-					'datepublish' => date('Y-m-d H:i:s', strtotime($tweet->created_at)),
-					'title' => $txt,
-					'image_url' => false,
-					'source_title' => $tweet->user->name,
-					//'color' => $colors[array_rand($colors)],
-					'color' => '#FFF',
-					'collection' => 'Twitter',
-					'content' => '',
-					'url'   => $tweet->entities->urls[0]->expanded_url,
-					'author' => $tweet->user->name,
-					'domain' => $tweet->entities->urls[0]->display_url,
-					'user'  => array(
-						'username'   => $tweet->user->screen_name,
-						'avatar'     => $tweet->user->profile_image_url,
-						'background' => $tweet->user->profile_background_image_url,
-						'link_color' => '#' . $tweet->user->profile_link_color
-					)
-				);
-
-				$notEncodedUrls[]= 'u[]=' . $d['url'];
-
-				$urls[]= 'u[]=' . urlencode($d['url']);
-
-				if (isset($tweet->entities->media))
-				{
-					foreach ($tweet->entities->media as $media)
+					if ($media->type == 'photo')
 					{
-						if ($media->type == 'photo')
-						{
-							$d['image_url'] = $media->media_url;
-							break;
-						}
+						$data['lead_image'] = array(
+			        'type' => 'image',
+			        'url_original' => $media->media_url,
+			        'url_archived_small' => $media->media_url
+			      );
+						break;
 					}
 				}
 
-				$tweets[] = $d;
+				unset($media);
 			}
 
-			// Let's use collector new articles api to fetch the tweets contents
-			if (count($urls))
+			if (isset($tweet->entities->hashtags))
 			{
-				$links = implode('&', $urls);
-				$req = 'http://collectorwp.com/api/v1/articles/?' . $links . '&key=' . md5('collector' . implode('&', $notEncodedUrls));
-
-				$data = json_decode(file_get_contents($req));
-
-				if ($data->status == 200)
+				foreach ($tweet->entities->hashtags as &$tag)
 				{
-					foreach ($data->articles as $article)
-					{
-						foreach ($tweets as &$tweet)
-						{
-							if ($tweet['url'] == $article->request_url)
-							{
-								$tweet['expanded'] = true;
-
-								if ($article->title && strlen($article->title) > 25) $tweet['title'] = $article->title;
-
-								if ($article->thumbnail)
-								{
-									$tweet['image_url'] = $article->thumbnail;
-									$tweet['color'] = $colors[array_rand($colors)];
-								}
-
-								if ($article->summary) $tweet['content'] = $article->summary;
-
-								break;
-							}
-						}
-					}
+					$d['tags'][] = $tag->text;
 				}
+
+				unset($tag);
 			}
 
-			return json_encode($tweets);
-		};
+			$tweets[] = $d;
+		}
 
-		$prefix = $this->_token;
-		if ($query) $prefix .= $query;
-		if ($data['max_id']) $prefix .= $data['max_id'];
+		unset($tweet);
+		unset($data);
 
-		$key = 'tweets-v5-' . date('Y-m-d-H') . md5($prefix) . '-' . round(date('i')/6);
-
-		return Cacher::fetch($key, $cb);
+		return $tweets;
 	}
 }

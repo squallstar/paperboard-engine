@@ -179,6 +179,7 @@ class Source_management_Controller extends Cronycle_Controller
             '$push' => array(
               'connected_accounts' => array(
                 'id' => $account_id,
+                'processed_at' => 0,
                 'connected_at' => time(),
                 'type' => 'twitter',
                 'access_token' => $access_token,

@@ -87,7 +87,8 @@ Class Model_sources extends CI_Model
       'sub_text' => $data['name'],
       'type' => 'twitter_user',
       'can_be_deleted' => false,
-      'can_be_hidden' => true
+      'can_be_hidden' => true,
+      'external_id' => $data['id']
     ));
   }
 
@@ -101,8 +102,10 @@ Class Model_sources extends CI_Model
     $data['text'] = strip_tags($data['text']);
     $data['type'] = isset($data['type']) ? $data['type'] : 'feed';
 
+    $external_id = isset($data['external_id']) ? $data['external_id'] : FALSE;
+
     $this->load->model('model_feeds', 'feeds');
-    $feed_id = $this->feeds->save($data['type'], $data['text'], $data['sub_text'])->{'$id'};
+    $feed_id = $this->feeds->save($data['type'], $data['text'], $data['sub_text'], $external_id)->{'$id'};
 
     if (!$feed_id) return false;
 

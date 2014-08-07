@@ -47,6 +47,12 @@ class Manage_Controller extends Cronycle_Controller
 		])['result'][0];
 
 		$this->json(200, array(
+			'users' => array(
+				'count' => collection('users')->count(),
+				'connected_accounts' => array(
+					'twitter' => collection('users')->count(array('connected_accounts.type' => 'twitter'))
+				)
+			),
 			'collections' => array(
 				'count' => collection('collections')->count(),
 				'public' => collection('collections')->count(array('publicly_visible' => true)),
@@ -60,11 +66,17 @@ class Manage_Controller extends Cronycle_Controller
 				]
 			),
 			'feeds' => array(
-				'count'         => collection('feeds')->count(),
+				'count'         => collection('feeds')->count(array('type' => 'feed')),
 				'processed'     => collection('feeds')->count(array('processed_at' => ['$gt' => 1])),
 				'not_processed' => collection('feeds')->count(array('processed_at' => 0)),
 				'outdated'      => collection('feeds')->count(array('processed_at' => ['$lt' => time() - 3600])),
 				'broken'        => collection('feeds')->count(array('failed_count' => ['$gt' => 4]))
+			),
+			'tweets' => array(
+				'sources' => collection('feeds')->count(array('type' => 'twitter_user')),
+				'count' => collection('articles')->count(array('type' => 'tweet')),
+				'processed' => collection('articles')->count(array('type' => 'tweet', 'fetched_at' => array('$gt' => 0))),
+				'not_processed' => collection('articles')->count(array('type' => 'tweet', 'fetched_at' => 0))
 			),
 			'articles' => array(
 				'count' => collection('articles')->count(),
@@ -76,7 +88,9 @@ class Manage_Controller extends Cronycle_Controller
 				'average_per_feed' => round(collection('articles')->count() / collection('feeds')->count())
 			),
 			'workers' => array(
-				'downloader' => $this->_process_is_running('start_downloader') ? 'running' : 'stopped'
+				'downloader' => $this->_process_is_running('start_downloader') ? 'running' : 'stopped',
+				'followers' => $this->_process_is_running('start_followers_updater') ? 'running' : 'stopped',
+				'tweets' => $this->_process_is_running('start_tweets_downloader') ? 'running' : 'stopped'
 			)
 		));
 	}

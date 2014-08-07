@@ -35,10 +35,44 @@ class Service_Controller extends CI_Controller
     }
   }
 
-  public function update_followers()
+  public function start_followers_updater()
   {
+    set_time_limit(0);
+    ini_set("memory_limit", "256M");
+
     $this->load->model('model_feeds', 'feeds');
 
-    echo $this->feeds->update_twitter_followers(7);
+    _log("Followers updater worker started!");
+
+    while (true)
+    {
+      echo 'Updated ' . $this->feeds->update_twitter_followers() . " followers.\r\n";
+      sleep(300);
+    }
+  }
+
+  public function start_tweets_downloader()
+  {
+    set_time_limit(0);
+    ini_set("memory_limit","128M");
+
+    $this->load->model('model_feeds', 'feeds');
+    $this->load->library('twitter');
+
+    while (true)
+    {
+      $added = $this->feeds->download_tweets();
+
+      if ($added == 0)
+      {
+        sleep(30);
+      }
+      else
+      {
+
+      }
+    }
+
+
   }
 }
