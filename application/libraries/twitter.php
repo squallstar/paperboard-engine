@@ -16,6 +16,8 @@ Class Twitter
 {
 	private $t;
 
+	private $_user_id;
+
 	public function __construct()
 	{
 		$this->t = new tmhOAuth(array(
@@ -63,6 +65,14 @@ Class Twitter
 		$this->t->config['user_secret'] = $this->session->userdata('oauth_token_secret');
 	}
 
+	public function set_local_token($account)
+	{
+		$this->_user_id = $account['user_id'];
+
+		$this->t->config['user_token']  = $account['oauth_token'];
+		$this->t->config['user_secret'] = $account['oauth_token_secret'];
+	}
+
 	//return access_token or FALSE
 	public function get_accesstoken()
 	{
@@ -107,6 +117,50 @@ Class Twitter
 	public function error()
 	{
 		log_message('error', 'Twitter: ' . $this->t->response['response']);
+	}
+
+	public function get_friends()
+	{
+		$params = array(
+			'user_id' => $this->_user_id,
+			'count' => 200,
+			'skip_status' => true,
+			'include_user_entities' => false,
+			'cursor' => -1
+		);
+
+		$friends = [];
+
+		while ($params['cursor'] != 0)
+		{
+			$code = $this->t->request('GET', $this->t->url('1.1/friends/list'), $params);
+
+			if ($code == 200)
+			{
+				$response = json_decode($this->t->response['response'], false);
+
+				$params['cursor'] = $response->next_cursor ? intval($response->next_cursor) : 0;
+
+				foreach ($response->users as &$user)
+				{
+					$friends[] = array(
+						'id' => $user->id,
+						'name' => $user->name,
+						'screen_name' => $user->screen_name,
+						'avatar' => $user->profile_background_image_url_https
+					);
+				}
+
+				unset($user);
+				unset($response);
+			}
+			else
+			{
+				$params['cursor'] = 0;
+			}
+		}
+
+		return $friends;
 	}
 
 	public function get_users($data = array())

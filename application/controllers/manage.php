@@ -116,6 +116,7 @@ class Manage_Controller extends Cronycle_Controller
 		$cat->ensureIndex(array('id' => 1), array('unique' => true));
 		$cat->ensureIndex(array('user_id' => 1));
 		$cat->ensureIndex(array('children.id' => 1));
+		$cat->ensureIndex(array('source_uri' => 1));
 
 		$cat = new MongoCollection($this->db, 'feeds');
 		$cat->ensureIndex(array('type' => 1));

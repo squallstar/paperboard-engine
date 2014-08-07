@@ -25,6 +25,11 @@ Class Model_users extends CI_Model
     return $user_id . md5($user_id . microtime());
   }
 
+  public function set_user($user)
+  {
+    $this->_user = $user;
+  }
+
   public function login($email, $password)
   {
     $user = collection('users')->findOne(

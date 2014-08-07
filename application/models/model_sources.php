@@ -19,7 +19,7 @@ Class Model_sources extends CI_Model
 
   public function add_feed_category($name = 'New category')
   {
-    $id = newid();
+    $id = newid('c');
 
     $data = array(
       'id'          => $id,
@@ -44,35 +44,33 @@ Class Model_sources extends CI_Model
     return $res ? $data : false;
   }
 
-  public function add_category($type, $name)
+  public function add_twitter_category($source_uri, $screen_name, $full_name = '')
   {
-    $name = strip_tags($name);
+    $id = newid('t');
 
     $data = array(
       'id'          => $id,
-      'text'        => $name,
-      'type'        => $type,
-      'source_uri'  => 'category:' . $id,
+      'text'        => $screen_name,
+      'sub_text'    => $full_name,
+      'type'        => 'twitter_account',
+      'source_uri'  => $source_uri,
       'user_id'     => $this->users->get('_id'),
       'can_be_renamed' => false,
       'can_be_deleted' => true,
       'can_be_hidden' => false,
-      'can_be_feed_parent' => true,
+      'can_be_feed_parent' => false,
       'child_count' => 0,
       'broken' => false,
       'children' => []
     );
 
-    if ($type == 'twitter_account')
-    {
-      collection('user_categories')->remove(
-        array(
-          'user_id'     => $this->users->get('_id'),
-          'text'        => $name
-        ),
-        array('justOne' => true)
-      );
-    }
+    collection('user_categories')->remove(
+      array(
+        'user_id'     => $this->users->get('_id'),
+        'text'        => $screen_name
+      ),
+      array('justOne' => true)
+    );
 
     $res = collection('user_categories')->save($data);
 
@@ -82,24 +80,41 @@ Class Model_sources extends CI_Model
     return $res ? $data : false;
   }
 
+  public function add_twitter_person($category_id, $data = array())
+  {
+    return $this->_add_feed($category_id, array(
+      'text' => '@' . $data['screen_name'],
+      'sub_text' => $data['name'],
+      'type' => 'twitter_user',
+      'can_be_deleted' => false,
+      'can_be_hidden' => true
+    ));
+  }
+
   public function add_feed($category_id, $title, $url)
   {
-    $title = strip_tags($title);
+    return $this->_add_feed($category_id, ['text' => $title, 'sub_text' => $url]);
+  }
+
+  private function _add_feed($category_id, $data = array())
+  {
+    $data['text'] = strip_tags($data['text']);
+    $data['type'] = isset($data['type']) ? $data['type'] : 'feed';
 
     $this->load->model('model_feeds', 'feeds');
-    $feed_id = $this->feeds->save($title, $url)->{'$id'};
+    $feed_id = $this->feeds->save($data['type'], $data['text'], $data['sub_text'])->{'$id'};
 
     if (!$feed_id) return false;
 
     $data = [
       'id' => $feed_id,
       'type' => 'feed',
-      'source_uri' => 'feed:' . $feed_id,
-      'text' => $title,
-      'sub_text' => $url,
+      'source_uri' => $data['type'] . ':' . $feed_id,
+      'text' => $data['text'],
+      'sub_text' => $data['sub_text'],
       'can_be_renamed' => false,
-      'can_be_deleted' => true,
-      'can_be_hidden' => false,
+      'can_be_deleted' => isset($data['can_be_deleted']) ? $data['can_be_deleted'] : false,
+      'can_be_hidden' => isset($data['can_be_hidden']) ? $data['can_be_hidden'] : false,
       'can_be_feed_parent' => false,
       'broken' => false
     ];
@@ -128,7 +143,8 @@ Class Model_sources extends CI_Model
         ),
         array(
           'private_id' => true,
-          'sources' => true
+          'sources' => true,
+          'filters' => true
         )
       );
 
@@ -224,6 +240,17 @@ Class Model_sources extends CI_Model
     unset($category);
 
     return $data;
+  }
+
+  public function get_user_folder_by_source_id($source_id)
+  {
+    return collection('user_categories')->findOne(
+      array(
+        'source_uri' => $source_id,
+        'user_id' => $this->users->get('_id')
+      ),
+      array('_id' => false, 'user_id' => false)
+    );
   }
 
   public function tree($sources = array(), $return_only_ids = false)

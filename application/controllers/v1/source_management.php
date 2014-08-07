@@ -153,14 +153,14 @@ class Source_management_Controller extends Cronycle_Controller
 
       if ($user)
       {
-        $account_id = 'twitter:' . $user->id;
+        $account_id = 'twitter_account:' . $user->id;
 
         collection('users')->update(
           array('_id' => $this->users->get('_id')),
           array(
             '$pull' => array(
               'connected_accounts' => array(
-                '_id' => $account_id
+                'id' => $account_id
               )
             )
           )
@@ -178,11 +178,14 @@ class Source_management_Controller extends Cronycle_Controller
             ),
             '$push' => array(
               'connected_accounts' => array(
-                '_id' => $account_id,
+                'id' => $account_id,
                 'connected_at' => time(),
                 'type' => 'twitter',
                 'access_token' => $access_token,
-                'following' => $user->friends_count
+                'following' => array(
+                  'count' => $user->friends_count,
+                  'updated_at' => 0
+                )
               )
             )
           )
@@ -190,13 +193,15 @@ class Source_management_Controller extends Cronycle_Controller
 
         if ($res)
         {
-          $this->load->model('model_sources', 'sourcs');
-          $res = $this->sources->add_category('twitter_account', '@' . $user->screen_name);
+          $res = $this->sources->add_twitter_category($account_id, '@' . $user->screen_name, $user->name);
 
           if (!$res)
           {
             return $this->json(422, ['errors' => ['Cannot add the twitter source']]);
           }
+
+          $this->load->model('model_feeds', 'feeds');
+          $this->feeds->update_twitter_followers($this->users->get('_id'));
 
           $cb = $this->session->userdata('callback');
           $this->session->unset_userdata('callback');

@@ -26,11 +26,19 @@ class Service_Controller extends CI_Controller
 
     _log("Downloader worker started!");
 
-    while (true) {
+    while (true)
+    {
       if (!$this->feeds->download())
       {
-        sleep(5);
+        sleep(4);
       }
     }
+  }
+
+  public function update_followers()
+  {
+    $this->load->model('model_feeds', 'feeds');
+
+    echo $this->feeds->update_twitter_followers(7);
   }
 }
