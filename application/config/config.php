@@ -18,6 +18,17 @@ $config['base_url']	= '';
 
 /*
 |--------------------------------------------------------------------------
+| Twitter Consumer keys
+|--------------------------------------------------------------------------
+|
+| https://apps.twitter.com/app/6413682/keys
+|
+*/
+$config['twitter_consumer_key'] = '6MMo4l9jicpOKGAOZubTWTgq4';
+$config['twitter_consumer_secret'] = 'FiBsNbjAul4nVqo1mrkuIs0l2mKEEZHaEwEN6m1NHRSub1SXwG';
+
+/*
+|--------------------------------------------------------------------------
 | MongoDB - Database connection settings
 |--------------------------------------------------------------------------
 |
@@ -35,7 +46,7 @@ define('DBNAME', 'cronyclesandbox');
 | variable so that it is blank.
 |
 */
-$config['index_page'] = 'index.php';
+$config['index_page'] = '';
 
 /*
 |--------------------------------------------------------------------------

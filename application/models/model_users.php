@@ -13,6 +13,7 @@
 Class Model_users extends CI_Model
 {
   private $_user;
+  private $_auth_token;
 
   public function __construct()
   {
@@ -104,7 +105,13 @@ Class Model_users extends CI_Model
       array('_id', 'full_name', 'avatar.small')
     );
 
-    return $this->_user ? true : false;
+    if ($this->_user)
+    {
+      $this->_auth_token = $token;
+      return true;
+    }
+
+    return false;
   }
 
   public function get($key = null)
@@ -115,6 +122,11 @@ Class Model_users extends CI_Model
     }
 
     return $this->_user;
+  }
+
+  public function token()
+  {
+    return $this->_auth_token;
   }
 
   public function sign_up($data)
@@ -177,7 +189,8 @@ Class Model_users extends CI_Model
       array('_id' => $id),
       array(
         'auth_token' => false,
-        'password'   => false
+        'password'   => false,
+        'connected_accounts.access_token' => false
       )
     );
 

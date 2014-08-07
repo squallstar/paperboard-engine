@@ -44,6 +44,44 @@ Class Model_sources extends CI_Model
     return $res ? $data : false;
   }
 
+  public function add_category($type, $name)
+  {
+    $name = strip_tags($name);
+
+    $data = array(
+      'id'          => $id,
+      'text'        => $name,
+      'type'        => $type,
+      'source_uri'  => 'category:' . $id,
+      'user_id'     => $this->users->get('_id'),
+      'can_be_renamed' => false,
+      'can_be_deleted' => true,
+      'can_be_hidden' => false,
+      'can_be_feed_parent' => true,
+      'child_count' => 0,
+      'broken' => false,
+      'children' => []
+    );
+
+    if ($type == 'twitter_account')
+    {
+      collection('user_categories')->remove(
+        array(
+          'user_id'     => $this->users->get('_id'),
+          'text'        => $name
+        ),
+        array('justOne' => true)
+      );
+    }
+
+    $res = collection('user_categories')->save($data);
+
+    unset($data['_id']);
+    unset($data['user_id']);
+
+    return $res ? $data : false;
+  }
+
   public function add_feed($category_id, $title, $url)
   {
     $title = strip_tags($title);
@@ -157,12 +195,35 @@ Class Model_sources extends CI_Model
     return $res ? true : false;
   }
 
-  public function get_user_feed_categories()
+  // public function get_user_feed_categories()
+  // {
+  //   return iterator_to_array(collection('user_categories')->find(
+  //     array('user_id' => $this->users->get('_id')),
+  //     array('_id' => false, 'user_id' => false)
+  //   ), false);
+  // }
+
+  public function get_user_categories()
   {
-    return iterator_to_array(collection('user_categories')->find(
+    $res = iterator_to_array(collection('user_categories')->find(
       array('user_id' => $this->users->get('_id')),
       array('_id' => false, 'user_id' => false)
     ), false);
+
+    $data = array(
+      'twitter' => array(),
+      'feed' => array()
+    );
+
+    foreach ($res as &$category)
+    {
+      if ($category['type'] == 'twitter_account') $data['twitter'][] = $category;
+      else $data['feed'][] = $category;
+    }
+
+    unset($category);
+
+    return $data;
   }
 
   public function tree($sources = array(), $return_only_ids = false)

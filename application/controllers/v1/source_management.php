@@ -24,10 +24,7 @@ class Source_management_Controller extends Cronycle_Controller
 
     if (!$this->require_token()) return;
 
-    $this->json(200, array(
-      'twitter' => array(),
-      'feed' => $this->sources->get_user_feed_categories()
-    ));
+    $this->json(200, $this->sources->get_user_categories());
   }
 
   public function collection_nodes($collection_id)
@@ -136,5 +133,84 @@ class Source_management_Controller extends Cronycle_Controller
     {
       $this->json(400);
     }
+  }
+
+  public function add_twitter_account()
+  {
+    if (!$this->require_token()) return;
+
+    $this->load->helper('url');
+    $this->load->library(['twitter', 'session']);
+
+    $token = $this->users->token();
+
+    if($this->input->get('oauth_verifier'))
+    {
+      $this->twitter->set_token();
+
+      $access_token = $this->twitter->get_accesstoken();
+      $user = $this->twitter->verify_credentials();
+
+      if ($user)
+      {
+        $account_id = 'twitter:' . $user->id;
+
+        collection('users')->update(
+          array('_id' => $this->users->get('_id')),
+          array(
+            '$pull' => array(
+              'connected_accounts' => array(
+                '_id' => $account_id
+              )
+            )
+          )
+        );
+
+        $res = collection('users')->update(
+          array('_id' => $this->users->get('_id')),
+          array(
+            '$set' => array(
+              'full_name' => $user->name,
+              'nickname' => $user->screen_name,
+              'avatar.small'  => $user->profile_image_url_https,
+              'avatar.medium' => $user->profile_image_url_https,
+              'avatar.high'   => $user->profile_image_url_https
+            ),
+            '$push' => array(
+              'connected_accounts' => array(
+                '_id' => $account_id,
+                'connected_at' => time(),
+                'type' => 'twitter',
+                'access_token' => $access_token,
+                'following' => $user->friends_count
+              )
+            )
+          )
+        );
+
+        if ($res)
+        {
+          $this->load->model('model_sources', 'sourcs');
+          $res = $this->sources->add_category('twitter_account', '@' . $user->screen_name);
+
+          if (!$res)
+          {
+            return $this->json(422, ['errors' => ['Cannot add the twitter source']]);
+          }
+
+          $cb = $this->session->userdata('callback');
+          $this->session->unset_userdata('callback');
+
+          return redirect($cb ? $cb : 'https://hhvm.cronycle.com/mycronycle');
+        }
+        else
+        {
+          return $this->json(422, ['errors' => ['Cannot add the twitter account']]);
+        }
+      }
+    }
+
+    $this->session->set_userdata('callback', $this->input->get('d'));
+    redirect($this->twitter->get_loginurl($token));
   }
 }

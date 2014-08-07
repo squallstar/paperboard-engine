@@ -93,6 +93,7 @@ class Manage_Controller extends Cronycle_Controller
 		$users->ensureIndex(array('email' => 1), array('unique' => true));
 		$users->ensureIndex(array('password' => 1));
 		$users->ensureIndex(array('auth_token' => 1), array('unique' => true));
+		$users->ensureIndex(array('connected_accounts.id' => 1));
 
 		$cats = new MongoCollection($this->db, 'categories');
 		$cats->ensureIndex(array('id' => 1), array('unique' => true));
@@ -117,6 +118,7 @@ class Manage_Controller extends Cronycle_Controller
 		$cat->ensureIndex(array('children.id' => 1));
 
 		$cat = new MongoCollection($this->db, 'feeds');
+		$cat->ensureIndex(array('type' => 1));
 		$cat->ensureIndex(array('url' => 1), array('unique' => true));
 		$cat->ensureIndex(array('processed_at' => 1));
 		$cat->ensureIndex(array('failed_count' => 1));

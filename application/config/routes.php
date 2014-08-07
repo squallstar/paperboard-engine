@@ -22,5 +22,8 @@ $route['v1/source_management/([A-z0-9]+)/add_feed'] = 'v1/source_management/add_
 $route['v1/source_management/([A-z0-9]+)/rename'] = 'v1/source_management/rename_category/$1';
 $route['v1/source_management/([A-z0-9]+)'] = 'v1/source_management/node/$1';
 
+$route['v1/source_management/add_twitter_account'] = 'v1/source_management/add_twitter_account';
+$route['auth/twitter'] = 'v1/source_management/add_twitter_account';
+
 /* End of file routes.php */
 /* Location: ./application/config/routes.php */
