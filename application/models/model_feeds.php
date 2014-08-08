@@ -217,6 +217,8 @@ Class Model_feeds extends CI_Model
 
         $tweets = $this->twitter->get_tweets();
 
+        _log("Processing " . count($tweets) . " tweets.");
+
         foreach ($tweets as &$tweet)
         {
           $ex_id = $tweet['sources'][0]['external_id'];
@@ -238,6 +240,8 @@ Class Model_feeds extends CI_Model
                 'screen_name' => $tweet['sources'][0]['screen_name'],
                 'avatar' => $tweet['sources'][0]['profile_image_url']
               ));
+
+              _log("New twitter source added: " . $tweet['sources'][0]['screen_name']);
             }
             else
             {

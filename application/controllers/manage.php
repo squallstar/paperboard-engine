@@ -67,10 +67,10 @@ class Manage_Controller extends Cronycle_Controller
 			),
 			'feeds' => array(
 				'count'         => collection('feeds')->count(array('type' => 'feed')),
-				'processed'     => collection('feeds')->count(array('processed_at' => ['$gt' => 1])),
-				'not_processed' => collection('feeds')->count(array('processed_at' => 0)),
-				'outdated'      => collection('feeds')->count(array('processed_at' => ['$lt' => time() - 3600])),
-				'broken'        => collection('feeds')->count(array('failed_count' => ['$gt' => 4]))
+				'processed'     => collection('feeds')->count(array('type' => 'feed', 'processed_at' => ['$gt' => 1])),
+				'not_processed' => collection('feeds')->count(array('type' => 'feed', 'processed_at' => 0)),
+				'outdated'      => collection('feeds')->count(array('type' => 'feed', 'processed_at' => ['$lt' => time() - 3600])),
+				'broken'        => collection('feeds')->count(array('type' => 'feed', 'failed_count' => ['$gt' => 4]))
 			),
 			'tweets' => array(
 				'sources' => collection('feeds')->count(array('type' => 'twitter_user')),
@@ -133,6 +133,7 @@ class Manage_Controller extends Cronycle_Controller
 		$cat = new MongoCollection($this->db, 'user_categories');
 		$cat->ensureIndex(array('id' => 1), array('unique' => true));
 		$cat->ensureIndex(array('user_id' => 1));
+		$cat->ensureIndex(array('text' => 1));
 		$cat->ensureIndex(array('children.id' => 1));
 		$cat->ensureIndex(array('source_uri' => 1));
 

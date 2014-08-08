@@ -30,3 +30,10 @@ View the running processes
 To kill a single process (downloader, tweets, followers)
 
     sudo stop service.cronycle.com service="downloader"
+  
+  
+## Engine
+
+To restart the engine:
+
+    sudo initctl emit cronycle-stop && sudo webrestart && sudo service cronycle start

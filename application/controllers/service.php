@@ -46,8 +46,16 @@ class Service_Controller extends CI_Controller
 
     while (true)
     {
-      echo 'Updated ' . $this->feeds->update_twitter_followers() . " followers.\r\n";
-      sleep(300);
+      $count = $this->feeds->update_twitter_followers();
+
+      if ($count === FALSE)
+      {
+        _log("Nothing to update.");
+        sleep(300);
+      } else {
+        echo 'Updated ' . $count . " followers.\r\n";
+        sleep(200);
+      }
     }
   }
 
@@ -58,6 +66,8 @@ class Service_Controller extends CI_Controller
 
     $this->load->model('model_feeds', 'feeds');
     $this->load->library('twitter');
+
+    _log("Tweets downloader worker started!");
 
     while (true)
     {

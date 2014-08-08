@@ -106,6 +106,8 @@ class Source_management_Controller extends Cronycle_Controller
 
       if ($feed)
       {
+        $this->sources->reorder_category_children($category_id);
+
         $this->json(201, $feed);
       }
       else

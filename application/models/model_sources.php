@@ -17,6 +17,27 @@ Class Model_sources extends CI_Model
     parent::__construct();
   }
 
+  public function reorder_category_children($category_id)
+  {
+    return collection('user_categories')->update(
+      array(
+        'user_id' => $this->users->get('_id'),
+        'id' => $category_id
+      ),
+      array(
+        '$push' => [
+          'children' => [
+            '$each' => [],
+            '$sort' => ['text' => 1]
+          ]
+        ],
+        '$inc' => [
+          'child_count' => 1
+        ]
+      )
+    );
+  }
+
   public function add_feed_category($name = 'New category')
   {
     $id = newid('c');
@@ -111,7 +132,7 @@ Class Model_sources extends CI_Model
 
     $data = [
       'id' => $feed_id,
-      'type' => 'feed',
+      'type' => $data['type'],
       'source_uri' => $data['type'] . ':' . $feed_id,
       'text' => $data['text'],
       'sub_text' => $data['sub_text'],
@@ -227,7 +248,7 @@ Class Model_sources extends CI_Model
     $res = iterator_to_array(collection('user_categories')->find(
       array('user_id' => $this->users->get('_id')),
       array('_id' => false, 'user_id' => false)
-    ), false);
+    )->sort(array('text' => 1)), false);
 
     $data = array(
       'twitter' => array(),

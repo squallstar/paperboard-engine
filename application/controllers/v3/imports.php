@@ -27,6 +27,10 @@ class Imports_Controller extends Cronycle_Controller
       return $this->json(422, ['errors' => ['OPML file not provided']]);
     }
 
+    ignore_user_abort(true);
+    set_time_limit(0);
+    ini_set("memory_limit", "256M");
+
     $this->load->model('model_sources', 'sources');
 
     $file = file_get_contents($_FILES['file']['tmp_name']);
@@ -65,6 +69,8 @@ class Imports_Controller extends Cronycle_Controller
           $this->sources->add_feed($cat['id'], (string)$rss['title'], (string)$rss['xmlUrl']);
           $n_feed++;
         }
+
+        $this->sources->reorder_category_children($cat['id']);
 
         $n_cat++;
       }
