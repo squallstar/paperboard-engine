@@ -89,6 +89,11 @@ Class Model_collections extends CI_Model
 
     if ($res)
     {
+      collection('users')->update(
+        ['_id' => $this->users->get('_id')],
+        ['$inc' => ['total_collections_count' => 1]]
+      );
+
       unset($data['_id']);
       unset($data['feeds']);
       return $data;
@@ -158,6 +163,11 @@ Class Model_collections extends CI_Model
 
   public function delete($collection_id)
   {
+    collection('users')->update(
+      ['_id' => $this->users->get('_id')],
+      ['$inc' => ['total_collections_count' => -1]]
+    );
+
     return collection('collections')->remove(
       array(
         'id' => $collection_id
