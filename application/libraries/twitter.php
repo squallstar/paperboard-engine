@@ -263,7 +263,7 @@ Class Twitter
 				{
 					if ($media->type == 'photo')
 					{
-						$data['lead_image'] = array(
+						$d['lead_image'] = array(
 			        'type' => 'image',
 			        'url_original' => $media->media_url,
 			        'url_archived_small' => $media->media_url
