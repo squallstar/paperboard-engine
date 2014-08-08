@@ -39,12 +39,7 @@ class Source_management_Controller extends Cronycle_Controller
 
     if ($collection)
     {
-      $tree = $this->sources->tree(array_values($collection['sources']));
-
-      $this->json(200, array(
-        'twitter' => array(),
-        'feed' => $tree
-      ));
+      $this->json(200, $this->sources->tree(array_values($collection['sources'])));
     }
     else
     {
@@ -205,6 +200,8 @@ class Source_management_Controller extends Cronycle_Controller
 
           $this->load->model('model_feeds', 'feeds');
           $this->feeds->update_twitter_followers($this->users->get('_id'));
+
+          $this->sources->reorder_category_children($res['id']);
 
           $cb = $this->session->userdata('callback');
           $this->session->unset_userdata('callback');

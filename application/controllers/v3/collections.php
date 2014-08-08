@@ -180,7 +180,8 @@ class Collections_Controller extends Cronycle_Controller
 
     $collection = $this->collections->find($collection_id, array(
       '_id' => false,
-      'sources' => false
+      'sources' => false,
+      'feeds' => false
     ));
 
     if ($collection)

@@ -288,8 +288,19 @@ Class Model_sources extends CI_Model
     $feeds = [];
 
     foreach ($sources as $source) {
-      if (strpos($source, 'category:') === 0) $categories[] = str_replace('category:', '', $source);
-      else if (strpos($source, 'feed:') === 0) $feeds[] = str_replace('feed:', '', $source);
+      list($type, $id) = explode(':', $source);
+
+      switch ($type) {
+        case 'feed':
+        case 'twitter_user':
+          $feeds[] = $id;
+          break;
+
+        case 'category':
+        case 'twitter_account':
+          $categories[] = $id;
+          break;
+      }
     }
 
     if ($return_only_ids)
@@ -301,7 +312,7 @@ Class Model_sources extends CI_Model
         $nodes = [];
 
         foreach ($feeds as $feed) {
-          $nodes[] = str_replace('feed:', '', $feed);
+          $nodes[] = str_replace(['feed:', 'twitter_user:'], '', $feed);
         }
 
         return $nodes;
@@ -378,21 +389,37 @@ Class Model_sources extends CI_Model
           }
         }
       }
+
+      return $nodes;
     }
     else
     {
+      $data = [
+        'twitter' => [],
+        'feed' => []
+      ];
+
       foreach ($res as $category)
       {
-        $category['children'] = array_values(array_filter($category['children'], function($feed) use($feeds)
+        if (!in_array($category['id'], $categories))
         {
-          return in_array($feed['id'], $feeds);
-        }));
+          //Filters children when category was not fully selected
+          $category['children'] = array_values(array_filter($category['children'], function($feed) use($feeds)
+          {
+            return in_array($feed['id'], $feeds);
+          }));
+        }
+        else
+        {
+          $category['children'] = [];
+        }
 
-        $nodes[] = $category;
+        if ($category['type'] == 'feed_category') $data['feed'][] = $category;
+        else $data['twitter'][] = $category;
       }
-    }
 
-    return $nodes;
+      return $data;
+    }
   }
 
   public function tree_ids()
