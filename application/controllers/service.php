@@ -54,7 +54,7 @@ class Service_Controller extends CI_Controller
   public function start_tweets_downloader()
   {
     set_time_limit(0);
-    ini_set("memory_limit","128M");
+    ini_set("memory_limit", "256M");
 
     $this->load->model('model_feeds', 'feeds');
     $this->load->library('twitter');

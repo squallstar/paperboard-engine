@@ -76,7 +76,11 @@ class Manage_Controller extends Cronycle_Controller
 				'sources' => collection('feeds')->count(array('type' => 'twitter_user')),
 				'count' => collection('articles')->count(array('type' => 'tweet')),
 				'processed' => collection('articles')->count(array('type' => 'tweet', 'fetched_at' => array('$gt' => 0))),
-				'not_processed' => collection('articles')->count(array('type' => 'tweet', 'fetched_at' => 0))
+				'not_processed' => collection('articles')->count(array('type' => 'tweet', 'fetched_at' => 0)),
+				'added' => array(
+					'today' => collection('articles')->count(array('type' => 'tweet', 'processed_at' => ['$gt' => $today])),
+					'yesterday' => collection('articles')->count(array('type' => 'tweet', 'processed_at' => ['$lt' => $today, '$gt' => strtotime("-1 day", $today)]))
+				)
 			),
 			'articles' => array(
 				'count' => collection('articles')->count(),
