@@ -65,16 +65,14 @@ Class Model_sources extends CI_Model
     return $res ? $data : false;
   }
 
-  public function add_twitter_category($source_uri, $screen_name, $full_name = '')
+  public function add_twitter_category($id, $screen_name, $full_name = '')
   {
-    $id = newid('t');
-
     $data = array(
       'id'          => $id,
       'text'        => $screen_name,
       'sub_text'    => $full_name,
       'type'        => 'twitter_account',
-      'source_uri'  => $source_uri,
+      'source_uri'  => 'twitter_account:' . $id,
       'user_id'     => $this->users->get('_id'),
       'can_be_renamed' => false,
       'can_be_deleted' => true,
@@ -321,6 +319,7 @@ Class Model_sources extends CI_Model
       $fields = array(
         '_id' => false,
         'id' => true,
+        'type',
         'children.id' => true
       );
     }

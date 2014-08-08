@@ -150,14 +150,15 @@ class Source_management_Controller extends Cronycle_Controller
 
       if ($user)
       {
-        $account_id = 'twitter_account:' . $user->id;
+        $account_id = newid('t');
+        $source_uri = 'twitter_account:' . $account_id;
 
         collection('users')->update(
           array('_id' => $this->users->get('_id')),
           array(
             '$pull' => array(
               'connected_accounts' => array(
-                'id' => $account_id
+                'id' => $source_uri
               )
             )
           )
@@ -175,7 +176,7 @@ class Source_management_Controller extends Cronycle_Controller
             ),
             '$push' => array(
               'connected_accounts' => array(
-                'id' => $account_id,
+                'id' => $source_uri,
                 'processed_at' => 0,
                 'connected_at' => time(),
                 'type' => 'twitter',

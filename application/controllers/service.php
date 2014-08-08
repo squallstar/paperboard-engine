@@ -75,7 +75,7 @@ class Service_Controller extends CI_Controller
 
       if ($added == 0)
       {
-        sleep(30);
+        sleep(10);
       }
       else
       {

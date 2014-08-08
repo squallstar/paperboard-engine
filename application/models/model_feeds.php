@@ -217,59 +217,62 @@ Class Model_feeds extends CI_Model
 
         $tweets = $this->twitter->get_tweets();
 
-        _log("Processing " . count($tweets) . " tweets.");
+        $count = count($tweets);
 
-        foreach ($tweets as &$tweet)
+        if (is_array($tweets) && $count)
         {
-          $ex_id = $tweet['sources'][0]['external_id'];
+          _log("Processing " . count($tweets) . " tweets.");
 
-          if (!count($sources) || !in_array($ex_id, array_keys($sources)))
+          foreach ($tweets as &$tweet)
           {
-            // Find source on db
-            $source = collection('feeds')->findOne(
-              array('external_id' => $ex_id),
-              array('_id' => true)
-            );
+            $ex_id = $tweet['sources'][0]['external_id'];
 
-            if (!$source)
+            if (!count($sources) || !in_array($ex_id, array_keys($sources)))
             {
-              // Adds the person as a new source
-              $source = $this->sources->add_twitter_person($folder['id'], array(
-                'id' => $ex_id,
-                'name' => $tweet['sources'][0]['full_name'],
-                'screen_name' => $tweet['sources'][0]['screen_name'],
-                'avatar' => $tweet['sources'][0]['profile_image_url']
-              ));
+              // Find source on db
+              $source = collection('feeds')->findOne(
+                array('external_id' => $ex_id),
+                array('_id' => true)
+              );
 
-              _log("New twitter source added: " . $tweet['sources'][0]['screen_name']);
+              if (!$source)
+              {
+                // Adds the person as a new source
+                $source = $this->sources->add_twitter_person($folder['id'], array(
+                  'id' => $ex_id,
+                  'name' => $tweet['sources'][0]['full_name'],
+                  'screen_name' => $tweet['sources'][0]['screen_name'],
+                  'avatar' => $tweet['sources'][0]['profile_image_url']
+                ));
+
+                _log("New twitter source added: " . $tweet['sources'][0]['screen_name']);
+              }
+              else
+              {
+                // Existing
+                $source['id'] = $source['_id']->{'$id'};
+              }
+
+              // Source setup
+              $source['added'] = 0;
+              $sources[$ex_id] = $source;
+
+              $tweet['source'] = $source['id'];
             }
             else
             {
-              // Existing
-              $source['id'] = $source['_id']->{'$id'};
+              $tweet['source'] = $sources[$ex_id]['id'];
             }
 
-            // Source setup
-            $source['added'] = 0;
-            $sources[$ex_id] = $source;
-
-            $tweet['source'] = $source['id'];
-          }
-          else
-          {
-            $tweet['source'] = $sources[$ex_id]['id'];
+            $sources[$ex_id]['added']++;
           }
 
-          $sources[$ex_id]['added']++;
+          _log("Downloaded " . $added . " new tweets for user " . $user['_id']);
         }
 
         unset($tweet);
 
-        $count = count($tweets);
-
-        _log("Downloaded " . $added . " new tweets for user " . $user['_id']);
-
-        if ($count > 0)
+        if (is_array($tweets) && $count > 0)
         {
           try
           {
@@ -281,19 +284,19 @@ Class Model_feeds extends CI_Model
             log_message('error', $e->getMessage());
           }
         }
-      }
 
-      collection('users')->update(
-        array(
-          '_id' => $user['_id'],
-          'connected_accounts.id' => $account['id']
-        ),
-        array(
-          '$set' => array(
-            'connected_accounts.$.processed_at' => time()
+        collection('users')->update(
+          array(
+            '_id' => $user['_id'],
+            'connected_accounts.id' => $account['id']
+          ),
+          array(
+            '$set' => array(
+              'connected_accounts.$.processed_at' => time()
+            )
           )
-        )
-      );
+        );
+      }
     }
 
     foreach ($sources as &$source)
