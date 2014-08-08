@@ -147,7 +147,7 @@ Class Twitter
 						'id' => $user->id,
 						'name' => $user->name,
 						'screen_name' => $user->screen_name,
-						'avatar' => $user->profile_background_image_url_https
+						'avatar' => $user->profile_image_url_https
 					);
 				}
 
@@ -251,7 +251,7 @@ Class Twitter
 						'full_name' => $tweet->user->name,
 						'screen_name' => $tweet->user->screen_name,
 						'type' => 'TwitterUser',
-						'profile_image_url' => $tweet->user->profile_background_image_url_https,
+						'profile_image_url' => $tweet->user->profile_image_url_https,
 						'published_at' => $ts
 					]
 				)

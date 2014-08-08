@@ -247,16 +247,19 @@ class Collections_Controller extends Cronycle_Controller
 
     $this->load->model('model_sources', 'sources');
 
-    $links = $this->collections->links(
-      array(
-        'filters' => array(
-          array(
-            'context' => 'keywords',
-            'filter_value' => $this->input->get('search_query')
-          )
-        ),
-        'feeds' => $this->sources->tree_ids()
+    $search_collection = array(
+      'filters' => array(
+        array(
+          'context' => 'keywords',
+          'filter_value' => $this->input->get('search_query')
+        )
       ),
+      // Just enable the line below to search only using the user sources
+      //'feeds' => $this->sources->tree_ids()
+    );
+
+    $links = $this->collections->links(
+      $search_collection,
       $this->input->get('per_page'),
       $this->input->get('max_timestamp'),
       $this->input->get('min_timestamp')

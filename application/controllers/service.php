@@ -72,17 +72,23 @@ class Service_Controller extends CI_Controller
     while (true)
     {
       $added = $this->feeds->download_tweets();
+      sleep($added == 0 ? 10 : 8);
+    }
+  }
 
-      if ($added == 0)
+  public function start_expander()
+  {
+    set_time_limit(0);
+    ini_set("memory_limit", "256M");
+
+    $this->load->model('model_articles_expander', 'expander');
+
+    while (true)
+    {
+      if ($this->expander->start(30) != 30)
       {
         sleep(10);
       }
-      else
-      {
-
-      }
     }
-
-
   }
 }

@@ -90,7 +90,7 @@ Class Model_feeds extends CI_Model
       return FALSE;
     }
 
-    $this->load->model('model_articles_downloader', 'downloader');
+    $this->load->model('model_feeds_downloader', 'downloader');
 
     $this->_is_downloading = true;
 
@@ -265,6 +265,7 @@ Class Model_feeds extends CI_Model
             }
 
             $sources[$ex_id]['added']++;
+            $added++;
           }
 
           _log("Downloaded " . $added . " new tweets for user " . $user['_id']);

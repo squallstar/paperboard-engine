@@ -84,7 +84,8 @@ class Manage_Controller extends Cronycle_Controller
 			),
 			'articles' => array(
 				'count' => collection('articles')->count(),
-				'fetched' => collection('articles')->count(array('fetched' => true)),
+				'fetched' => collection('articles')->count(array('fetched_at' => array('$gt' => 0))),
+				'not_fetched' => collection('articles')->count(array('fetched_at' => 0)),
 				'added' => [
 					'today' => collection('articles')->count(['processed_at' => ['$gt' => $today]]),
 					'yesterday' => collection('articles')->count(['processed_at' => ['$lt' => $today, '$gt' => strtotime("-1 day", $today)]]),
@@ -92,9 +93,15 @@ class Manage_Controller extends Cronycle_Controller
 				'average_per_feed' => round(collection('articles')->count() / collection('feeds')->count())
 			),
 			'workers' => array(
-				'downloader' => $this->_process_is_running('start_downloader') ? 'running' : 'stopped',
-				'followers' => $this->_process_is_running('start_followers_updater') ? 'running' : 'stopped',
-				'tweets' => $this->_process_is_running('start_tweets_downloader') ? 'running' : 'stopped'
+				'memory' => array(
+					'usage' => round(memory_get_usage() / 1024) . 'Mb'
+				),
+				'processes' => array(
+					'downloader' => $this->_process_is_running('start_downloader') ? 'running' : 'stopped',
+					'expander' => $this->_process_is_running('start_expander') ? 'running' : 'stopped',
+					'followers' => $this->_process_is_running('start_followers_updater') ? 'running' : 'stopped',
+					'tweets' => $this->_process_is_running('start_tweets_downloader') ? 'running' : 'stopped'
+				)
 			)
 		));
 	}
@@ -151,7 +158,7 @@ class Manage_Controller extends Cronycle_Controller
 		$art->ensureIndex(array('id' => 1), array('unique' => true));
 		$art->ensureIndex(array('source' => 1));
 		$art->ensureIndex(array('published_at' => -1));
-		$art->ensureIndex(array('fetched' => 1));
+		$art->ensureIndex(array('fetched_at' => 1));
 		$art->ensureIndex(array('name' => 'text', 'description' => 'text'));
 
 		echo 'done';

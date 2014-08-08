@@ -1,6 +1,6 @@
 <?php
 /**
- * article downloader model
+ * feeds downloader model
  *
  * @package     Cronycle
  * @author      Nicholas Valbusa - info@squallstar.it - @squallstar
@@ -10,7 +10,7 @@
  *
  */
 
-class Model_articles_downloader extends CI_Model
+class Model_feeds_downloader extends CI_Model
 {
   const ARTICLE_CONTENT_LENGTH = 300;
 
@@ -416,6 +416,8 @@ class Model_articles_downloader extends CI_Model
         'url_archived_small' => $img
       );
     }
+
+    $data['fetched_at'] = $img ? time() : 0;
 
     return $data;
   }
