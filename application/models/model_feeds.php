@@ -183,7 +183,7 @@ Class Model_feeds extends CI_Model
     $users = collection('users')->find(
       array(
         'connected_accounts.type' => 'twitter',
-        'connected_accounts.processed_at' => ['$lt' => time() - 120]
+        'connected_accounts.processed_at' => ['$lt' => time() - 80]
       ),
       array(
         '_id' => true,

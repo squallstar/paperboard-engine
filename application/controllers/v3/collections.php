@@ -268,10 +268,55 @@ class Collections_Controller extends Cronycle_Controller
     $this->json(200, iterator_to_array($links, false));
   }
 
+  public function favourite_collection()
+  {
+    if (!$this->require_token()) return;
+
+    $this->set_body_request();
+
+    $id = $this->request['id'];
+
+    if (!$id) return $this->json(400, ['errors' => ['Article ID is required']]);
+
+    $res = $this->method == 'post' ? $this->users->add_favourite($id) : $this->users->remove_favourite($id);
+
+    $this->json($res ? 200 : 422);
+  }
+
   public function favourite_collection_links()
   {
     if (!$this->require_token()) return;
 
-    $this->json(200, array());
+    $favourites = $this->users->get_favourites();
+
+    if (count($favourites))
+    {
+      $favourite_ids = [];
+      foreach ($favourites as $favourite) $favourite_ids[] = $favourite['id'];
+
+      $favourite_collection = [
+        'article_ids' => $favourite_ids
+      ];
+
+      // TODO: favourite order should be calcolated prior to the query (using per_page, min_timestamp, etc)
+
+      $links = iterator_to_array($this->collections->links(
+        $favourite_collection,
+        $this->input->get('per_page'),
+        $this->input->get('max_timestamp'),
+        $this->input->get('min_timestamp')
+      ), false);
+
+      foreach ($links as &$link)
+      {
+        $link['is_favourited'] = true;
+      }
+
+      $this->json(200, $links);
+    }
+    else
+    {
+      $this->json(200, []);
+    }
   }
 }

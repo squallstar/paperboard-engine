@@ -153,12 +153,11 @@ Class Model_users extends CI_Model
       ),
 
       'bucket' => new stdClass,
-
-      'connected_accounts' => array(
-
-      ),
+      'connected_accounts' => [],
 
       'favourite_collection_position' => 99,
+      'favourites' => [],
+
       'has_password' => true,
       'has_to_wait' => false,
       'is_pro' => true,
@@ -195,7 +194,8 @@ Class Model_users extends CI_Model
       array(
         'auth_token' => false,
         'password'   => false,
-        'connected_accounts.access_token' => false
+        'connected_accounts.access_token' => false,
+        'favourites' => false
       )
     );
 
@@ -206,5 +206,41 @@ Class Model_users extends CI_Model
     }
 
     return $u;
+  }
+
+  public function add_favourite($article_id)
+  {
+    return collection('users')->update(
+      ['_id' => $this->_user['_id']],
+      [
+        '$addToSet' => [
+          'favourites' => [
+            'id' => $article_id,
+            'favourited_at' => time()
+          ]
+        ]
+      ]
+    );
+  }
+
+  public function remove_favourite($article_id)
+  {
+    return collection('users')->update(
+      ['_id' => $this->_user['_id']],
+      [
+        '$pull' => [
+          'favourites' => [
+            'id' => $article_id
+          ]
+        ]
+      ]
+    );
+  }
+
+  public function get_favourites()
+  {
+    $res = collection('users')->findOne(['_id' => $this->_user['_id']], ['favourites']);
+
+    return $res ? $res['favourites'] : array();
   }
 }

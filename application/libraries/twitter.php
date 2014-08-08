@@ -217,6 +217,7 @@ Class Twitter
 		}
 
 		$data = json_decode($this->t->response['response']);
+		$tweets = [];
 
 		$now = time();
 
@@ -225,19 +226,24 @@ Class Twitter
 			if (!isset($tweet->entities)) continue;
 			if (!$tweet->entities->urls) continue;
 
+			$id = 'tweet-' . $tweet->id;
+
+			// Check if tweet exists
+			if (collection('articles')->count(['id' => $id])) continue;
+
 			$ts = strtotime($tweet->created_at);
 
 			$url = $tweet->entities->urls[0]->expanded_url;
 
 			$d = array(
-				'id' => $tweet->id,
+				'id' => $id,
 				'type' => 'tweet',
 				'fetched_at' => 0,
 				'processed_at' => $now,
 				'published_at' => $ts,
 				'name' => $tweet->text,
-				'description' => null,
-				'content' => null,
+				'description' => "",
+				'content' => "",
 				'url' => $url,
 				'url_host' => parse_url($url)['host'],
 				'lead_image' => null,
@@ -288,6 +294,10 @@ Class Twitter
 			$tweets[] = $d;
 		}
 
+		unset($d);
+		unset($id);
+		unset($ts);
+		unset($url);
 		unset($tweet);
 		unset($data);
 

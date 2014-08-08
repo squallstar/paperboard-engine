@@ -145,7 +145,14 @@ class Model_articles_expander extends CI_Model
     }
     else
     {
-      $article['name'] = trim($xpath->query('//title')->item(0)->textContent);
+      $title = $xpath->query('//title');
+
+      if ($title->length > 0)
+      {
+        $article['name'] = trim($title->item(0)->textContent);
+      }
+
+      unset($title);
     }
 
     if (isset($metas['og:image']))

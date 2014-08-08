@@ -231,7 +231,7 @@ Class Model_collections extends CI_Model
       );
     }
 
-    if (count($collection['filters']))
+    if (isset($collection['filters']) && count($collection['filters']))
     {
       $text_filters = [];
 
@@ -270,12 +270,17 @@ Class Model_collections extends CI_Model
       }
     }
 
+    if (isset($collection['article_ids']))
+    {
+      $conditions['id'] = ['$in' => $collection['article_ids']];
+    }
+
     $cursor = collection('articles')->find(
       $conditions,
       array(
         '_id' => false,
         'source' => false,
-        'fetched' => false
+        'fetched_at' => false
       )
     );
 

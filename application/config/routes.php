@@ -13,6 +13,7 @@ $route['v3/collections/(p?[A-z0-9]+)/publish'] = 'v3/collections/publish/$1';
 $route['v3/collections/(p?[A-z0-9]+)/source_management'] = 'v1/source_management/collection_nodes/$1';
 $route['v3/search_collection/links'] = 'v3/collections/search_links';
 
+$route['v3/favourite_collection'] = 'v3/collections/favourite_collection';
 $route['v3/favourite_collection/links'] = 'v3/collections/favourite_collection_links';
 
 $route['v4/directory/([A-z0-9]+)'] = 'v4/directory/category_collections/$1';
