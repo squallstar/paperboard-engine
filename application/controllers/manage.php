@@ -144,11 +144,12 @@ class Manage_Controller extends Cronycle_Controller
 		$cat->ensureIndex(array('children.id' => 1));
 		$cat->ensureIndex(array('source_uri' => 1));
 
-		$cat = new MongoCollection($this->db, 'feeds');
-		$cat->ensureIndex(array('type' => 1));
-		$cat->ensureIndex(array('url' => 1), array('unique' => true));
-		$cat->ensureIndex(array('processed_at' => 1));
-		$cat->ensureIndex(array('failed_count' => 1));
+		$feed = new MongoCollection($this->db, 'feeds');
+		$feed->ensureIndex(array('type' => 1));
+		$feed->ensureIndex(array('url' => 1), array('unique' => true));
+		$feed->ensureIndex(array('processed_at' => 1));
+		$feed->ensureIndex(array('failed_count' => 1));
+		$feed->ensureIndex(array('title' => 'text', 'url' => 'text'));
 
 		$counters = new MongoCollection($this->db, 'counters');
 		$counters->insert(array('_id' => 'user_id', 'seq' => 0));
@@ -162,6 +163,22 @@ class Manage_Controller extends Cronycle_Controller
 		$art->ensureIndex(array('name' => 'text', 'description' => 'text'));
 
 		echo 'done';
+	}
 
+	public function test_curl()
+	{
+		$curl = curl_init();
+    curl_setopt($curl, CURLOPT_URL, 'http://ift.tt/1mBGRNJ');
+    curl_setopt($curl, CURLOPT_HEADER, 0);
+    curl_setopt($curl, CURLOPT_TIMEOUT, 7);
+    curl_setopt($curl, CURLOPT_MAXREDIRS, 1);
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+
+    $output = curl_exec($curl);
+
+    curl_close($curl);
+
+    debug($output);die;
 	}
 }

@@ -78,12 +78,17 @@ Class Model_users extends CI_Model
         'password' => md5($password)
       ),
       array(
-        'password' => false
+        'password'   => false,
+        'connected_accounts.access_token' => false,
+        'favourites' => false
       )
     );
 
     if ($u)
     {
+      $u['id'] = $u['_id'];
+      unset($u['_id']);
+
       $data = array(
         'auth_token' => $u['auth_token'],
         'user' => $u

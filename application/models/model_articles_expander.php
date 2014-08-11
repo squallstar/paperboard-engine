@@ -41,10 +41,6 @@ class Model_articles_expander extends CI_Model
 
       _log("Expanded " . $count . " articles");
     }
-    else
-    {
-      _log("Nothing to expand");
-    }
 
     unset($articles);
 
@@ -67,6 +63,7 @@ class Model_articles_expander extends CI_Model
       curl_setopt($curl, CURLOPT_URL, $article['url']);
       curl_setopt($curl, CURLOPT_HEADER, 0);
       curl_setopt($curl, CURLOPT_TIMEOUT, 7);
+      curl_setopt($curl, CURLOPT_MAXREDIRS, 5);
       curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
       curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
 
@@ -162,6 +159,8 @@ class Model_articles_expander extends CI_Model
         'url_original' => $metas['og:image'],
         'url_archived_small' => $metas['og:image']
       );
+
+      $article['images_processed'] = false;
     }
 
     if (isset($metas['og:url']))

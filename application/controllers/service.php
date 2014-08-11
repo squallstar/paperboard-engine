@@ -91,4 +91,20 @@ class Service_Controller extends CI_Controller
       }
     }
   }
+
+  public function start_images_downloader()
+  {
+    set_time_limit(0);
+    ini_set("memory_limit", "256M");
+
+    $this->load->model('model_images_processor', 'images');
+
+    while (true)
+    {
+      if ($this->images->process(30) != 30)
+      {
+        sleep(10);
+      }
+    }
+  }
 }

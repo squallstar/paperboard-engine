@@ -223,8 +223,30 @@ Class Twitter
 
 		foreach ($data as &$tweet)
 		{
-			if (!isset($tweet->entities)) continue;
-			if (!$tweet->entities->urls) continue;
+			$url = false;
+
+			if (isset($tweet->entities) && $tweet->entities->urls)
+			{
+				$url = $tweet->entities->urls[0]->expanded_url;
+			}
+			else
+			{
+				if (isset($tweet->entities->media))
+				{
+					foreach ($tweet->entities->media as &$media)
+					{
+						if ($media->type == 'photo')
+						{
+							$url = $media->media_url;
+							break;
+						}
+					}
+
+					unset($media);
+				}
+			}
+
+			if (!$url) continue;
 
 			$id = 'tweet-' . $tweet->id;
 
@@ -232,8 +254,6 @@ Class Twitter
 			if (collection('articles')->count(['id' => $id])) continue;
 
 			$ts = strtotime($tweet->created_at);
-
-			$url = $tweet->entities->urls[0]->expanded_url;
 
 			$d = array(
 				'id' => $id,
@@ -251,6 +271,7 @@ Class Twitter
 				'show_external_url' => true,
 				'assets' => [],
 				'tags' => [],
+				'images_processed' => true,
 				'sources' => array(
 					[
 						'external_id' => $tweet->user->id,
@@ -274,6 +295,7 @@ Class Twitter
 			        'url_original' => $media->media_url,
 			        'url_archived_small' => $media->media_url
 			      );
+			      $d['images_processed'] = false;
 						break;
 					}
 				}

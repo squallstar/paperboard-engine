@@ -247,19 +247,39 @@ class Collections_Controller extends Cronycle_Controller
 
     $this->load->model('model_sources', 'sources');
 
-    $search_collection = array(
-      'filters' => array(
-        array(
+    $query = $this->input->get('search_query');
+
+    $cond = [];
+
+    if (strpos($query, '@') === 0)
+    {
+      // Search by twitter author
+      $author = collection('feeds')->findOne(
+        ['title' => new MongoRegex("/$query/i")],
+        ['_id' => true]
+      );
+
+      if ($author)
+      {
+        $cond['feeds'] = [$author['_id']->{'$id'}];
+      }
+    }
+
+    if (count($cond) == 0)
+    {
+      $cond['filters'] = [
+        [
           'context' => 'keywords',
-          'filter_value' => $this->input->get('search_query')
-        )
-      ),
-      // Just enable the line below to search only using the user sources
-      //'feeds' => $this->sources->tree_ids()
-    );
+          'filter_value' => $query
+        ]
+      ];
+    }
+
+    // Include the line below in the feeds to search only using the user sources
+    //'feeds' => $this->sources->tree_ids()
 
     $links = $this->collections->links(
-      $search_collection,
+      $cond,
       $this->input->get('per_page'),
       $this->input->get('max_timestamp'),
       $this->input->get('min_timestamp')

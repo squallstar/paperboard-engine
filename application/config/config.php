@@ -29,6 +29,16 @@ $config['twitter_consumer_secret'] = 'FiBsNbjAul4nVqo1mrkuIs0l2mKEEZHaEwEN6m1NHR
 
 /*
 |--------------------------------------------------------------------------
+| Amazon S3 Consumer keys
+|--------------------------------------------------------------------------
+|
+*/
+$config['aws_consumer_key'] = 'AKIAIUSKQAVL6YSIYUFQ';
+$config['aws_consumer_secret'] = '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';
+$config['aws_bucket_name'] = 'cronycle-sandbox';
+
+/*
+|--------------------------------------------------------------------------
 | MongoDB - Database connection settings
 |--------------------------------------------------------------------------
 |

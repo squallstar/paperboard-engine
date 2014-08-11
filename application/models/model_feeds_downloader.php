@@ -415,9 +415,15 @@ class Model_feeds_downloader extends CI_Model
         'url_original' => $img,
         'url_archived_small' => $img
       );
-    }
 
-    $data['fetched_at'] = $img ? time() : 0;
+      $data['fetched_at'] = time();
+      $data['images_processed'] = false;
+    }
+    else
+    {
+      $data['fetched_at'] = 0;
+      $data['images_processed'] = true;
+    }
 
     return $data;
   }
