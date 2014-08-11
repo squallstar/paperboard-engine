@@ -84,13 +84,32 @@ class Manage_Controller extends Cronycle_Controller
 			),
 			'articles' => array(
 				'count' => collection('articles')->count(),
-				'fetched' => collection('articles')->count(array('fetched_at' => array('$gt' => 0))),
-				'not_fetched' => collection('articles')->count(array('fetched_at' => 0)),
+				'expanded' => [
+					'fetched' => collection('articles')->count(array('fetched_at' => array('$gt' => 0))),
+					'not_fetched' => collection('articles')->count(array('fetched_at' => 0)),
+					'fetched_today' => collection('articles')->count(array('fetched_at' => array('$gt' => $today))),
+				],
 				'added' => [
+					'last_hour' => collection('articles')->count(['processed_at' => ['$gt' => time() - 3600]]),
 					'today' => collection('articles')->count(['processed_at' => ['$gt' => $today]]),
 					'yesterday' => collection('articles')->count(['processed_at' => ['$lt' => $today, '$gt' => strtotime("-1 day", $today)]]),
+					'this_week' => collection('articles')->count(['processed_at' => ['$gt' => strtotime("-1 week", time())]])
 				],
-				'average_per_feed' => round(collection('articles')->count() / collection('feeds')->count())
+				'average_per_feed' => round(collection('articles')->count() / collection('feeds')->count()),
+				'images' => array(
+					'with_images' => collection('articles')->count(['lead_image.url_original' => ['$exists' => true]]),
+					'without_images' => collection('articles')->count(['lead_image' => null]),
+					'processed' => [
+						'uploaded' => collection('articles')->count(['images_processed' => true, 'lead_image.url_original' => ['$exists' => true]]),
+						'not_uploaded' => collection('articles')->count(['images_processed' => false, 'lead_image.url_original' => ['$exists' => true]]),
+						'bucket' => $this->config->item('aws_bucket_name'),
+						'resolution' => [
+							'width' => collection('articles')->findOne(['images_processed' => true], ['lead_image' => 1])['lead_image']['width'],
+							'height' => 'auto'
+						],
+						'last_uploaded' => collection('articles')->findOne(['images_processed' => true], ['lead_image' => 1])['lead_image']['url_archived_small']
+					]
+				)
 			),
 			'workers' => array(
 				'memory' => array(
@@ -100,7 +119,8 @@ class Manage_Controller extends Cronycle_Controller
 					'downloader' => $this->_process_is_running('start_downloader') ? 'running' : 'stopped',
 					'expander' => $this->_process_is_running('start_expander') ? 'running' : 'stopped',
 					'followers' => $this->_process_is_running('start_followers_updater') ? 'running' : 'stopped',
-					'tweets' => $this->_process_is_running('start_tweets_downloader') ? 'running' : 'stopped'
+					'tweets' => $this->_process_is_running('start_tweets_downloader') ? 'running' : 'stopped',
+					'images' => $this->_process_is_running('start_images_downloader') ? 'running' : 'stopped'
 				)
 			)
 		));
