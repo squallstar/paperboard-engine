@@ -42,7 +42,7 @@ class Model_images_processor extends CI_Model
           '_id' => true,
           'lead_image.url_original' => true
         ]
-      )->sort(['processed_at' => -1])
+      )->sort(['published_at' => -1])
        ->limit($limit)
     , false);
 

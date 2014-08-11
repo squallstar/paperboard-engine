@@ -50,7 +50,6 @@ class Service_Controller extends CI_Controller
 
       if ($count === FALSE)
       {
-        _log("Nothing to update.");
         sleep(300);
       } else {
         echo 'Updated ' . $count . " followers.\r\n";

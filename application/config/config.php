@@ -33,9 +33,9 @@ $config['twitter_consumer_secret'] = 'FiBsNbjAul4nVqo1mrkuIs0l2mKEEZHaEwEN6m1NHR
 |--------------------------------------------------------------------------
 |
 */
-$config['aws_consumer_key'] = 'AKIAIUSKQAVL6YSIYUFQ';
-$config['aws_consumer_secret'] = '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';
-$config['aws_bucket_name'] = 'cronycle-sandbox';
+$config['aws_consumer_key'] = 'AKIAIAHTPBFSK76RTJOA';
+$config['aws_consumer_secret'] = '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';
+$config['aws_bucket_name'] = 'cronycle-hhvm';
 
 /*
 |--------------------------------------------------------------------------

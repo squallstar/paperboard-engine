@@ -34,6 +34,8 @@ class Manage_Controller extends Cronycle_Controller
 
 	public function status()
 	{
+		$this->load->helper('url');
+
 		$today = strtotime("00:00:00");
 
 		$avg = collection('collections')->aggregate([
@@ -47,6 +49,7 @@ class Manage_Controller extends Cronycle_Controller
 		])['result'][0];
 
 		$this->json(200, array(
+			'live_logs' => site_url('manage/logs'),
 			'users' => array(
 				'count' => collection('users')->count(),
 				'connected_accounts' => array(
@@ -104,10 +107,10 @@ class Manage_Controller extends Cronycle_Controller
 						'not_uploaded' => collection('articles')->count(['images_processed' => false, 'lead_image.url_original' => ['$exists' => true]]),
 						'bucket' => $this->config->item('aws_bucket_name'),
 						'resolution' => [
-							'width' => collection('articles')->findOne(['images_processed' => true], ['lead_image' => 1])['lead_image']['width'],
+							'width' => collection('articles')->findOne(['images_processed' => true, 'lead_image.url_original' => ['$exists' => true]], ['lead_image' => 1])['lead_image']['width'],
 							'height' => 'auto'
 						],
-						'last_uploaded' => collection('articles')->findOne(['images_processed' => true], ['lead_image' => 1])['lead_image']['url_archived_small']
+						'last_uploaded' => collection('articles')->find(['images_processed' => true, 'lead_image.url_original' => ['$exists' => true]], ['lead_image' => 1])->limit(1)->sort(['published_at' => -1])->getNext()['lead_image']['url_archived_small']
 					]
 				)
 			),
@@ -180,6 +183,7 @@ class Manage_Controller extends Cronycle_Controller
 		$art->ensureIndex(array('source' => 1));
 		$art->ensureIndex(array('published_at' => -1));
 		$art->ensureIndex(array('fetched_at' => 1));
+		$art->ensureIndex(array('images_processed' => 1));
 		$art->ensureIndex(array('name' => 'text', 'description' => 'text'));
 
 		echo 'done';
@@ -200,5 +204,51 @@ class Manage_Controller extends Cronycle_Controller
     curl_close($curl);
 
     debug($output);die;
+	}
+
+	public function logs()
+	{
+		$this->load->helper('url');
+
+		echo '<meta http-equiv="refresh" content="5;URL=' . current_url() .'" />';
+		echo '<pre>';
+		echo str_replace(array(date('Y-m-d H:i')), array("<strong style='color:red;background-color:rgba(255,0,0,0.1);'>&rarr; &rarr; &rarr;</strong> " . date('Y-m-d H:i')), shell_exec("tail -n20 /var/log/cronycle/downloader.log /var/log/cronycle/tweets.log /var/log/cronycle/images.log /var/log/cronycle/expander.log /var/log/cronycle/followers.log"));
+		echo '</pre>';
+	}
+
+	public function geckoboard($action)
+	{
+		$today = strtotime("00:00:00");
+
+		switch ($action) {
+			case 'links':
+				return $this->json(200, [
+					'item' => [
+						[
+							'value' => collection('articles')->count(['processed_at' => ['$gt' => $today]]),
+							'label' => 'Added today'
+						],
+						[
+							'value' => collection('articles')->count(['processed_at' => ['$lt' => $today, '$gt' => strtotime("-1 day", $today)]]),
+							'label' => 'Added yesterday'
+						]
+					]
+				]);
+			case 'images':
+				return $this->json(200, [
+					'item' => [
+						[
+							'value' => collection('articles')->count(['images_processed' => true, 'lead_image.url_original' => ['$exists' => true]]),
+							'label' => 'Uploaded to S3',
+							'color' => '00ff00'
+						],
+						[
+							'value' => collection('articles')->count(['images_processed' => false, 'lead_image.url_original' => ['$exists' => true]]),
+							'label' => 'Not uploaded',
+							'color' => 'ff0000'
+						]
+					]
+				]);
+		}
 	}
 }
