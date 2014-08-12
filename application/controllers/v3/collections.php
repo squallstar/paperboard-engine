@@ -32,10 +32,21 @@ class Collections_Controller extends Cronycle_Controller
     {
       $how_many = intval($this->input->get('include_first'));
 
+      $favourites = $this->users->get_favourites(true);
+      $has_favourites = count($favourites) > 0;
+
       foreach ($collections as &$collection)
       {
         $collection['links'] = iterator_to_array($this->collections->links($collection, 10), false);
         unset($collection['feeds']);
+
+        if ($has_favourites)
+        {
+          foreach ($collection['links'] as &$link)
+          {
+            if (in_array($link['id'], $favourites)) $link['is_favourited'] = true;
+          }
+        }
 
         $how_many--;
         if ($how_many == 0) break;
@@ -307,15 +318,12 @@ class Collections_Controller extends Cronycle_Controller
   {
     if (!$this->require_token()) return;
 
-    $favourites = $this->users->get_favourites();
+    $favourites = $this->users->get_favourites(true);
 
     if (count($favourites))
     {
-      $favourite_ids = [];
-      foreach ($favourites as $favourite) $favourite_ids[] = $favourite['id'];
-
       $favourite_collection = [
-        'article_ids' => $favourite_ids
+        'article_ids' => &$favourites
       ];
 
       // TODO: favourite order should be calcolated prior to the query (using per_page, min_timestamp, etc)

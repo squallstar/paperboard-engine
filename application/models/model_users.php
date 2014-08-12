@@ -242,10 +242,33 @@ Class Model_users extends CI_Model
     );
   }
 
-  public function get_favourites()
+  public function get_favourites($just_ids = false)
   {
-    $res = collection('users')->findOne(['_id' => $this->_user['_id']], ['favourites']);
+    $fields = ['_id' => false];
 
-    return $res ? $res['favourites'] : array();
+    if ($just_ids) $fields['favourites.id'] = true;
+    else $fields['favourites'] = true;
+
+    $res = collection('users')->findOne(['_id' => $this->_user['_id']], $fields);
+
+    unset($fields);
+
+    if ($res)
+    {
+      if ($just_ids)
+      {
+        $favourite_ids = [];
+        foreach ($res['favourites'] as &$favourite) $favourite_ids[] = $favourite['id'];
+        unset($favourite);
+        unset($res);
+        return $favourite_ids;
+      }
+      else
+      {
+        return $res;
+      }
+    }
+
+    return array();
   }
 }

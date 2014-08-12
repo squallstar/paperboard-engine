@@ -116,6 +116,9 @@ class Model_images_processor extends CI_Model
       ],
       [
         '$set' => $data
+      ],
+      [
+        'w' => 0
       ]);
     }
 

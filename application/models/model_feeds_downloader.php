@@ -256,7 +256,10 @@ class Model_feeds_downloader extends CI_Model
     if (count($batchArticles))
     {
       try{
-        collection('articles')->batchInsert(array_reverse(array_values($batchArticles)));
+        collection('articles')->batchInsert(
+          array_reverse(array_values($batchArticles)),
+          array('w' => 0)
+        );
       } catch (Exception $e) {
         log_message('error', $e->getMessage());
       }
@@ -405,7 +408,7 @@ class Model_feeds_downloader extends CI_Model
 
     if ($img)
     {
-      if ($img[0] == '/')
+      if (strpos($img, '/') === 0)
       {
         $img = $source['host'] . $img;
       }

@@ -12,6 +12,18 @@
 
 class Collections_Controller extends Cronycle_Controller
 {
+  public function recap()
+  {
+    if (!$this->require_token()) return;
+
+    $this->load->model('model_collections', 'collections');
+
+    $this->json(200, [
+      'collections' => $this->collections->find_mine(),
+      'user' => $this->users->find($this->users->get('_id'))
+    ]);
+  }
+
   public function auto_complete()
   {
     $q = $this->input->get('q');

@@ -202,8 +202,6 @@ class Source_management_Controller extends Cronycle_Controller
           $this->load->model('model_feeds', 'feeds');
           $this->feeds->update_twitter_followers($this->users->get('_id'));
 
-          $this->sources->reorder_category_children($res['id']);
-
           $cb = $this->session->userdata('callback');
           $this->session->unset_userdata('callback');
 

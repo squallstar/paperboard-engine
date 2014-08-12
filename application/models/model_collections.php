@@ -290,7 +290,11 @@ Class Model_collections extends CI_Model
       array(
         '_id' => false,
         'source' => false,
-        'fetched_at' => false
+        'fetched_at' => false,
+        'images_processed' => false,
+        'assets' => false,
+        'type' => false,
+        'lead_image_in_content' => false
       )
     );
 

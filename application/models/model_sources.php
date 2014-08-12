@@ -17,8 +17,11 @@ Class Model_sources extends CI_Model
     parent::__construct();
   }
 
-  public function reorder_category_children($category_id)
+  public function reorder_category_children($category_id, $key = 'text')
   {
+    $order = [];
+    $order[$key] = 1;
+
     return collection('user_categories')->update(
       array(
         'user_id' => $this->users->get('_id'),
@@ -28,12 +31,12 @@ Class Model_sources extends CI_Model
         '$push' => [
           'children' => [
             '$each' => [],
-            '$sort' => ['text' => 1]
+            '$sort' => $order
           ]
-        ],
-        '$inc' => [
-          'child_count' => 1
         ]
+      ),
+      array(
+        'w' => 0
       )
     );
   }
@@ -107,7 +110,8 @@ Class Model_sources extends CI_Model
       'type' => 'twitter_user',
       'can_be_deleted' => false,
       'can_be_hidden' => true,
-      'external_id' => $data['id']
+      'external_id' => $data['id'],
+      'external_key' => strtolower($data['screen_name'])
     ));
   }
 
@@ -138,7 +142,8 @@ Class Model_sources extends CI_Model
       'can_be_deleted' => isset($data['can_be_deleted']) ? $data['can_be_deleted'] : false,
       'can_be_hidden' => isset($data['can_be_hidden']) ? $data['can_be_hidden'] : false,
       'can_be_feed_parent' => false,
-      'broken' => false
+      'broken' => false,
+      'external_key' => isset($data['external_key']) ? $data['external_key'] : null
     ];
 
     $res = collection('user_categories')->update(
