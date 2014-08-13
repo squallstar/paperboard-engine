@@ -35,7 +35,7 @@ class Source_management_Controller extends Cronycle_Controller
 
     $this->load->model('model_collections', 'collections');
 
-    $collection = $this->collections->find($collection_id, array('sources'));
+    $collection = $this->collections->find($collection_id, array('sources' => 1));
 
     if ($collection)
     {

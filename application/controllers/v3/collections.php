@@ -79,6 +79,8 @@ class Collections_Controller extends Cronycle_Controller
 
   public function update($collection_id)
   {
+    if (!$this->require_token()) return;
+
     $this->set_body_request();
 
     if (!isset($this->request['collection']))
@@ -99,7 +101,6 @@ class Collections_Controller extends Cronycle_Controller
   public function publish($collection_id)
   {
     if (!$this->require_token()) return;
-
 
     if ($this->method == 'delete')
     {
@@ -199,7 +200,7 @@ class Collections_Controller extends Cronycle_Controller
     {
       if ($this->method == 'delete')
       {
-        if ($collection['user']['id'] == $this->users->get('_id'))
+        if ($collection['owned_collection'])
         {
           if ($this->collections->delete($collection['id']))
           {
@@ -212,7 +213,14 @@ class Collections_Controller extends Cronycle_Controller
         }
         else
         {
-          return $this->json(400, ['errors' => ['You do not own this collection']]);
+          if ($this->collections->unfollow($collection['id']))
+          {
+            return $this->json(200);
+          }
+          else
+          {
+            return $this->json(422, ['errors' => ['Cannot unfollow the collection']]);
+          }
         }
       }
 
@@ -226,10 +234,6 @@ class Collections_Controller extends Cronycle_Controller
 
   public function view_links($collection_id)
   {
-    if (strpos($collection_id, 'p') !== 0) {
-      if (!$this->require_token()) return;
-    }
-
     $collection = $this->collections->find($collection_id, array(
       'feeds' => true,
       'filters' => true
@@ -244,11 +248,27 @@ class Collections_Controller extends Cronycle_Controller
         $this->input->get('min_timestamp')
       );
 
+      unset($collection);
+
       $this->json(200, iterator_to_array($links, false));
     }
     else
     {
       $this->json(404, ['errors' => ['The collection was not found']]);
+    }
+  }
+
+  public function follow($collection_id)
+  {
+    if (!$this->require_token() || $this->method != 'post') return;
+
+    if ($this->collections->follow($collection_id))
+    {
+      $this->json(200);
+    }
+    else
+    {
+      $this->json(404);
     }
   }
 

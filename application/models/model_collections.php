@@ -19,7 +19,7 @@ Class Model_collections extends CI_Model
 
   private function _default_excluded_fields()
   {
-    return array('_id' => false, 'sources' => false, 'feeds' => false);
+    return array('_id' => false, 'sources' => false, 'feeds' => false, 'followers' => false);
   }
 
   private function _filter_fields($data = array())
@@ -48,30 +48,30 @@ Class Model_collections extends CI_Model
       'name' => 'New collection',
       'description' => '',
       'position' => 0,
-      'owned_collection' => true,
       'publicly_visible' => true,
       'partner_identifier' => null,
       'type' => 'standard',
       'total_links_count' => 0,
       'average_rating' => 0.0,
       'total_ratings' => 0,
-      'changed_since_last_updated' => false,
       'last_updated_at' => time(),
-      'filters_updated_at' => time(),
       'settings' => array(
         'color' => 'green',
         'links' => array(
           'displayStyle' => 'headline+image'
         )
       ),
-      'filters' => array(),
+      'cover_asset' => [],
+      'filters' => [],
+      'followers' => [],
+      'followers_count' => 0,
       'user' => array(
         'id' => $this->users->get('_id'),
         'full_name' => $this->users->get('full_name'),
         'image_url' => $this->users->get('avatar')['small']
       ),
-      'sources' => array(),
-      'feeds' => array()
+      'sources' => [],
+      'feeds' => []
     ), $data);
   }
 
@@ -114,7 +114,7 @@ Class Model_collections extends CI_Model
 
   public function update($collection_id, $data = array(), $return = false)
   {
-    $q = $this->_where_id($collection_id);
+    $q = $this->_where_id($collection_id, true, true);
     $data = $this->_filter_fields($data);
 
     if (isset($data['sources']))
@@ -148,6 +148,7 @@ Class Model_collections extends CI_Model
 
     if ($return)
     {
+      //TODO: this doesn't return the owned_collection status
       return collection('collections')->findAndModify(
         $q,
         array('$set' => $data),
@@ -181,7 +182,24 @@ Class Model_collections extends CI_Model
   public function find($collection_id, $fields = array())
   {
     $q = $this->_where_id($collection_id);
-    return collection('collections')->findOne($q, $fields);
+
+    foreach ($fields as $key => $val) {
+      if ($val == true)
+      {
+        $fields['user'] = true;
+        break;
+      }
+    }
+
+    $collection = collection('collections')->findOne($q, $fields);
+
+    if ($collection)
+    {
+      $this->users->load_user();
+      $collection['owned_collection'] = $collection['user']['id'] == $this->users->get('_id');
+    }
+
+    return $collection;
   }
 
   public function find_mine($include_feeds = false)
@@ -189,34 +207,79 @@ Class Model_collections extends CI_Model
     $fields = $this->collections->_default_excluded_fields();
     if ($include_feeds && isset($fields['feeds'])) unset($fields['feeds']);
 
-    return iterator_to_array(
+    $user_id = $this->users->get('_id');
+
+    $collections = iterator_to_array(
       collection('collections')->find(
-        array(
-          'user.id' => $this->users->get('_id')
-        ),
+        [
+          '$or' => [
+            ['user.id' => $user_id],
+            ['followers.id' => $user_id]
+          ]
+        ],
         $fields
       )->sort(['position' => 1]),
       false
     );
+
+    foreach ($collections as &$collection)
+    {
+      $collection['owned_collection'] = $collection['user']['id'] == $user_id;
+    }
+
+    unset($collection);
+    unset($user_id);
+
+    return $collections;
   }
 
-  private function _where_id($collection_id)
+  private function _where_id($collection_id, $owned_or_followed = true, $owned = false)
   {
     if (strpos($collection_id, 'p') === 0)
     {
       return array('private_id' => $collection_id);
-    } else {
+    }
+    else
+    {
       $this->users->load_user();
-      return array(
-        'id' => intval($collection_id),
-        'user.id' => $this->users->get('_id')
-      );
+      $user_id = $this->users->get('_id');
+
+      if ($owned)
+      {
+        return [
+          'id' => intval($collection_id),
+          'user.id' => $user_id
+        ];
+      }
+      else
+      {
+        if ($owned_or_followed)
+        {
+          return [
+            '$and' => [
+              [
+                'id' => intval($collection_id)
+              ],
+              [
+                '$or' => [
+                  ['user.id' => $user_id],
+                  ['followers.id' => $user_id]
+                ]
+              ]
+            ]
+          ];
+        }
+        else
+        {
+          return ['id' => intval($collection_id)];
+        }
+      }
     }
   }
 
-  public function links(&$collection, $limit = 30, $max_timestamp = null, $min_timestamp = null)
+  public function links(&$collection, $limit = 40, $max_timestamp = null, $min_timestamp = null)
   {
-    $limit = $limit ? intval($limit) : 30;
+    $limit = $limit ? intval($limit) : 40;
 
     $conditions = [];
 
@@ -321,5 +384,41 @@ Class Model_collections extends CI_Model
         'owned_collection' => false
       )
     )->limit($limit);
+  }
+
+  public function follow($collection_id)
+  {
+    return collection('collections')->update(
+      $this->_where_id($collection_id, false),
+      [
+        '$addToSet' => [
+          'followers' => [
+            'id' => $this->users->get('_id'),
+            'followed_at' => time(),
+            'position' => 0
+          ]
+        ],
+        '$inc' => [
+          'followers_count' => 1
+        ]
+      ]
+    );
+  }
+
+  public function unfollow($collection_id)
+  {
+    return collection('collections')->update(
+      $this->_where_id($collection_id),
+      [
+        '$pull' => [
+          'followers' => array(
+            'id' => $this->users->get('_id')
+          )
+        ],
+        '$inc' => [
+          'followers_count' => -1
+        ]
+      ]
+    );
   }
 }

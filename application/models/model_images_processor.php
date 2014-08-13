@@ -83,8 +83,8 @@ class Model_images_processor extends CI_Model
           $image->clear();
           @$image->readImage($article['lead_image']['url_original']);
           $image->setFormat("jpeg");
-          $image->setCompressionQuality(85);
-          $image->thumbnailImage(500, 0);
+          $image->setCompressionQuality(80);
+          $image->thumbnailImage(480, 0);
 
           $name = 'articles/' . date('Ymd/') . $article['_id']->{'$id'} . time() . '_s.jpg';
 

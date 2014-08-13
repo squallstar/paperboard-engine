@@ -66,6 +66,8 @@ class Model_articles_expander extends CI_Model
       curl_setopt($curl, CURLOPT_MAXREDIRS, 5);
       curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
       curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+      curl_setopt($curl,CURLOPT_USERAGENT,'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36');
+
 
       $ch[$article['_id']->{'$id'}] = $curl;
       curl_multi_add_handle($mh, $curl);

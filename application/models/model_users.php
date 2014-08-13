@@ -128,7 +128,7 @@ Class Model_users extends CI_Model
   {
     if ($key)
     {
-      return $this->_user[$key];
+      return isset($this->_user[$key]) ? $this->_user[$key] : null;
     }
 
     return $this->_user;
