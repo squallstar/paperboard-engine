@@ -194,6 +194,14 @@ class Source_management_Controller extends Cronycle_Controller
         {
           $res = $this->sources->add_twitter_category($account_id, '@' . $user->screen_name, $user->name);
 
+          // Also adds myself as a source
+          $this->sources->add_twitter_person($res['id'], [
+            'id' => $user->id,
+            'name' => $user->name,
+            'screen_name' => $user->screen_name,
+            'avatar' => $user->profile_image_url_https
+          ]);
+
           if (!$res)
           {
             return $this->json(422, ['errors' => ['Cannot add the twitter source']]);

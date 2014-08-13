@@ -162,24 +162,25 @@ class Collections_Controller extends Cronycle_Controller
     if (is_array($this->request['collection_ids']))
     {
       $pos = 0;
+      $updated = 0;
 
       foreach ($this->request['collection_ids'] as $id)
       {
         if ($id != 'favourite_collection')
         {
-          $this->collections->update_single_field($id, 'position', $pos);
+          if ($this->collections->update_position($id, $pos)) $updated++;
         }
         else
         {
-          $this->users->update_current(array(
+          if ($this->users->update_current(array(
             'favourite_collection_position' => $pos
-          ));
+          ))) $updated++;
         }
 
         $pos++;
       }
 
-      die;
+      $this->json(200, ['updated' => $updated, 'given' => $pos]);
 
     } else {
       $this->json(422, array('errors' => ['Collection IDs are required']));

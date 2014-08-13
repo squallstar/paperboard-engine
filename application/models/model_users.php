@@ -134,6 +134,12 @@ Class Model_users extends CI_Model
     return $this->_user;
   }
 
+  public function id()
+  {
+    if (!$this->_user) $this->load_user();
+    return $this->_user['_id'];
+  }
+
   public function token()
   {
     return $this->_auth_token;

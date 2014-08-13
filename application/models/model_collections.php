@@ -66,7 +66,7 @@ Class Model_collections extends CI_Model
       'followers' => [],
       'followers_count' => 0,
       'user' => array(
-        'id' => $this->users->get('_id'),
+        'id' => $this->users->id(),
         'full_name' => $this->users->get('full_name'),
         'image_url' => $this->users->get('avatar')['small']
       ),
@@ -90,7 +90,7 @@ Class Model_collections extends CI_Model
     if ($res)
     {
       collection('users')->update(
-        ['_id' => $this->users->get('_id')],
+        ['_id' => $this->users->id()],
         ['$inc' => ['total_collections_count' => 1]]
       );
 
@@ -102,14 +102,37 @@ Class Model_collections extends CI_Model
     return false;
   }
 
-  public function update_single_field($collection_id, $field, $value)
+  public function update_position($collection_id, $position)
   {
     $q = $this->_where_id($collection_id);
+    $collection = $this->find($collection_id, ['id' => true]);
 
-    $data = [];
-    $data[$field] = $value;
+    if ($collection)
+    {
+      $position = intval($position);
 
-    return collection('collections')->update($q, array('$set' => $data));
+      if ($collection['owned_collection'])
+      {
+        return collection('collections')->update(
+          ['id' => $collection['id']],
+          ['$set' => ['position' => $position]]
+        );
+      }
+      else
+      {
+        return collection('collections')->update(
+          [
+            'id' => $collection['id'],
+            'followers.id' => $this->users->id()
+          ],
+          ['$set' =>
+            ['followers.$.position' => $position]
+          ]
+        );
+      }
+    }
+
+    return false;
   }
 
   public function update($collection_id, $data = array(), $return = false)
@@ -165,7 +188,7 @@ Class Model_collections extends CI_Model
   public function delete($collection_id)
   {
     collection('users')->update(
-      ['_id' => $this->users->get('_id')],
+      ['_id' => $this->users->id()],
       ['$inc' => ['total_collections_count' => -1]]
     );
 
@@ -183,10 +206,15 @@ Class Model_collections extends CI_Model
   {
     $q = $this->_where_id($collection_id);
 
+    $user_id = $this->users->id();
+
     foreach ($fields as $key => $val) {
       if ($val == true)
       {
-        $fields['user'] = true;
+        $fields['user.id'] = true;
+        $fields['followers'] = [
+          '$elemMatch' => ['id' => $user_id]
+        ];
         break;
       }
     }
@@ -195,8 +223,26 @@ Class Model_collections extends CI_Model
 
     if ($collection)
     {
-      $this->users->load_user();
-      $collection['owned_collection'] = $collection['user']['id'] == $this->users->get('_id');
+      if ($collection['user']['id'] == $user_id)
+      {
+        $collection['owned_collection'] = true;
+      }
+      else
+      {
+        $collection['owned_collection'] = false;
+
+        if (isset($collection['followers']) && count($collection['followers']))
+        {
+          foreach ($collection['followers'] as &$follower)
+          {
+            if ($follower['id'] == $user_id)
+            {
+              $collection['position'] = $follower['position'];
+              break;
+            }
+          }
+        }
+      }
     }
 
     return $collection;
@@ -207,7 +253,7 @@ Class Model_collections extends CI_Model
     $fields = $this->collections->_default_excluded_fields();
     if ($include_feeds && isset($fields['feeds'])) unset($fields['feeds']);
 
-    $user_id = $this->users->get('_id');
+    $user_id = $this->users->id();
 
     $collections = iterator_to_array(
       collection('collections')->find(
@@ -235,46 +281,51 @@ Class Model_collections extends CI_Model
 
   private function _where_id($collection_id, $owned_or_followed = true, $owned = false)
   {
-    if (strpos($collection_id, 'p') === 0)
+    $private_id = strpos($collection_id, 'p') === 0;
+
+    $user_id = $this->users->id();
+
+    if ($owned)
     {
-      return array('private_id' => $collection_id);
+      $query = [
+        'user.id' => $user_id
+      ];
+
+      if (!$private_id) $query['id'] = intval($collection_id);
+      else $query['private_id'] = $collection_id;
     }
     else
     {
-      $this->users->load_user();
-      $user_id = $this->users->get('_id');
-
-      if ($owned)
+      if ($owned_or_followed)
       {
-        return [
-          'id' => intval($collection_id),
-          'user.id' => $user_id
+        $query = [
+          '$and' => [
+            [
+              // id added below
+            ],
+            [
+              '$or' => [
+                ['user.id' => $user_id],
+                ['followers.id' => $user_id]
+              ]
+            ]
+          ]
         ];
+
+        if (!$private_id) $query['$and'][0]['id'] = intval($collection_id);
+        else $query['$and'][0]['private_id'] = $collection_id;
       }
       else
       {
-        if ($owned_or_followed)
-        {
-          return [
-            '$and' => [
-              [
-                'id' => intval($collection_id)
-              ],
-              [
-                '$or' => [
-                  ['user.id' => $user_id],
-                  ['followers.id' => $user_id]
-                ]
-              ]
-            ]
-          ];
-        }
-        else
-        {
-          return ['id' => intval($collection_id)];
-        }
+        if (!$private_id) $query = ['id' => intval($collection_id)];
+        else $query = ['private_id' => $collection_id];
       }
     }
+
+    unset($private_id);
+    unset($user_id);
+
+    return $query;
   }
 
   public function links(&$collection, $limit = 40, $max_timestamp = null, $min_timestamp = null)
@@ -393,7 +444,7 @@ Class Model_collections extends CI_Model
       [
         '$addToSet' => [
           'followers' => [
-            'id' => $this->users->get('_id'),
+            'id' => $this->users->id(),
             'followed_at' => time(),
             'position' => 0
           ]
@@ -412,7 +463,7 @@ Class Model_collections extends CI_Model
       [
         '$pull' => [
           'followers' => array(
-            'id' => $this->users->get('_id')
+            'id' => $this->users->id()
           )
         ],
         '$inc' => [
