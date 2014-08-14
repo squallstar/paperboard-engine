@@ -24,6 +24,7 @@ Class Model_collections extends CI_Model
 
   private function _filter_fields($data = array())
   {
+    // These below are the fields that a user can update on a collection
     return array_intersect_key(
       $data,
       array(
@@ -142,6 +143,11 @@ Class Model_collections extends CI_Model
 
     if (!$collection || !$collection['owned_collection']) return false;
 
+    if (isset($data['category']['id']) && $data['category']['id'] == false)
+    {
+      unset($data['category']);
+    }
+
     $data = $this->_filter_fields($data);
 
     $needs_recount = false;
@@ -173,7 +179,10 @@ Class Model_collections extends CI_Model
 
     $res = collection('collections')->update(['id' => $collection['id']], ['$set' => $data]);
 
-    return $res ? array_replace_recursive($collection, $data) : false;
+    unset($data['feeds']);
+    if (isset($data['sources'])) unset($data['sources']);
+
+    return $res ? $data : false;
   }
 
   public function delete($collection_id)
@@ -215,39 +224,50 @@ Class Model_collections extends CI_Model
 
     if ($collection)
     {
-      $collection['is_followed'] = false;
-
-      if ($collection['user']['id'] == $user_id)
-      {
-        $collection['owned_collection'] = true;
-      }
-      else
-      {
-        $collection['owned_collection'] = false;
-
-        if (isset($collection['followers']) && count($collection['followers']))
-        {
-          foreach ($collection['followers'] as &$follower)
-          {
-            if ($follower['id'] == $user_id)
-            {
-              $collection['position'] = $follower['position'];
-              $collection['is_followed'] = true;
-              break;
-            }
-          }
-
-          unset($follower);
-        }
-      }
+      $this->_set_ownerships($collection, $user_id);
     }
 
     return $collection;
   }
 
+  private function _set_ownerships(&$collection, &$user_id)
+  {
+    $collection['is_followed'] = false;
+
+    if ($collection['user']['id'] == $user_id)
+    {
+      $collection['owned_collection'] = true;
+    }
+    else
+    {
+      $collection['owned_collection'] = false;
+
+      if (isset($collection['followers']) && count($collection['followers']))
+      {
+        foreach ($collection['followers'] as &$follower)
+        {
+          if ($follower['id'] == $user_id)
+          {
+            $collection['position'] = $follower['position'];
+            $collection['is_followed'] = true;
+            break;
+          }
+        }
+
+        unset($follower);
+      }
+    }
+
+    unset($user_id);
+  }
+
   public function find_mine($include_feeds = false)
   {
     $fields = $this->collections->_default_excluded_fields();
+
+    // Needed to set the ownership
+    unset($fields['followers']);
+
     if ($include_feeds && isset($fields['feeds'])) unset($fields['feeds']);
 
     $user_id = $this->users->id();
@@ -261,13 +281,13 @@ Class Model_collections extends CI_Model
           ]
         ],
         $fields
-      )->sort(['position' => 1]),
+      ),
       false
     );
 
     foreach ($collections as &$collection)
     {
-      $collection['owned_collection'] = $collection['user']['id'] == $user_id;
+      $this->_set_ownerships($collection, $user_id);
     }
 
     unset($collection);
