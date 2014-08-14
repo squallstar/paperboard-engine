@@ -187,44 +187,51 @@ class Collections_Controller extends Cronycle_Controller
     }
   }
 
+  public function delete($collection_id)
+  {
+    $collection = $this->collections->find($collection_id, array(
+      '_id' => false,
+      'sources' => false,
+      'feeds' => false
+    ), false);
+
+    if ($collection['owned_collection'])
+    {
+      if ($this->collections->delete($collection['id']))
+      {
+        return $this->json(200);
+      }
+      else
+      {
+        return $this->json(422, ['errors' => ['Cannot delete the collection']]);
+      }
+    }
+    else
+    {
+      if ($this->collections->unfollow($collection['id']))
+      {
+        return $this->json(200);
+      }
+      else
+      {
+        return $this->json(422, ['errors' => ['Cannot unfollow the collection']]);
+      }
+    }
+  }
+
   public function view($collection_id)
   {
     if ($this->method == 'put') return $this->update($collection_id);
+    if ($this->method == 'delete') return $this->delete($collection_id);
 
     $collection = $this->collections->find($collection_id, array(
       '_id' => false,
       'sources' => false,
       'feeds' => false
-    ));
+    ), false);
 
     if ($collection)
     {
-      if ($this->method == 'delete')
-      {
-        if ($collection['owned_collection'])
-        {
-          if ($this->collections->delete($collection['id']))
-          {
-            return $this->json(200);
-          }
-          else
-          {
-            return $this->json(422, ['errors' => ['Cannot delete the collection']]);
-          }
-        }
-        else
-        {
-          if ($this->collections->unfollow($collection['id']))
-          {
-            return $this->json(200);
-          }
-          else
-          {
-            return $this->json(422, ['errors' => ['Cannot unfollow the collection']]);
-          }
-        }
-      }
-
       $this->json(200, $collection);
     }
     else
@@ -238,7 +245,7 @@ class Collections_Controller extends Cronycle_Controller
     $collection = $this->collections->find($collection_id, array(
       'feeds' => true,
       'filters' => true
-    ));
+    ), false);
 
     if ($collection)
     {

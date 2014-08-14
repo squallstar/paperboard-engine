@@ -104,7 +104,6 @@ Class Model_collections extends CI_Model
 
   public function update_position($collection_id, $position)
   {
-    $q = $this->_where_id($collection_id);
     $collection = $this->find($collection_id, ['id' => true]);
 
     if ($collection)
@@ -118,7 +117,7 @@ Class Model_collections extends CI_Model
           ['$set' => ['position' => $position]]
         );
       }
-      else
+      else if ($collection['is_followed'])
       {
         return collection('collections')->update(
           [
@@ -137,52 +136,44 @@ Class Model_collections extends CI_Model
 
   public function update($collection_id, $data = array(), $return = false)
   {
-    $q = $this->_where_id($collection_id, true, true);
+    $collection = $this->find($collection_id, [
+      'category' => false, 'settings' => false
+    ]);
+
+    if (!$collection || !$collection['owned_collection']) return false;
+
     $data = $this->_filter_fields($data);
+
+    $needs_recount = false;
 
     if (isset($data['sources']))
     {
+      $needs_recount = true;
       $this->load->model('model_sources', 'sources');
       $data['feeds'] = $this->sources->tree($data['sources'], true);
     }
 
-    $data['last_updated_at'] = time();
-
-    $is_changing_feeds = isset($data['feeds']);
-
-    if ($is_changing_feeds || isset($data['filters']))
+    if (isset($data['filters']))
     {
-      if (!$is_changing_feeds)
-      {
-        $tmp = collection('collections')->findOne(
-          $q,
-          array('_id' => false, 'feeds' => true)
-        );
-
-        $data['feeds'] = $tmp['feeds'];
-        unset($tmp);
-      }
-
-      $data['total_links_count'] = $this->links($data, FALSE)->count();
-      $data['total_source_count'] = count($data['feeds']);
-
-      if (!$is_changing_feeds) unset($data['feeds']);
-    }
-
-    if ($return)
-    {
-      //TODO: this doesn't return the owned_collection status
-      return collection('collections')->findAndModify(
-        $q,
-        array('$set' => $data),
-        $this->_default_excluded_fields(),
-        array('new' => true)
-      );
+      $needs_recount = true;
+      $data['feeds'] = $collection['feeds'];
     }
     else
     {
-      return collection('collections')->update($q, array('$set' => $data));
+      $data['filters'] = $collection['filters'];
     }
+
+    $data['last_updated_at'] = time();
+
+    if ($needs_recount)
+    {
+      $data['total_links_count'] = $this->links($data, FALSE)->count();
+      $data['total_source_count'] = count($data['feeds']);
+    }
+
+    $res = collection('collections')->update(['id' => $collection['id']], ['$set' => $data]);
+
+    return $res ? array_replace_recursive($collection, $data) : false;
   }
 
   public function delete($collection_id)
@@ -194,7 +185,8 @@ Class Model_collections extends CI_Model
 
     return collection('collections')->remove(
       array(
-        'id' => $collection_id
+        'id' => $collection_id,
+        'user.id' => $this->users->id()
       ),
       array(
         'justOne' => true
@@ -223,6 +215,8 @@ Class Model_collections extends CI_Model
 
     if ($collection)
     {
+      $collection['is_followed'] = false;
+
       if ($collection['user']['id'] == $user_id)
       {
         $collection['owned_collection'] = true;
@@ -238,9 +232,12 @@ Class Model_collections extends CI_Model
             if ($follower['id'] == $user_id)
             {
               $collection['position'] = $follower['position'];
+              $collection['is_followed'] = true;
               break;
             }
           }
+
+          unset($follower);
         }
       }
     }
@@ -279,53 +276,14 @@ Class Model_collections extends CI_Model
     return $collections;
   }
 
-  private function _where_id($collection_id, $owned_or_followed = true, $owned = false)
+  private function _where_id($collection_id)
   {
-    $private_id = strpos($collection_id, 'p') === 0;
-
-    $user_id = $this->users->id();
-
-    if ($owned)
+    if (strpos($collection_id, 'p') === 0)
     {
-      $query = [
-        'user.id' => $user_id
-      ];
-
-      if (!$private_id) $query['id'] = intval($collection_id);
-      else $query['private_id'] = $collection_id;
-    }
-    else
-    {
-      if ($owned_or_followed)
-      {
-        $query = [
-          '$and' => [
-            [
-              // id added below
-            ],
-            [
-              '$or' => [
-                ['user.id' => $user_id],
-                ['followers.id' => $user_id]
-              ]
-            ]
-          ]
-        ];
-
-        if (!$private_id) $query['$and'][0]['id'] = intval($collection_id);
-        else $query['$and'][0]['private_id'] = $collection_id;
-      }
-      else
-      {
-        if (!$private_id) $query = ['id' => intval($collection_id)];
-        else $query = ['private_id' => $collection_id];
-      }
+      return ['private_id' => $collection_id];
     }
 
-    unset($private_id);
-    unset($user_id);
-
-    return $query;
+    return ['id' => intval($collection_id)];
   }
 
   public function links(&$collection, $limit = 40, $max_timestamp = null, $min_timestamp = null)
@@ -440,7 +398,7 @@ Class Model_collections extends CI_Model
   public function follow($collection_id)
   {
     return collection('collections')->update(
-      $this->_where_id($collection_id, false),
+      $this->_where_id($collection_id),
       [
         '$addToSet' => [
           'followers' => [

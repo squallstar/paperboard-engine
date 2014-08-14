@@ -290,7 +290,7 @@ Class Model_sources extends CI_Model
     $categories = [];
     $feeds = [];
 
-    foreach ($sources as $source) {
+    foreach ($sources as &$source) {
       list($type, $id) = explode(':', $source);
 
       switch ($type) {
@@ -306,6 +306,8 @@ Class Model_sources extends CI_Model
       }
     }
 
+    unset($source);
+
     if ($return_only_ids)
     {
       if (count($categories) == 0)
@@ -314,9 +316,11 @@ Class Model_sources extends CI_Model
         // as we already know all the ids
         $nodes = [];
 
-        foreach ($feeds as $feed) {
+        foreach ($feeds as &$feed) {
           $nodes[] = str_replace(['feed:', 'twitter_user:'], '', $feed);
         }
+
+        unset($feed);
 
         return $nodes;
       }
