@@ -14,6 +14,17 @@ class Model_articles_expander extends CI_Model
 {
   private $_is_working;
 
+  private $_rules;
+
+  public function __construct()
+  {
+    parent::__construct();
+
+    $this->_rules = json_decode(file_get_contents(APPPATH . 'libraries/reader-rules/rules.json'), true)['hosts'];
+
+    _log(count($this->_rules) . ' rules read from file');
+  }
+
   public function start($limit = 30)
   {
     if ($this->_is_working) return FALSE;
@@ -25,7 +36,8 @@ class Model_articles_expander extends CI_Model
         ],
         [
           '_id' => true,
-          'url' => 1
+          'url' => 1,
+          'url_host' => 1
         ]
       )->sort(['processed_at' => -1])
        ->limit($limit)
@@ -216,32 +228,21 @@ class Model_articles_expander extends CI_Model
 
     $content = null;
 
-    switch ($article['url_host']) {
-      case 'www.theverge.com':
+    if (isset($this->_rules[$article['url_host']]))
+    {
+      $rule = & $this->_rules[$article['url_host']];
+
+      if (isset($rule['cleanup']) && $rule['cleanup'] == true)
+      {
         $this->_cleanup_doc($xpath->document);
-        $content = $xpath->query('//div[@id="article-body" or @class="article-body" or @class="timn__body-intro"]');
-        break;
+      }
 
-      case 'www.polygon.com':
-        $this->_cleanup_doc($xpath->document);
-        $content = $xpath->query('//div[@id="article-body"]');
-        break;
+      if (isset($rule['content']))
+      {
+        $content = $xpath->query($rule['content']);
+      }
 
-      case 'www.bbc.co.uk':
-        $this->_cleanup_doc($xpath->document);
-        $content = $xpath->query('//p[@class="introduction"]');
-        break;
-
-      case 'www.theguardian.com':
-        $content = $xpath->query('//div[@id="article-body-blocks"]');
-        break;
-
-      case 'www.engadget.com':
-        $content = $xpath->query('//div[@class="article-content"]');
-        break;
-
-      default:
-        break;
+      unset($rule);
     }
 
     if (!is_null($content) && $content->length > 0)

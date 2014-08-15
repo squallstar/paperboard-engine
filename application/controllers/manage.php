@@ -29,7 +29,15 @@ class Manage_Controller extends Cronycle_Controller
 	private function _process_is_running($name)
 	{
 		exec("ps -aux | grep $name", $worker);
-		return count($worker) > 0 && strpos($worker[0], '/php') !== FALSE;
+		if (count($worker) > 0)
+		{
+			foreach ($worker as $w)
+			{
+				if (strpos($w, '/php') !== FALSE) return true;
+			}
+		}
+
+		return false;
 	}
 
 	public function status()

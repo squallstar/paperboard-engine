@@ -52,7 +52,7 @@ class Service_Controller extends CI_Controller
       {
         sleep(300);
       } else {
-        echo 'Updated ' . $count . " followers.\r\n";
+        _log('Updated ' . $count . " followers.\r\n");
         sleep(200);
       }
     }
