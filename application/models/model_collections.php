@@ -135,7 +135,7 @@ Class Model_collections extends CI_Model
     return false;
   }
 
-  public function update($collection_id, $data = array(), $return = false)
+  public function update($collection_id, $data = array())
   {
     $collection = $this->find($collection_id, [
       'category' => false, 'settings' => false
@@ -261,9 +261,16 @@ Class Model_collections extends CI_Model
     unset($user_id);
   }
 
-  public function find_mine($include_feeds = false)
+  public function find_mine($include_feeds = false, $fields_to_include = array())
   {
     $fields = $this->collections->_default_excluded_fields();
+
+    foreach ($fields_to_include as &$field)
+    {
+      if (isset($fields[$field])) unset($fields[$field]);
+    }
+
+    unset($field);
 
     // Needed to set the ownership
     unset($fields['followers']);

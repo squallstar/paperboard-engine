@@ -102,13 +102,16 @@ Class Model_feeds extends CI_Model
     return $count == $limit;
   }
 
-  public function update_twitter_followers($user_id = FALSE, $timespan = 1)
+  public function update_twitter_followers($user_id = FALSE)
   {
     ini_set("memory_limit","128M");
 
+    // 10 minutes
+    $ts = time() - 600;
+
     $cond = array(
       'connected_accounts.type' => 'twitter',
-      'connected_accounts.following.updated_at' => ['$lt' => $timespan]
+      'connected_accounts.following.updated_at' => ['$lt' => $ts]
     );
 
     if ($user_id !== FALSE) $cond['_id'] = $user_id;
@@ -182,20 +185,24 @@ Class Model_feeds extends CI_Model
 
   public function download_tweets()
   {
+    $ts = time() - 65;
+
     $users = collection('users')->find(
       array(
-        'connected_accounts.type' => 'twitter',
-        'connected_accounts.processed_at' => ['$lt' => time() - 80]
+        'connected_accounts' => [
+          '$elemMatch' => [
+            'type' => 'twitter',
+            'processed_at' => ['$lt' => $ts]
+          ]
+        ]
       ),
       array(
         '_id' => true,
         'connected_accounts' => true,
       )
-    )->limit(40);
+    )->limit(30);
 
     if ($users->count() == 0) return 0;
-
-    _log("Started to download tweets for " . count($users->count()) . " users");
 
     $added = 0;
 
@@ -207,11 +214,15 @@ Class Model_feeds extends CI_Model
 
     foreach ($users as $user)
     {
+      _log("Checking connected accounts for user " . $user['_id']);
+
       $this->users->set_user($user);
 
       foreach ($user['connected_accounts'] as $account)
       {
-        if ($account['type'] != 'twitter') continue;
+        if ($account['type'] != 'twitter' || $account['processed_at'] > $ts) continue;
+
+        _log("Downloading tweets for account " . $account['id'] . " (" . $account['access_token']['screen_name'] . ")");
 
         $folder = $this->sources->get_user_folder_by_source_id($account['id']);
 

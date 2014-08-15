@@ -18,8 +18,6 @@ class Model_articles_expander extends CI_Model
   {
     if ($this->_is_working) return FALSE;
 
-    libxml_use_internal_errors(true);
-
     $articles = iterator_to_array(
       collection('articles')->find(
         [
@@ -37,7 +35,7 @@ class Model_articles_expander extends CI_Model
 
     if ($n)
     {
-      $count = $this->_expand($articles);
+      $count = $this->expand($articles);
 
       _log("Expanded " . $count . " articles");
     }
@@ -47,8 +45,10 @@ class Model_articles_expander extends CI_Model
     return $n;
   }
 
-  private function _expand(&$articles = array())
+  public function expand(&$articles = array(), $update = true)
   {
+    libxml_use_internal_errors(true);
+
     $this->_is_working = true;
 
     _log("Started to expand " . count($articles) . " articles");
@@ -104,7 +104,7 @@ class Model_articles_expander extends CI_Model
       $id = $article['_id'];
       unset($article['_id']);
 
-      collection('articles')->update(
+      if ($update) collection('articles')->update(
         ['_id' => $id],
         ['$set' => $article]
       );
@@ -122,6 +122,8 @@ class Model_articles_expander extends CI_Model
   {
     _log("Parsing article " . $article['_id']->{'$id'});
 
+    $html = mb_convert_encoding($html, 'HTML-ENTITIES', "UTF-8");
+
     $doc = new DOMDocument;
     $doc->loadHTML($html);
 
@@ -133,9 +135,7 @@ class Model_articles_expander extends CI_Model
     $metas = [];
 
     foreach ($xpath->query($query) as $meta) {
-        $property = $meta->getAttribute('property');
-        $content = $meta->getAttribute('content');
-        $metas[$property] = $content;
+      $metas[$meta->getAttribute('property')] = $meta->getAttribute('content');
     }
 
     if (isset($metas['og:title']) && strlen($metas['og:title']) > 3)
@@ -176,20 +176,73 @@ class Model_articles_expander extends CI_Model
     }
     else
     {
-      $desc = $xpath->query('//meta[@name="description"]');
+      $desc = $xpath->query('//html/head/meta[@name="description" or @name="Description"]');
 
       if ($desc->length > 0)
       {
-        $article['description'] = trim($desc->item(0)->textContent);
+        $article['description'] = trim($desc->item(0)->getAttribute('content'));
       }
 
       unset($desc);
     }
+
+    $this->find_content(parse_url($article['url'])['host'], $xpath, $article);
 
     unset($metas);
     unset($xpath);
     unset($doc);
 
     return true;
+  }
+
+  private function _cleanup_doc(&$doc)
+  {
+    foreach (['script', 'style', 'iframe', 'aside'] as $tag)
+    {
+      while (($r = $doc->getElementsByTagName($tag)) && $r->length)
+      {
+        $r->item(0)->parentNode->removeChild($r->item(0));
+      }
+    }
+  }
+
+  public function find_content($domain, &$xpath, &$article)
+  {
+    $content = null;
+
+    switch ($domain) {
+      case 'www.theverge.com':
+        $this->_cleanup_doc($xpath->document);
+        $content = $xpath->query('//div[@id="article-body" or @class="article-body" or @class="timn__body-intro"]');
+        break;
+
+      case 'www.polygon.com':
+        $this->_cleanup_doc($xpath->document);
+        $content = $xpath->query('//div[@id="article-body"]');
+        break;
+
+      case 'www.bbc.co.uk':
+        $this->_cleanup_doc($xpath->document);
+        $content = $xpath->query('//p[@class="introduction"]');
+        break;
+
+      case 'www.theguardian.com':
+        $content = $xpath->query('//div[@id="article-body-blocks"]');
+        break;
+
+      default:
+        break;
+    }
+
+    if (!is_null($content) && $content->length > 0)
+    {
+      _log("Content found for domain " . $domain);
+      $node = $content->item(0);
+
+      $article['content'] = trim($node->ownerDocument->saveHTML($node));
+      unset($node);
+    }
+
+    unset($content);
   }
 }

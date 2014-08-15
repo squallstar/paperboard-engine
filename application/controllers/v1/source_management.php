@@ -153,15 +153,17 @@ class Source_management_Controller extends Cronycle_Controller
         $account_id = newid('t');
         $source_uri = 'twitter_account:' . $account_id;
 
+        // As a requirement, we remove this twitter account from other users if they connected it
         collection('users')->update(
-          array('_id' => $this->users->get('_id')),
-          array(
-            '$pull' => array(
-              'connected_accounts' => array(
-                'id' => $source_uri
-              )
-            )
-          )
+          [],
+          [
+            '$pull' => [
+              'connected_accounts' => [
+                'access_token.screen_name' => $user->screen_name
+              ]
+            ]
+          ],
+          ['multiple' => true]
         );
 
         $res = collection('users')->update(

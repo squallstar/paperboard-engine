@@ -40,7 +40,7 @@ class Manage_Controller extends Cronycle_Controller
 
 		$avg = collection('collections')->aggregate([
 			'$group' => [
-				'_id' => '$type',
+				'_id' => 1,
 				'avg_links'   => ['$avg' => '$total_links_count'],
 				'avg_sources' => ['$avg' => '$total_source_count'],
 				'max_links'   => ['$max' => '$total_links_count'],
@@ -189,21 +189,19 @@ class Manage_Controller extends Cronycle_Controller
 		echo 'done';
 	}
 
-	public function test_curl()
+	public function expand()
 	{
-		$curl = curl_init();
-    curl_setopt($curl, CURLOPT_URL, 'http://ift.tt/1mBGRNJ');
-    curl_setopt($curl, CURLOPT_HEADER, 0);
-    curl_setopt($curl, CURLOPT_TIMEOUT, 7);
-    curl_setopt($curl, CURLOPT_MAXREDIRS, 1);
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		$this->load->model('model_articles_expander', 'expander');
 
-    $output = curl_exec($curl);
+		$articles = [
+			[
+				'_id' => new MongoId(),
+				'url' => $this->input->get('url')
+			]
+		];
 
-    curl_close($curl);
-
-    debug($output);die;
+		$this->expander->expand($articles, false);
+		var_dump($articles);
 	}
 
 	public function logs()

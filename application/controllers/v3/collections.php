@@ -88,7 +88,7 @@ class Collections_Controller extends Cronycle_Controller
       return $this->json(400);
     }
 
-    $res = $this->collections->update($collection_id, $this->request['collection'], true);
+    $res = $this->collections->update($collection_id, $this->request['collection']);
 
     if ($res)
     {
@@ -242,10 +242,24 @@ class Collections_Controller extends Cronycle_Controller
 
   public function view_links($collection_id)
   {
-    $collection = $this->collections->find($collection_id, array(
-      'feeds' => true,
-      'filters' => true
-    ), false);
+    if ($collection_id == 'everything')
+    {
+      $collection = [
+        'feeds' => []
+      ];
+
+      foreach ($this->collections->find_mine(false, ['feeds']) as $c)
+      {
+        $collection['feeds'] = array_merge($collection['feeds'], $c['feeds']);
+      }
+    }
+    else
+    {
+      $collection = $this->collections->find($collection_id, array(
+        'feeds' => true,
+        'filters' => true
+      ), false);
+    }
 
     if ($collection)
     {
