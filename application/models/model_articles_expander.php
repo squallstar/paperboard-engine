@@ -168,6 +168,7 @@ class Model_articles_expander extends CI_Model
     if (isset($metas['og:url']))
     {
       $article['url'] = $metas['og:url'];
+      $article['url_host'] = parse_url($article['url'])['host'];
     }
 
     if (isset($metas['og:description']))
@@ -186,7 +187,7 @@ class Model_articles_expander extends CI_Model
       unset($desc);
     }
 
-    $this->find_content(parse_url($article['url'])['host'], $xpath, $article);
+    $this->find_content($xpath, $article);
 
     unset($metas);
     unset($xpath);
@@ -206,11 +207,16 @@ class Model_articles_expander extends CI_Model
     }
   }
 
-  public function find_content($domain, &$xpath, &$article)
+  public function find_content(&$xpath, &$article)
   {
+    if (!isset($article['url_host']))
+    {
+      $article['url_host'] = parse_url($article['url'])['host'];
+    }
+
     $content = null;
 
-    switch ($domain) {
+    switch ($article['url_host']) {
       case 'www.theverge.com':
         $this->_cleanup_doc($xpath->document);
         $content = $xpath->query('//div[@id="article-body" or @class="article-body" or @class="timn__body-intro"]');
@@ -230,13 +236,17 @@ class Model_articles_expander extends CI_Model
         $content = $xpath->query('//div[@id="article-body-blocks"]');
         break;
 
+      case 'www.engadget.com':
+        $content = $xpath->query('//div[@class="article-content"]');
+        break;
+
       default:
         break;
     }
 
     if (!is_null($content) && $content->length > 0)
     {
-      _log("Content found for domain " . $domain);
+      _log("Content found for domain " . $article['url_host']);
       $node = $content->item(0);
 
       $article['content'] = trim($node->ownerDocument->saveHTML($node));
