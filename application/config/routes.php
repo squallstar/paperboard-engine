@@ -27,5 +27,7 @@ $route['v1/source_management/([A-z0-9]+)'] = 'v1/source_management/node/$1';
 $route['v1/source_management/add_twitter_account'] = 'v1/source_management/add_twitter_account';
 $route['auth/twitter'] = 'v1/source_management/add_twitter_account';
 
+$route['v1/avatar'] = 'v3/user/avatar';
+
 /* End of file routes.php */
 /* Location: ./application/config/routes.php */

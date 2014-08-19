@@ -26,6 +26,39 @@ class Model_images_processor extends CI_Model
     $this->_bucket = $this->config->item('aws_bucket_name');
   }
 
+  public function upload_image($folder, $filename, $width = 'auto', $height = 0)
+  {
+    $image = false;
+
+    if ($width != 'auto')
+    {
+      // Resample image
+      $image = new Imagick();
+
+      $image->readImage($filename);
+      $image->setFormat("jpeg");
+      $image->setCompressionQuality(80);
+      $image->thumbnailImage($width, $height);
+    }
+    else
+    {
+      $image = file_get_contents($filename);
+    }
+
+    $name = $folder . '/' . date('Ymd/') . md5($filename . $width . $height) . time() . '.jpg';
+
+    $res = S3::putObject("$image", $this->_bucket, $name, S3::ACL_PUBLIC_READ, array(), array('Content-Type' => 'image/jpeg'));
+
+    if ($res)
+    {
+      return $this->_aws_url . $this->_bucket . '/' . $name;
+    }
+    else
+    {
+      return false;
+    }
+  }
+
   public function process($limit = 30)
   {
     if ($this->_is_working) return FALSE;

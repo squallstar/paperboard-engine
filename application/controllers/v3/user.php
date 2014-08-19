@@ -126,4 +126,47 @@ class User_Controller extends Cronycle_Controller
       }
     }
   }
+
+  public function avatar()
+  {
+    if (!$this->require_token() || $this->method != 'post') return;
+
+    if (!isset($_FILES['file']))
+    {
+      return $this->json(422, ['errors' => ['File not provided']]);
+    }
+
+    $file = & $_FILES['file'];
+
+    if (!in_array($file['type'], ['image/jpeg', 'image/png']))
+    {
+      return $this->json(422, ['errors' => ['The given file is not a JPEG or PNG image']]);
+    }
+
+    list($width, $height, $type, $attr) = getimagesize($file['tmp_name']);
+
+    if ($width < 100 || $height < 100)
+    {
+      return $this->json(422, ['errors' => ['The avatar width and height must be greater than 100px']]);
+    }
+
+    $this->load->model('model_images_processor', 'images');
+
+    $res = $this->users->update_current([
+      'avatar' => [
+        'small' => $this->images->upload_image('avatars', $file['tmp_name'], 30, 30),
+        'medium' => $this->images->upload_image('avatars', $file['tmp_name'], 60, 60),
+        'high' => $this->images->upload_image('avatars', $file['tmp_name'], 150, 150)
+      ]
+    ]);
+
+    if ($res)
+    {
+      $this->json(200);
+    }
+    else
+    {
+      $this->json(422);
+    }
+  }
 }
