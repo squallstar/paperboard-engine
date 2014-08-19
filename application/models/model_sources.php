@@ -17,30 +17,6 @@ Class Model_sources extends CI_Model
     parent::__construct();
   }
 
-  public function reorder_category_children($category_id, $key = 'text')
-  {
-    $order = [];
-    $order[$key] = 1;
-
-    return collection('user_categories')->update(
-      array(
-        'user_id' => $this->users->get('_id'),
-        'id' => $category_id
-      ),
-      array(
-        '$push' => [
-          'children' => [
-            '$each' => [],
-            '$sort' => $order
-          ]
-        ]
-      ),
-      array(
-        'w' => 0
-      )
-    );
-  }
-
   public function add_feed_category($name = 'New category')
   {
     $id = newid('c');
@@ -56,8 +32,7 @@ Class Model_sources extends CI_Model
       'can_be_hidden' => false,
       'can_be_feed_parent' => true,
       'child_count' => 0,
-      'broken' => false,
-      'children' => []
+      'broken' => false
     );
 
     $res = collection('user_categories')->save($data);
@@ -82,8 +57,7 @@ Class Model_sources extends CI_Model
       'can_be_hidden' => false,
       'can_be_feed_parent' => false,
       'child_count' => 0,
-      'broken' => false,
-      'children' => []
+      'broken' => false
     );
 
     collection('user_categories')->remove(
@@ -132,13 +106,15 @@ Class Model_sources extends CI_Model
 
     if (!$feed_id) return false;
 
-    $exist = collection('user_categories')->count([
-      'id' => $category_id,
-      'children.id' => $feed_id
+    $exist = collection('category_children')->count([
+      'id' => $feed_id,
+      'category_id' => $category_id
     ]);
 
     $data = [
       'id' => $feed_id,
+      'category_id' => $category_id,
+      'user_id' => $this->users->id(),
       'type' => $data['type'],
       'source_uri' => $data['type'] . ':' . $feed_id,
       'text' => $data['text'],
@@ -148,28 +124,12 @@ Class Model_sources extends CI_Model
       'can_be_hidden' => isset($data['can_be_hidden']) ? $data['can_be_hidden'] : false,
       'can_be_feed_parent' => false,
       'broken' => false,
-      'external_key' => isset($data['external_key']) ? $data['external_key'] : null
+      'external_key' => isset($data['external_key']) ? $data['external_key'] : strtolower($data['text'])
     ];
 
     if (!$exist)
     {
-      $res = collection('user_categories')->update(
-        array(
-          //'user_id' => $this->users->get('_id'),
-          'id' => $category_id
-        ),
-        array(
-          '$push' => [
-            'children' => $data
-          ],
-          '$inc' => [
-            'child_count' => 1
-          ]
-        ),
-        array(
-          'w' => 0
-        )
-      );
+      $res = collection('category_children')->insert($data);
     }
 
     // Updates the feed ids inside collections that selected this category
@@ -199,34 +159,48 @@ Class Model_sources extends CI_Model
 
   public function delete($node_id)
   {
-    $res1 = collection('user_categories')->remove(
+    $node = collection('category_children')->findOne(
       array(
-        'user_id' => $this->users->get('_id'),
-        'id' => $node_id
+        'id' => $node_id,
+        'user_id' => $this->users->id()
       ),
       array(
-        'justOne' => true
+        '_id' => true,
+        'category_id' => true
       )
     );
 
-    $res2 = collection('user_categories')->update(
-      array(
-        'user_id' => $this->users->get('_id'),
-        'children' => array(
-          '$elemMatch' => array(
-            'id' => $node_id
-          )
-        )
-      ),
-      array(
-        '$pull' => array(
-          'children.id' => $node_id
+    if ($node)
+    {
+      $res = collection('category_children')->remove(['_id' => $node['_id']]);
+
+      if ($res)
+      {
+        collection('user_categories')->update(
+          [
+            'user_id' => $this->users->id(),
+            'id' => $node['category_id']
+          ],
+          [
+            '$inc' => ['child_count' => -1]
+          ]
+        );
+      }
+    }
+    else
+    {
+      $res = collection('user_categories')->remove(
+        array(
+          'user_id' => $this->users->get('_id'),
+          'id' => $node_id
         ),
-        // TODO: update child_count
-      )
-    );
+        array(
+          'justOne' => true
+        )
+      );
+    }
 
-    return $res1 && $res2 ? true : false;
+    return $res ? true : false;
   }
 
   public function rename_category($category_id, $new_name)
@@ -244,15 +218,7 @@ Class Model_sources extends CI_Model
     return $res ? true : false;
   }
 
-  // public function get_user_feed_categories()
-  // {
-  //   return iterator_to_array(collection('user_categories')->find(
-  //     array('user_id' => $this->users->get('_id')),
-  //     array('_id' => false, 'user_id' => false)
-  //   ), false);
-  // }
-
-  public function get_user_categories()
+  public function get_user_categories($include_children = true)
   {
     $res = iterator_to_array(collection('user_categories')->find(
       array('user_id' => $this->users->get('_id')),
@@ -266,6 +232,8 @@ Class Model_sources extends CI_Model
 
     foreach ($res as &$category)
     {
+      $this->_fill_category_with_children($category);
+
       if ($category['type'] == 'twitter_account') $data['twitter'][] = $category;
       else $data['feed'][] = $category;
     }
@@ -322,7 +290,8 @@ Class Model_sources extends CI_Model
         // as we already know all the ids
         $nodes = [];
 
-        foreach ($feeds as &$feed) {
+        foreach ($feeds as &$feed)
+        {
           $nodes[] = str_replace(['feed:', 'twitter_user:'], '', $feed);
         }
 
@@ -331,130 +300,96 @@ Class Model_sources extends CI_Model
         return $nodes;
       }
 
-      $fields = array(
-        '_id' => false,
-        'id' => true,
-        'type',
-        'children.id' => true
-      );
-    }
-    else
-    {
-      $fields = array(
-        '_id' => false,
-        'id' => true,
-        'type' => true,
-        'text' => true,
-        'source_uri' => true,
-        'child_count' => true,
-        'broken' => true,
-        'can_be_deleted' => true,
-        'children.id' => true,
-        'children.text' => true,
-        'children.type' => true,
-        'children.source_uri' => true,
-        'children.sub_text' => true,
-        'children.can_be_deleted' => true,
-        'children.can_be_renamed' => true,
-        'children.can_be_feed_parent' => true,
-        'children.can_be_hidden' => true,
-        'children.broken' => true
-      );
-    }
-
-    $res = collection('user_categories')->find(
-      array(
-        'user_id' => $this->users->get('_id'),
-        '$or' => [
-          [
-            'id' => [
-              '$in' => $categories
-            ]
-          ],
-          [
-            'children.id' => [
-              '$in' => $feeds
+      $items = collection('category_children')->find(
+        [
+          '$or' => [
+            [
+              'category_id' => [
+                '$in' => $categories
+              ]
+            ],
+            [
+              'id' => [
+                '$in' => $feeds
+              ]
             ]
           ]
+        ],
+        [
+          'id' => true
         ]
-      ),
-      $fields
-    );
+      );
 
-    $nodes = array();
+      $nodes = [];
 
-    if ($return_only_ids)
-    {
-      foreach ($res as $category)
+      foreach ($items as $item)
       {
-        if (in_array($category['id'], $categories))
-        {
-          // Folder is fully selected
-          foreach ($category['children'] as $feed) $nodes[] = $feed['id'];
-        }
-        else
-        {
-          foreach ($category['children'] as $feed)
-          {
-            if (in_array($feed['id'], $feeds))
-            {
-              $nodes[] = $feed['id'];
-            }
-          }
-        }
+        $nodes[] = $item['id'];
       }
 
       return $nodes;
     }
     else
     {
+      $folders = iterator_to_array(collection('user_categories')->find(
+        array(
+          'user_id' => $this->users->get('_id'),
+          'id' => [
+            '$in' => $categories
+          ]
+        ),
+        array(
+          '_id' => false,
+          'id' => true,
+          'type' => true,
+          'text' => true,
+          'source_uri' => true,
+          'child_count' => true,
+          'broken' => true,
+          'can_be_deleted' => true
+        )
+      ));
+
       $data = [
         'twitter' => [],
         'feed' => []
       ];
 
-      foreach ($res as $category)
+      foreach ($folders as &$category)
       {
-        if (!in_array($category['id'], $categories))
-        {
-          //Filters children when category was not fully selected
-          $category['children'] = array_values(array_filter($category['children'], function($feed) use($feeds)
-          {
-            return in_array($feed['id'], $feeds);
-          }));
-        }
-        else
-        {
-          $category['children'] = [];
-        }
+        $this->_fill_category_with_children($category);
 
-        if ($category['type'] == 'feed_category') $data['feed'][] = $category;
-        else $data['twitter'][] = $category;
+        $data[ ($category['type'] == 'feed_category' ? 'feed' : 'twitter') ][] = $category;
       }
 
       return $data;
     }
   }
 
+  private function _fill_category_with_children(&$category)
+  {
+    $category['children'] = iterator_to_array(collection('category_children')->find(
+      ['category_id' => $category['id']],
+      ['_id' => false, 'category_children' => false]
+    )->sort(['external_key' => 1]));
+  }
+
   public function tree_ids()
   {
-    $res = collection('user_categories')->find(
+    $res = collection('category_children')->find(
       array(
         'user_id' => $this->users->get('_id')
       ),
       array(
-        'children.id'
+        'id' => true
       )
     );
 
     $ids = [];
 
-    foreach ($res as $category)
+    foreach ($res as $item)
     {
-      foreach ($category['children'] as $feed)
-      {
-        $ids[] = $feed['id'];
-      }
+      $ids[] = $item['id'];
     }
 
     return $ids;

@@ -159,8 +159,6 @@ Class Model_feeds extends CI_Model
             }
           }
 
-          $this->sources->reorder_category_children($folder['id'], 'external_key');
-
           unset($friend);
           unset($friends);
         }

@@ -24,7 +24,7 @@ class Source_management_Controller extends Cronycle_Controller
 
     if (!$this->require_token()) return;
 
-    $this->json(200, $this->sources->get_user_categories());
+    $this->json(200, $this->sources->get_user_categories(true));
   }
 
   public function collection_nodes($collection_id)
@@ -101,8 +101,6 @@ class Source_management_Controller extends Cronycle_Controller
 
       if ($feed)
       {
-        $this->sources->reorder_category_children($category_id);
-
         $this->json(201, $feed);
       }
       else

@@ -70,8 +70,6 @@ class Imports_Controller extends Cronycle_Controller
           $n_feed++;
         }
 
-        $this->sources->reorder_category_children($cat['id']);
-
         $n_cat++;
       }
     }

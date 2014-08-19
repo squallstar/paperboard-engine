@@ -181,6 +181,12 @@ class Manage_Controller extends Cronycle_Controller
 		$cat->ensureIndex(array('children.external_key' => 1));
 		$cat->ensureIndex(array('source_uri' => 1));
 
+		$cc = new MongoCollection($this->db, 'category_children');
+		$cc->ensureIndex(array('external_key' => 1));
+		$cc->ensureIndex(array('category_id' => 1));
+		$cc->ensureIndex(array('id' => 1));
+		$cc->ensureIndex(array('id' => 1, 'category_id' => 1), array('unique' => 1));
+
 		$feed = new MongoCollection($this->db, 'feeds');
 		$feed->ensureIndex(array('type' => 1));
 		$feed->ensureIndex(array('url' => 1), array('unique' => true));
