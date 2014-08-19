@@ -1,12 +1,14 @@
 <?php
-function debug($obj) {
+function debug($obj)
+{
 	echo '<pre>';
 	var_dump($obj);
 	echo '</pre>';
 }
 
 //Database singleton
-function collection($key = FALSE) {
+function collection($key = FALSE)
+{
 	$APP =& get_instance();
 	if (!isset($APP->db)) {
 		$APP->connection = new MongoClient(DBCONN);
@@ -17,13 +19,15 @@ function collection($key = FALSE) {
 	return $key ? $APP->db->$key : $APP->db;
 }
 
-function _log($message) {
+function _log($message)
+{
 	echo date("Y-m-d H:i:s ") . $message, PHP_EOL;
 }
 
-function next_id($name) {
+function next_id($sequence)
+{
 	$ret = collection('counters')->findAndModify(
-		array('_id' => $name . '_id'),
+		array('_id' => $sequence . '_id'),
 		array('$inc' => array('seq' => 1)),
 		null,
 		array('new' => true)

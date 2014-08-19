@@ -132,6 +132,11 @@ Class Model_sources extends CI_Model
 
     if (!$feed_id) return false;
 
+    $exist = collection('user_categories')->count([
+      'id' => $category_id,
+      'children.id' => $feed_id
+    ]);
+
     $data = [
       'id' => $feed_id,
       'type' => $data['type'],
@@ -146,49 +151,50 @@ Class Model_sources extends CI_Model
       'external_key' => isset($data['external_key']) ? $data['external_key'] : null
     ];
 
-    $res = collection('user_categories')->update(
-      array(
-        'user_id' => $this->users->get('_id'),
-        'id' => $category_id
+    if (!$exist)
+    {
+      $res = collection('user_categories')->update(
+        array(
+          //'user_id' => $this->users->get('_id'),
+          'id' => $category_id
+        ),
+        array(
+          '$push' => [
+            'children' => $data
+          ],
+          '$inc' => [
+            'child_count' => 1
+          ]
+        ),
+        array(
+          'w' => 0
+        )
+      );
+    }
+
+    // Updates the feed ids inside collections that selected this category
+    $collections = collection('collections')->find(array(
+      'user.id' => $this->users->get('_id'),
+      'sources' => 'category:' . $category_id
       ),
       array(
-        '$addToSet' => [
-          'children' => $data
-        ],
-        '$inc' => [
-          'child_count' => 1
-        ]
+        'private_id' => true,
+        'sources' => true,
+        'filters' => true
       )
     );
 
-    if ($res)
+    if ($collections->count())
     {
-      // Updates the feed ids inside collections that selected this category
-      $collections = collection('collections')->find(array(
-        'user.id' => $this->users->get('_id'),
-        'sources' => 'category:' . $category_id
-        ),
-        array(
-          'private_id' => true,
-          'sources' => true,
-          'filters' => true
-        )
-      );
+      $this->load->model('model_collections', 'collections');
 
-      if ($collections->count())
+      foreach ($collections as $collection)
       {
-        $this->load->model('model_collections', 'collections');
-
-        foreach ($collections as $collection)
-        {
-          $this->collections->update($collection['private_id'], $collection);
-        }
+        $this->collections->update($collection['private_id'], $collection);
       }
-
-      return $data;
     }
 
-    return false;
+    return $data;
   }
 
   public function delete($node_id)

@@ -319,7 +319,7 @@ Class Model_collections extends CI_Model
 
     $conditions = [];
 
-    if (isset($collection['feeds']))
+    if (isset($collection['feeds']) && count($collection['feeds']))
     {
       $conditions['source'] = array(
         '$in' => $collection['feeds']

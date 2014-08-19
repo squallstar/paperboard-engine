@@ -104,6 +104,7 @@ Class Model_feeds extends CI_Model
 
   public function update_twitter_followers($user_id = FALSE)
   {
+    set_time_limit(0);
     ini_set("memory_limit","128M");
 
     // 10 minutes

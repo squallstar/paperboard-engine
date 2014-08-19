@@ -177,10 +177,12 @@ class Model_articles_expander extends CI_Model
       $article['images_processed'] = false;
     }
 
-    if (isset($metas['og:url']))
+    if (isset($metas['og:url']) && strlen($metas['og:url']))
     {
       $article['url'] = $metas['og:url'];
-      $article['url_host'] = parse_url($article['url'])['host'];
+      $uri = parse_url($article['url']);
+      if (isset($uri['host'])) $article['url_host'] = $uri['host'];
+      unset($uri);
     }
 
     if (isset($metas['og:description']))

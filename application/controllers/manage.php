@@ -99,6 +99,8 @@ class Manage_Controller extends Cronycle_Controller
 					'fetched' => collection('articles')->count(array('fetched_at' => array('$gt' => 0))),
 					'not_fetched' => collection('articles')->count(array('fetched_at' => 0)),
 					'fetched_today' => collection('articles')->count(array('fetched_at' => array('$gt' => $today))),
+					'with_content' => collection('articles')->count(array('content' => ['$ne' => ''])),
+					'without_content' => collection('articles')->count(array('content' => ''))
 				],
 				'added' => [
 					'last_hour' => collection('articles')->count(['processed_at' => ['$gt' => time() - 3600]]),
@@ -131,7 +133,8 @@ class Manage_Controller extends Cronycle_Controller
 					'expander' => $this->_process_is_running('start_expander') ? 'running' : 'stopped',
 					'followers' => $this->_process_is_running('start_followers_updater') ? 'running' : 'stopped',
 					'tweets' => $this->_process_is_running('start_tweets_downloader') ? 'running' : 'stopped',
-					'images' => $this->_process_is_running('start_images_downloader') ? 'running' : 'stopped'
+					'images' => $this->_process_is_running('start_images_downloader') ? 'running' : 'stopped',
+					'runner' => $this->_process_is_running('start_runner') ? 'running' : 'stopped'
 				)
 			)
 		));
@@ -150,6 +153,7 @@ class Manage_Controller extends Cronycle_Controller
 		$users->ensureIndex(array('password' => 1));
 		$users->ensureIndex(array('auth_token' => 1), array('unique' => true));
 		$users->ensureIndex(array('connected_accounts.id' => 1));
+		$users->ensureIndex(array('connected_accounts.following.updated_at' => 1));
 
 		$cats = new MongoCollection($this->db, 'categories');
 		$cats->ensureIndex(array('id' => 1), array('unique' => true));
@@ -167,12 +171,14 @@ class Manage_Controller extends Cronycle_Controller
 		$col->ensureIndex(array('position' => 1));
 		$col->ensureIndex(array('publicly_visible' => 1));
 		$col->ensureIndex(array('category.slug' => 1));
+		$col->ensureIndex(array('followers.id' => 1));
 
 		$cat = new MongoCollection($this->db, 'user_categories');
 		$cat->ensureIndex(array('id' => 1), array('unique' => true));
 		$cat->ensureIndex(array('user_id' => 1));
 		$cat->ensureIndex(array('text' => 1));
 		$cat->ensureIndex(array('children.id' => 1));
+		$cat->ensureIndex(array('children.external_key' => 1));
 		$cat->ensureIndex(array('source_uri' => 1));
 
 		$feed = new MongoCollection($this->db, 'feeds');
@@ -180,6 +186,7 @@ class Manage_Controller extends Cronycle_Controller
 		$feed->ensureIndex(array('url' => 1), array('unique' => true));
 		$feed->ensureIndex(array('processed_at' => 1));
 		$feed->ensureIndex(array('failed_count' => 1));
+		$feed->ensureIndex(array('external_id' => 1));
 		$feed->ensureIndex(array('title' => 'text', 'url' => 'text'));
 
 		$counters = new MongoCollection($this->db, 'counters');

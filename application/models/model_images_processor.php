@@ -39,7 +39,7 @@ class Model_images_processor extends CI_Model
           'images_processed' => false
         ],
         [
-          '_id' => true,
+          'id' => true,
           'lead_image.url_original' => true
         ]
       )->sort(['published_at' => -1])
@@ -86,7 +86,7 @@ class Model_images_processor extends CI_Model
           $image->setCompressionQuality(80);
           $image->thumbnailImage(480, 0);
 
-          $name = 'articles/' . date('Ymd/') . $article['_id']->{'$id'} . time() . '_s.jpg';
+          $name = 'articles/' . date('Ymd/') . $article['id'] . time() . '_s.jpg';
 
           $res = S3::putObject("$image", $this->_bucket, $name, S3::ACL_PUBLIC_READ, array(), array('Content-Type' => 'image/jpeg'));
 
@@ -107,12 +107,12 @@ class Model_images_processor extends CI_Model
         }
         catch (Exception $e)
         {
-          _log('Could not download image for article ' . $article['_id']->{'$id'});
+          _log('Could not download image for article ' . $article['id']);
         }
       }
 
       collection('articles')->update([
-        '_id' => $article['_id']
+        'id' => $article['id']
       ],
       [
         '$set' => $data

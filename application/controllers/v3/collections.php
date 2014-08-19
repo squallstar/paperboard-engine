@@ -302,30 +302,55 @@ class Collections_Controller extends Cronycle_Controller
 
     $query = $this->input->get('search_query');
 
-    $cond = [];
+    $cond = [
+      'filters' => [],
+      'feeds' => []
+    ];
 
-    if (strpos($query, '@') === 0)
+    $sources = [];
+
+    $queries = explode(' ', $query);
+    $n = count($queries);
+
+    for ($i=0; $i < $n; $i++)
     {
-      // Search by twitter author
-      $author = collection('feeds')->findOne(
-        ['title' => new MongoRegex("/$query/i")],
-        ['_id' => true]
-      );
+      $q = $queries[$i];
 
-      if ($author)
+      if (in_array($q, ['from', 'and', ',', '.', ';']))
       {
-        $cond['feeds'] = [$author['_id']->{'$id'}];
+        continue;
       }
-    }
 
-    if (count($cond) == 0)
-    {
-      $cond['filters'] = [
-        [
+      if ($q == 'not')
+      {
+        if ($i+1 < $n)
+        {
+          $queries[$i+1] = '-' . trim($queries[$i+1], '-');
+        }
+
+        continue;
+      }
+
+      if (strpos($q, '@') === 0)
+      {
+        // Search by twitter author
+        $author = collection('feeds')->findOne(
+          ['title' => new MongoRegex("/$q/i")],
+          ['_id' => true]
+        );
+
+        if ($author)
+        {
+          $cond['feeds'][] = $author['_id']->{'$id'};
+        }
+      }
+      else
+      {
+        $cond['filters'][] = [
           'context' => 'keywords',
-          'filter_value' => $query
-        ]
-      ];
+          'filter_value' => $q
+        ];
+      }
     }
 
     // Include the line below in the feeds to search only using the user sources
