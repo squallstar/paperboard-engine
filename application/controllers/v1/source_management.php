@@ -150,6 +150,11 @@ class Source_management_Controller extends Cronycle_Controller
 
       if ($user)
       {
+        if ($user->friends_count > Twitter::MAX_ALLOWED_FRIENDS)
+        {
+          return show_error("Twitter accounts that follow more than " . Twitter::MAX_ALLOWED_FRIENDS . " people are not allowed to be connected.", 422);
+        }
+
         $account_id = newid('t');
         $source_uri = 'twitter_account:' . $account_id;
 
@@ -215,7 +220,7 @@ class Source_management_Controller extends Cronycle_Controller
           $cb = $this->session->userdata('callback');
           $this->session->unset_userdata('callback');
 
-          return redirect($cb ? $cb : 'https://hhvm.cronycle.com/mycronycle');
+          return redirect($cb ? $cb : $this->config->item('client_base_url'));
         }
         else
         {

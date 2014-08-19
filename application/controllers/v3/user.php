@@ -152,11 +152,13 @@ class User_Controller extends Cronycle_Controller
 
     $this->load->model('model_images_processor', 'images');
 
+    $folder = 'avatars/' . $this->users->id();
+
     $res = $this->users->update_current([
       'avatar' => [
-        'small' => $this->images->upload_image('avatars', $file['tmp_name'], 30, 30),
-        'medium' => $this->images->upload_image('avatars', $file['tmp_name'], 60, 60),
-        'high' => $this->images->upload_image('avatars', $file['tmp_name'], 150, 150)
+        'small' => $this->images->upload_image($folder, $file['tmp_name'], 30, 30),
+        'medium' => $this->images->upload_image($folder, $file['tmp_name'], 60, 60),
+        'high' => $this->images->upload_image($folder, $file['tmp_name'], 150)
       ]
     ]);
 

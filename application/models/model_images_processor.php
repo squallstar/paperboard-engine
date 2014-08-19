@@ -12,11 +12,15 @@
 
 class Model_images_processor extends CI_Model
 {
+  const AWS_URL = 'https://s3-eu-west-1.amazonaws.com/';
+
+  const DEFAULT_WIDTH = 400;
+
+  const DEFAULT_JPEG_QUALITY = 83;
+
   private $_is_working;
 
   private $_bucket;
-
-  private $_aws_url = 'https://s3-eu-west-1.amazonaws.com/';
 
   public function __construct()
   {
@@ -45,13 +49,13 @@ class Model_images_processor extends CI_Model
       $image = file_get_contents($filename);
     }
 
-    $name = $folder . '/' . date('Ymd/') . md5($filename . $width . $height) . time() . '.jpg';
+    $name = $folder . '/' . md5($filename . $width . $height) . time() . '.jpg';
 
     $res = S3::putObject("$image", $this->_bucket, $name, S3::ACL_PUBLIC_READ, array(), array('Content-Type' => 'image/jpeg'));
 
     if ($res)
     {
-      return $this->_aws_url . $this->_bucket . '/' . $name;
+      return self::AWS_URL . $this->_bucket . '/' . $name;
     }
     else
     {
@@ -99,7 +103,7 @@ class Model_images_processor extends CI_Model
 
   private function _process(&$articles)
   {
-    $aws_url = $this->_aws_url . $this->_bucket . '/';
+    $aws_url = self::AWS_URL . $this->_bucket . '/';
 
     $image = new Imagick();
 
@@ -116,8 +120,8 @@ class Model_images_processor extends CI_Model
           $image->clear();
           @$image->readImage($article['lead_image']['url_original']);
           $image->setFormat("jpeg");
-          $image->setCompressionQuality(80);
-          $image->thumbnailImage(480, 0);
+          $image->setCompressionQuality(self::DEFAULT_JPEG_QUALITY);
+          $image->thumbnailImage(self::DEFAULT_WIDTH, 0);
 
           $name = 'articles/' . date('Ymd/') . $article['id'] . time() . '_s.jpg';
 
