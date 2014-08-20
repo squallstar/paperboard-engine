@@ -133,6 +133,8 @@ Class Twitter
 
 		$friends = [];
 
+		$max = 10;
+
 		while ($params['cursor'] != 0)
 		{
 			$code = $this->t->request('GET', $this->t->url('1.1/friends/list'), $params);
@@ -158,8 +160,11 @@ Class Twitter
 			}
 			else
 			{
-				$params['cursor'] = 0;
+				break;
 			}
+
+			$max--;
+			if ($max == 0) break;
 		}
 
 		return $friends;
