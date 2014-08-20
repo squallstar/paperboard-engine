@@ -63,7 +63,8 @@ Class Model_sources extends CI_Model
     collection('user_categories')->remove(
       array(
         'user_id'     => $this->users->get('_id'),
-        'text'        => $screen_name
+        'text'        => $screen_name,
+        'type'        => 'twitter_account'
       ),
       array('justOne' => true)
     );
@@ -106,17 +107,17 @@ Class Model_sources extends CI_Model
 
     if (!$feed_id) return false;
 
-    $exist = collection('category_children')->count([
-      'id' => $feed_id,
+
+    $exist = collection('category_children')->findOne([
+      'feed_id' => $feed_id,
       'category_id' => $category_id
-    ]);
+    ], ['id' => 1, 'source_uri' => 1]);
 
     $data = [
-      'id' => $feed_id,
+      'feed_id' => $feed_id,
       'category_id' => $category_id,
       'user_id' => $this->users->id(),
       'type' => $data['type'],
-      'source_uri' => $data['type'] . ':' . $feed_id,
       'text' => $data['text'],
       'sub_text' => $data['sub_text'],
       'can_be_renamed' => false,
@@ -129,8 +130,17 @@ Class Model_sources extends CI_Model
 
     if (!$exist)
     {
+      $data['id'] = newid('f-');
+      $data['source_uri'] = $data['type'] . ':' . $data['id'];
       $res = collection('category_children')->insert($data);
     }
+    else
+    {
+      $data['id'] = $exist['id'];
+      $data['source_uri'] = $exist['source_uri'];
+    }
+
+    unset($exist);
 
     // Updates the feed ids inside collections that selected this category
     $collections = collection('collections')->find(array(
@@ -191,11 +201,21 @@ Class Model_sources extends CI_Model
     {
       $res = collection('user_categories')->remove(
         array(
-          'user_id' => $this->users->get('_id'),
+          'user_id' => $this->users->id(),
           'id' => $node_id
         ),
         array(
           'justOne' => true
+        )
+      );
+
+      collection('category_children')->remove(
+        array(
+          'user_id' => $this->users->id(),
+          'category_id' => $node_id
+        ),
+        array(
+          'justOne' => false
         )
       );
     }
@@ -268,14 +288,13 @@ Class Model_sources extends CI_Model
       list($type, $id) = explode(':', $source);
 
       switch ($type) {
-        case 'feed':
-        case 'twitter_user':
-          $feeds[] = $id;
-          break;
-
         case 'category':
         case 'twitter_account':
           $categories[] = $id;
+          break;
+
+        default:
+          $feeds[] = $source;
           break;
       }
     }
@@ -284,24 +303,19 @@ Class Model_sources extends CI_Model
 
     if ($return_only_ids)
     {
+      $nodes = [];
+
       if (count($categories) == 0)
       {
-        // When no folders are selected, it's not necessary to run all the code below
-        // as we already know all the ids
-        $nodes = [];
-
-        foreach ($feeds as &$feed)
-        {
-          $nodes[] = str_replace(['feed:', 'twitter_user:'], '', $feed);
-        }
-
-        unset($feed);
-
-        return $nodes;
+        $cond = [
+          'source_uri' => [
+            '$in' => $feeds
+          ]
+        ];
       }
-
-      $items = collection('category_children')->find(
-        [
+      else
+      {
+        $cond = [
           '$or' => [
             [
               'category_id' => [
@@ -309,22 +323,24 @@ Class Model_sources extends CI_Model
               ]
             ],
             [
-              'id' => [
+              'source_uri' => [
                 '$in' => $feeds
               ]
             ]
           ]
-        ],
+        ];
+      }
+
+      $items = collection('category_children')->find(
+        $cond,
         [
-          'id' => true
+          'feed_id' => true
         ]
       );
 
-      $nodes = [];
-
       foreach ($items as $item)
       {
-        $nodes[] = $item['id'];
+        $nodes[] = $item['feed_id'];
       }
 
       return $nodes;
@@ -333,7 +349,6 @@ Class Model_sources extends CI_Model
     {
       $folders = iterator_to_array(collection('user_categories')->find(
         array(
-          'user_id' => $this->users->get('_id'),
           'id' => [
             '$in' => $categories
           ]
@@ -358,9 +373,100 @@ Class Model_sources extends CI_Model
       foreach ($folders as &$category)
       {
         $this->_fill_category_with_children($category);
+      }
 
+      if (count($feeds))
+      {
+        // Some feeds were selected. we need to find out their folders
+        $cats = [];
+
+        $items = collection('category_children')->find(
+          [
+            'source_uri' => [
+              '$in' => $feeds
+            ]
+          ],
+          [
+            '_id' => false,
+            'feed_id' => false
+          ]
+        );
+
+        $not_extracted_cats = [];
+
+        foreach ($items as $item)
+        {
+          $cat_id = $item['category_id'];
+          unset($item['category_id']);
+
+          if (isset($cats[$cat_id]))
+          {
+            $cats[$cat_id]['children'][] = $item;
+          }
+          else
+          {
+            // Folder not extracted yet. Add to next queue
+
+            if (!isset($not_extracted_cats[$cat_id]))
+            {
+              $not_extracted_cats[$cat_id] = [];
+            }
+
+            $not_extracted_cats[$cat_id][] = $item;
+          }
+        }
+
+        // Next. extract missing categories
+        $ids = array_keys($not_extracted_cats);
+
+        if (count($ids))
+        {
+          $feed_cats = iterator_to_array(collection('user_categories')->find(
+            array(
+              'id' => [
+                '$in' => $ids
+              ]
+            ),
+            array(
+              '_id' => false,
+              'id' => true,
+              'type' => true,
+              'text' => true,
+              'source_uri' => true,
+              'child_count' => true,
+              'broken' => true,
+              'can_be_deleted' => true
+            )
+          ));
+
+          foreach ($feed_cats as $folder)
+          {
+            $cats[$folder['id']] = $folder;
+            $cats[$folder['id']]['children'] = $not_extracted_cats[$folder['id']];
+          }
+        }
+
+        foreach ($cats as $id => &$cat) {
+          $folders[] = $cat;
+        }
+
+        unset($cats);
+        unset($not_extracted_cats);
+        unset($items);
+      }
+
+      $data = [
+        'twitter' => [],
+        'feed' => []
+      ];
+
+      foreach ($folders as &$category)
+      {
         $data[ ($category['type'] == 'feed_category' ? 'feed' : 'twitter') ][] = $category;
       }
+
+      unset($category);
+      unset($folders);
 
       return $data;
     }
@@ -370,7 +476,7 @@ Class Model_sources extends CI_Model
   {
     $category['children'] = iterator_to_array(collection('category_children')->find(
       ['category_id' => $category['id']],
-      ['_id' => false, 'category_children' => false]
+      ['_id' => false, 'category_id' => false, 'feed_id' => false]
     )->sort(['external_key' => 1]));
   }
 

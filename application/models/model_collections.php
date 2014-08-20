@@ -62,7 +62,9 @@ Class Model_collections extends CI_Model
           'displayStyle' => 'headline+image'
         )
       ),
-      'cover_asset' => [],
+      'cover_asset' => [
+        'fixed' => false
+      ],
       'filters' => [],
       'followers' => [],
       'followers_count' => 0,
@@ -152,27 +154,27 @@ Class Model_collections extends CI_Model
 
     $needs_recount = false;
 
-    if (isset($data['sources']))
-    {
-      $needs_recount = true;
-      $this->load->model('model_sources', 'sources');
-      $data['feeds'] = $this->sources->tree($data['sources'], true);
-    }
-
     if (isset($data['filters']))
     {
       $needs_recount = true;
-      $data['feeds'] = $collection['feeds'];
     }
     else
     {
       $data['filters'] = $collection['filters'];
     }
 
+    if (isset($data['sources']))
+    {
+      $needs_recount = true;
+    }
+
     $data['last_updated_at'] = time();
 
     if ($needs_recount)
     {
+      $this->load->model('model_sources', 'sources');
+      $data['feeds'] = $this->sources->tree($data['sources'], true);
+
       $data['total_links_count'] = $this->links($data, FALSE)->count();
       $data['total_source_count'] = count($data['feeds']);
     }
@@ -313,13 +315,13 @@ Class Model_collections extends CI_Model
     return ['id' => intval($collection_id)];
   }
 
-  public function links(&$collection, $limit = 40, $max_timestamp = null, $min_timestamp = null)
+  public function links(&$collection, $limit = 40, $max_timestamp = null, $min_timestamp = null, $fields = array())
   {
     $limit = $limit ? intval($limit) : 40;
 
     $conditions = [];
 
-    if (isset($collection['feeds']) && count($collection['feeds']))
+    if (isset($collection['feeds']) && is_array($collection['feeds']))
     {
       $conditions['source'] = array(
         '$in' => $collection['feeds']
@@ -384,9 +386,9 @@ Class Model_collections extends CI_Model
       $conditions['id'] = ['$in' => $collection['article_ids']];
     }
 
-    $cursor = collection('articles')->find(
-      $conditions,
-      array(
+    if (!count($fields))
+    {
+      $fields = array(
         '_id' => false,
         'source' => false,
         'fetched_at' => false,
@@ -394,8 +396,15 @@ Class Model_collections extends CI_Model
         'assets' => false,
         'type' => false,
         'lead_image_in_content' => false
-      )
+      );
+    }
+
+    $cursor = collection('articles')->find(
+      $conditions,
+      $fields
     );
+
+    unset($fields);
 
     if ($limit !== FALSE)
     {

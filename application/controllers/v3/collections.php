@@ -307,8 +307,6 @@ class Collections_Controller extends Cronycle_Controller
       'feeds' => []
     ];
 
-    $sources = [];
-
     $queries = explode(' ', $query);
     $n = count($queries);
 
@@ -352,6 +350,8 @@ class Collections_Controller extends Cronycle_Controller
         ];
       }
     }
+
+    if (count($cond['feeds']) == 0) unset($cond['feeds']);
 
     // Include the line below in the feeds to search only using the user sources
     //'feeds' => $this->sources->tree_ids()

@@ -39,7 +39,9 @@ class Source_management_Controller extends Cronycle_Controller
 
     if ($collection)
     {
-      $this->json(200, $this->sources->tree(array_values($collection['sources'])));
+      $flat = $this->input->get('flat') ? true: false;
+
+      $this->json(200, $this->sources->tree($collection['sources'], $flat));
     }
     else
     {
