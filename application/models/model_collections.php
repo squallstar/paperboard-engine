@@ -67,7 +67,7 @@ Class Model_collections extends CI_Model
       ],
       'filters' => [],
       'followers' => [],
-      'followers_count' => 0,
+      'follower_count' => 0,
       'user' => array(
         'id' => $this->users->id(),
         'full_name' => $this->users->get('full_name'),
@@ -290,7 +290,7 @@ Class Model_collections extends CI_Model
           ]
         ],
         $fields
-      ),
+      )->sort(['position' => 1]),
       false
     );
 
@@ -444,7 +444,7 @@ Class Model_collections extends CI_Model
           ]
         ],
         '$inc' => [
-          'followers_count' => 1
+          'follower_count' => 1
         ]
       ]
     );
@@ -461,7 +461,7 @@ Class Model_collections extends CI_Model
           )
         ],
         '$inc' => [
-          'followers_count' => -1
+          'follower_count' => -1
         ]
       ]
     );

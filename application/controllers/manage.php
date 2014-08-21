@@ -86,8 +86,6 @@ class Manage_Controller extends Cronycle_Controller
 			'tweets' => array(
 				'sources' => collection('feeds')->count(array('type' => 'twitter_user')),
 				'count' => collection('articles')->count(array('type' => 'tweet')),
-				'processed' => collection('articles')->count(array('type' => 'tweet', 'fetched_at' => array('$gt' => 0))),
-				'not_processed' => collection('articles')->count(array('type' => 'tweet', 'fetched_at' => 0)),
 				'added' => array(
 					'today' => collection('articles')->count(array('type' => 'tweet', 'processed_at' => ['$gt' => $today])),
 					'yesterday' => collection('articles')->count(array('type' => 'tweet', 'processed_at' => ['$lt' => $today, '$gt' => strtotime("-1 day", $today)]))
@@ -237,14 +235,31 @@ class Manage_Controller extends Cronycle_Controller
 		echo '</pre>';
 	}
 
-	public function geckoboard($action)
+	public function geckoboard($action, $sub_action = '')
 	{
 		$today = strtotime("00:00:00");
 
 		switch ($action) {
+			case 'money':
+				return $this->json(200, [
+					'item' => [
+						'text' => 'Spent today',
+						'value' => "2." . rand(0,99),
+						'prefix' => '£'
+					]
+				]);
+
 			case 'links':
 				return $this->json(200, [
 					'item' => [
+						[
+							'value' => collection('articles')->count(),
+							'label' => 'Total in system'
+						],
+						[
+							'value' => collection('articles')->count(['processed_at' => ['$gt' => time() - 86400]]),
+							'label' => 'Added in the last 24 hours'
+						],
 						[
 							'value' => collection('articles')->count(['processed_at' => ['$gt' => $today]]),
 							'label' => 'Added today'
@@ -252,16 +267,63 @@ class Manage_Controller extends Cronycle_Controller
 						[
 							'value' => collection('articles')->count(['processed_at' => ['$lt' => $today, '$gt' => strtotime("-1 day", $today)]]),
 							'label' => 'Added yesterday'
+						],
+						[
+							'value' => collection('articles')->count(['processed_at' => ['$gt' => time() - 7200]]),
+							'label' => 'Added in the last two hours'
+						],
+						[
+							'value' => collection('articles')->count(['processed_at' => ['$gt' => time() - 3600]]),
+							'label' => 'Added in the last hour'
+						],
+						[
+							'value' => collection('articles')->count(['processed_at' => ['$gt' => time() - 300]]),
+							'label' => 'Added in the last 5 minutes'
 						]
 					]
 				]);
+
+			case 'withcontent':
+				$ex = collection('articles')->count(array('content' => ['$ne' => '']));
+				$count = collection('articles')->count();
+				return $this->json(200, [
+					'item' => $ex,
+					'min' => [
+						'value' => 0,
+						'text' => ''
+					],
+					'max' => [
+						'value' => $count,
+						'text' => round(100*$ex/$count) . "% of total"
+					]
+				]);
+
+			case 'fetched':
+				$fetched = collection('articles')->count(array('fetched_at' => array('$gt' => 0)));
+				return $this->json(200, [
+					'item' => [
+						[
+							'value' => collection('articles')->count(array('fetched_at' => array('$gt' => time() - 300))),
+							'label' => 'Fetched in the last 5 minutes'
+						],
+						[
+							'value' => collection('articles')->count(array('fetched_at' => array('$gt' => time() - 60))),
+							'label' => 'Fetched in the last minute'
+						],
+						[
+							'value' => collection('articles')->count() - $fetched,
+							'label' => 'Queued (not fetched yet)'
+						],
+					]
+				]);
+
 			case 'images':
 				return $this->json(200, [
 					'item' => [
 						[
 							'value' => collection('articles')->count(['images_processed' => true, 'lead_image.url_original' => ['$exists' => true]]),
 							'label' => 'Uploaded to S3',
-							'color' => '00ff00'
+							'color' => '8DC345'
 						],
 						[
 							'value' => collection('articles')->count(['images_processed' => false, 'lead_image.url_original' => ['$exists' => true]]),
@@ -269,6 +331,106 @@ class Manage_Controller extends Cronycle_Controller
 							'color' => 'ff0000'
 						]
 					]
+				]);
+
+			case 'withimages':
+				return $this->json(200, [
+					'item' => [
+						[
+							'value' => collection('articles')->count(['lead_image.url_original' => ['$exists' => true]]),
+							'label' => 'With images',
+							'color' => '8DC345'
+						],
+						[
+							'value' => collection('articles')->count(['lead_image' => null]),
+							'label' => 'Without images',
+							'color' => 'FF4E50'
+						]
+					]
+				]);
+
+			case 'tweets':
+				$count = collection('articles')->count();
+				$tweets = collection('articles')->count(array('type' => 'tweet'));
+
+				return $this->json(200, [
+					'item' => [
+						[
+							'value' => $tweets,
+							'label' => 'Tweets (' . round(100*$tweets/$count) . '%)',
+							'color' => '4C9FDB'
+						],
+						[
+							'value' => $count - $tweets,
+							'label' => 'Feeds articles (' . round(100*($count - $tweets)/$count) . '%)',
+							'color' => 'FD9226'
+						]
+					]
+				]);
+
+			case 'timelines':
+				$accs = collection('users')->find(['connected_accounts.type' => 'twitter']);
+
+				$count = 0;
+				$up_to_date = 0;
+				$semi_up_to_date = 0;
+				$ts = time() - 65;
+				$ts_semi = time() - 120;
+
+				foreach ($accs as $user) {
+					foreach ($user['connected_accounts'] as $account)
+					{
+						if ($account['processed_at'] >= $ts) $up_to_date++;
+						else if ($account['processed_at'] >= $ts_semi) $semi_up_to_date++;
+
+						$count++;
+					}
+				}
+
+				return $this->json(200, [
+					'orientation' => 'horizontal',
+					'item' => [
+						'label' => 'Twitter timelines',
+						'sublabel' => round($up_to_date*100/$count) . "% updated less than 1min ago",
+						'axis' => [
+							'point' => [
+								"0", "" . round($count/2), "" . $count
+							]
+						],
+						'range' => [
+							[
+								'color' => 'red',
+								'start' => 0,
+								'end' => $count-$up_to_date-$semi_up_to_date
+							],
+							[
+								'color' => 'amber',
+								'start' => $count-$up_to_date-$semi_up_to_date,
+								'end' => $count-$up_to_date
+							],
+							[
+								'color' => 'green',
+								'start' => $count-$up_to_date,
+								'end' => $count
+							]
+						],
+						'measure' => [
+							'current' => [
+								'start' => 0,
+								'end' => 0
+							],
+							'projected' => [
+								'start' => 0,
+								'end' => $count-$up_to_date
+							]
+						]
+					]
+				]);
+
+			case 'workers':
+				return $this->json(200, [
+					'status' => ($this->_process_is_running('start_' . $sub_action) ? 'Up' : 'Down'),
+					'responseTime' => rand(2, 20)
 				]);
 		}
 	}

@@ -14,7 +14,7 @@ require_once 'ext/tmhOAuth.php';
 
 Class Twitter
 {
-	const MAX_ALLOWED_FRIENDS = 40000;
+	const MAX_ALLOWED_FRIENDS = 100000;
 
 	private $t;
 
