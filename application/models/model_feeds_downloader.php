@@ -329,6 +329,11 @@ class Model_feeds_downloader extends CI_Model
     $domain = isset($url_pieces['host']) ? $url_pieces['host'] : '';
 
     $ts = strtotime($entry->publishedDate);
+    if (!$ts) $ts = time();
+    else if ($now < $ts)
+    {
+      $ts = $now;
+    }
 
     $content = trim($entry->content);
 
@@ -339,7 +344,7 @@ class Model_feeds_downloader extends CI_Model
         array(
           'external_id'  => $source['_id']->{'$id'},
           'full_name'    => $source['title'],
-          'published_at' => $now < $ts ? $now : $ts,
+          'published_at' => $ts,
           'type'         => 'Feed',
           'screen_name'  => strip_tags($entry->author)
         )
@@ -348,7 +353,7 @@ class Model_feeds_downloader extends CI_Model
       'url'          => $entry->link,
       'description'  => strip_tags($content),
       'content'      => $content,
-      'published_at' => $now < $ts ? $now : $ts,
+      'published_at' => $ts,
       'processed_at' => $now,
       'url_host'     => $domain,
       'lead_image'   => NULL,
@@ -406,6 +411,9 @@ class Model_feeds_downloader extends CI_Model
     }
 
     unset($content);
+    unset($domain);
+    unset($ts);
+    unset($now);
 
     if ($img)
     {

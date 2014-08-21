@@ -92,9 +92,11 @@ class Service_Controller extends CI_Controller
   {
     $this->load->model('model_articles_expander', 'expander');
 
+    $n = 30;
+
     while (true)
     {
-      if ($this->expander->start(30) != 30)
+      if ($this->expander->start($n) != $n)
       {
         sleep(10);
       }
@@ -105,9 +107,11 @@ class Service_Controller extends CI_Controller
   {
     $this->load->model('model_images_processor', 'images');
 
+    $n = 25;
+
     while (true)
     {
-      if ($this->images->process(30) != 30)
+      if ($this->images->process($n) != $n)
       {
         sleep(10);
       }

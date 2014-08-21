@@ -67,53 +67,46 @@ class Model_images_processor extends CI_Model
   {
     if ($this->_is_working) return FALSE;
 
-    $articles = iterator_to_array(
-      collection('articles')->find(
-        [
-          'fetched_at' => [
-            '$gt' => 0
-          ],
-          'images_processed' => false
+    $articles = collection('articles')->find(
+      [
+        'fetched_at' => [
+          '$gt' => 0
         ],
-        [
-          'id' => true,
-          'lead_image.url_original' => true
-        ]
-      )->sort(['published_at' => -1])
-       ->limit($limit)
-    , false);
+        'images_processed' => false
+      ],
+      [
+        'id' => true,
+        'lead_image.url_original' => true
+      ]
+    )->sort(['published_at' => -1])
+     ->limit($limit);
 
-    $n = count($articles);
+    $this->_is_working = true;
+    $count = $this->_process($articles);
+    $this->_is_working = false;
 
-    if ($n)
-    {
-      $this->_is_working = true;
-
-      $count = $this->_process($articles);
-
-      $this->_is_working = false;
-
-      _log("Processed " . $count . " images");
-    }
+    _log("Processed " . $count . " images");
 
     unset($articles);
 
-    return $n;
+    return $count;
   }
 
-  private function _process(&$articles)
+  private function _process($articles)
   {
     $aws_url = self::AWS_URL . $this->_bucket . '/';
 
     $image = new Imagick();
 
-    foreach ($articles as &$article)
+    $i = 0;
+
+    foreach ($articles as $article)
     {
       $data = [
         'images_processed' => true
       ];
 
-      if ($article['lead_image'])
+      if ($article['lead_image'] && isset($article['lead_image']['url_original']))
       {
         try
         {
@@ -144,7 +137,7 @@ class Model_images_processor extends CI_Model
         }
         catch (Exception $e)
         {
-          _log('Could not download image for article ' . $article['id']);
+          _log('Could not download image for article ' . $article['id'] . ': ' . $article['lead_image']['url_original']);
         }
       }
 
@@ -157,15 +150,16 @@ class Model_images_processor extends CI_Model
       [
         'w' => 0
       ]);
+
+      $i++;
     }
 
     unset($name);
     unset($res);
-    unset($article);
     unset($image);
     unset($aws_url);
 
-    return count($articles);
+    return $i;
   }
 
 }

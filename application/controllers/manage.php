@@ -203,6 +203,7 @@ class Manage_Controller extends Cronycle_Controller
 		$art->ensureIndex(array('id' => 1), array('unique' => true));
 		$art->ensureIndex(array('source' => 1));
 		$art->ensureIndex(array('published_at' => -1));
+		$art->ensureIndex(array('processed_at' => -1));
 		$art->ensureIndex(array('fetched_at' => 1));
 		$art->ensureIndex(array('images_processed' => 1));
 		$art->ensureIndex(array('name' => 'text', 'description' => 'text'));
@@ -318,16 +319,17 @@ class Manage_Controller extends Cronycle_Controller
 				]);
 
 			case 'images':
+				$not = collection('articles')->count(['images_processed' => false, 'lead_image.url_original' => ['$exists' => true]]);
 				return $this->json(200, [
 					'item' => [
 						[
-							'value' => collection('articles')->count(['images_processed' => true, 'lead_image.url_original' => ['$exists' => true]]),
-							'label' => 'Uploaded to S3',
+							'value' => collection('articles')->count(['processed_at' => ['$gt' => $today], 'images_processed' => true, 'lead_image.url_original' => ['$exists' => true]]),
+							'label' => 'Uploaded today',
 							'color' => '8DC345'
 						],
 						[
-							'value' => collection('articles')->count(['images_processed' => false, 'lead_image.url_original' => ['$exists' => true]]),
-							'label' => 'Not uploaded',
+							'value' => $not,
+							'label' => 'Queued (' . $not . ')',
 							'color' => 'ff0000'
 						]
 					]
@@ -431,6 +433,41 @@ class Manage_Controller extends Cronycle_Controller
 				return $this->json(200, [
 					'status' => ($this->_process_is_running('start_' . $sub_action) ? 'Up' : 'Down'),
 					'responseTime' => rand(2, 20)
+				]);
+
+			case 'domains':
+				$pipeline = array(
+				    array(
+			        '$group' => array(
+			            '_id' => '$url_host',
+			            'value' => ['$sum' => 1]
+			        )
+				    ),
+				    array(
+				    	'$sort' => ['value' => -1]
+				    ),
+				    array(
+				    	'$limit' => 9
+				    )
+				);
+				$out = collection('articles')->aggregate($pipeline);
+				$items = [
+					[
+						'value' => collection('articles')->count(),
+						'label' => 'All articles'
+					]
+				];
+
+				foreach ($out['result'] as $domain)
+				{
+					$items[] = [
+						'value' => $domain['value'],
+						'label' => $domain['_id']
+					];
+				}
+
+				return $this->json(200, [
+					'item' => $items
 				]);
 		}
 	}
