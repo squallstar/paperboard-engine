@@ -4,3 +4,4 @@
 */cache/!index.html
 */cache/!.htaccess
 error.log
+.fuse_*

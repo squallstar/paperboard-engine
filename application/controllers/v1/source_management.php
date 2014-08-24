@@ -79,11 +79,16 @@ class Source_management_Controller extends Cronycle_Controller
 
   public function delete_node($node_id)
   {
-    $res = $this->sources->delete($node_id);
+    $nodes = explode(',', $node_id);
+
+    $res = [];
+    foreach ($nodes as $node_id) {
+      $res[] = $this->sources->delete($node_id) ? true : false;
+    }
 
     if ($res)
     {
-      $this->json(200);
+      $this->json(200, $res);
     }
     else
     {
@@ -132,6 +137,102 @@ class Source_management_Controller extends Cronycle_Controller
     }
   }
 
+  public function add_instagram_account()
+  {
+    if (!$this->require_token()) return;
+
+    $this->load->helper('url');
+    $this->load->library('session');
+    $this->load->library('instagram', [
+      'callback' => current_url() . '?auth_token=' . $this->users->token()
+    ]);
+
+    $code = $this->input->get('code');
+
+    if ($code)
+    {
+      $resp = $this->instagram->getOAuthToken($code);
+
+      if ($resp && isset($resp->access_token))
+      {
+        $account_id = newid('i');
+        $source_uri = 'instagram_account:' . $account_id;
+
+        // As a requirement, we remove this instagram account from other users if they connected it
+        collection('users')->update(
+          [],
+          [
+            '$pull' => [
+              'connected_accounts' => [
+                'type' => 'instagram',
+                'access_token.screen_name' => $resp->user->username
+              ]
+            ]
+          ],
+          ['multiple' => true]
+        );
+
+        $res = collection('users')->update(
+          array('_id' => $this->users->get('_id')),
+          array(
+            '$set' => array(
+              'full_name' => $resp->user->full_name,
+              'nickname' => $resp->user->username,
+              'avatar.small'  => $resp->user->profile_picture,
+              'avatar.medium' => $resp->user->profile_picture,
+              'avatar.high'   => $resp->user->profile_picture
+            ),
+            '$push' => array(
+              'connected_accounts' => array(
+                'id' => $source_uri,
+                'processed_at' => 0,
+                'connected_at' => time(),
+                'type' => 'instagram',
+                'access_token' => array(
+                  'oauth_token' => $resp->access_token,
+                  'user_id' => $resp->user->id,
+                  'screen_name' => $resp->user->username
+                ),
+                'following' => array(
+                  'count' => 0,
+                  'updated_at' => 0
+                )
+              )
+            )
+          )
+        );
+
+        if ($res)
+        {
+          $res = $this->sources->add_instagram_category($account_id, $resp->user->username, $resp->user->full_name);
+
+          // Also adds myself as a source
+          $this->sources->add_instagram_person($res['id'], $resp->user);
+
+          if (!$res)
+          {
+            return $this->json(422, ['errors' => ['Cannot add the twitter source']]);
+          }
+
+          $this->load->model('model_feeds', 'feeds');
+          $this->feeds->update_instagram_followers($this->users->get('_id'));
+
+          $cb = $this->session->userdata('callback');
+          $this->session->unset_userdata('callback');
+
+          return redirect($cb ? $cb : $this->config->item('client_base_url'));
+        }
+        else
+        {
+          return $this->json(422, ['errors' => ['Cannot add the instagram account']]);
+        }
+      }
+    }
+
+    $this->session->set_userdata('callback', $this->input->get('d'));
+    redirect($this->instagram->getLoginUrl(['basic', 'likes', 'comments']));
+  }
+
   public function add_twitter_account()
   {
     if (!$this->require_token()) return;
@@ -164,6 +265,7 @@ class Source_management_Controller extends Cronycle_Controller
           [
             '$pull' => [
               'connected_accounts' => [
+                'type' => 'twitter',
                 'access_token.screen_name' => $user->screen_name
               ]
             ]

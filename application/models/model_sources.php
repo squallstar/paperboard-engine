@@ -43,6 +43,54 @@ Class Model_sources extends CI_Model
     return $res ? $data : false;
   }
 
+  public function add_instagram_category($id, $screen_name, $full_name = '')
+  {
+    $data = array(
+      'id'          => $id,
+      'text'        => $screen_name,
+      'sub_text'    => $full_name,
+      'type'        => 'instagram_account',
+      'source_uri'  => 'instagram_account:' . $id,
+      'user_id'     => $this->users->get('_id'),
+      'can_be_renamed' => false,
+      'can_be_deleted' => true,
+      'can_be_hidden' => false,
+      'can_be_feed_parent' => false,
+      'child_count' => 0,
+      'broken' => false
+    );
+
+    collection('user_categories')->remove(
+      array(
+        'user_id'     => $this->users->get('_id'),
+        'text'        => $screen_name,
+        'type'        => 'instagram_account'
+      ),
+      array('justOne' => true)
+    );
+
+    $res = collection('user_categories')->save($data);
+
+    unset($data['_id']);
+    unset($data['user_id']);
+
+    return $res ? $data : false;
+  }
+
+  public function add_instagram_person($category_id, $data)
+  {
+    return $this->_add_feed($category_id, array(
+      'text' => $data->username,
+      'sub_text' => $data->full_name,
+      'type' => 'instagram_user',
+      'can_be_deleted' => false,
+      'can_be_hidden' => true,
+      'external_id' => $data->id,
+      'external_key' => strtolower($data->username),
+      'avatar' => $data->profile_picture
+    ));
+  }
+
   public function add_twitter_category($id, $screen_name, $full_name = '')
   {
     $data = array(
@@ -254,7 +302,7 @@ Class Model_sources extends CI_Model
     {
       $this->_fill_category_with_children($category);
 
-      if ($category['type'] == 'twitter_account') $data['twitter'][] = $category;
+      if ($category['type'] == 'twitter_account' || $category['type'] == 'instagram_account') $data['twitter'][] = $category;
       else $data['feed'][] = $category;
     }
 
@@ -290,6 +338,7 @@ Class Model_sources extends CI_Model
       switch ($type) {
         case 'category':
         case 'twitter_account':
+        case 'instagram_account':
           $categories[] = $id;
           break;
 

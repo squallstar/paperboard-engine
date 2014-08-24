@@ -182,6 +182,97 @@ Class Model_feeds extends CI_Model
     return $count;
   }
 
+  public function update_instagram_followers($user_id = FALSE)
+  {
+    set_time_limit(0);
+    ini_set("memory_limit","128M");
+
+    // 10 minutes
+    $ts = time() - 600;
+
+    $cond = array(
+      'connected_accounts.type' => 'instagram',
+      'connected_accounts.following.updated_at' => ['$lt' => $ts]
+    );
+
+    if ($user_id !== FALSE) $cond['_id'] = $user_id;
+
+    $users = collection('users')->find(
+      $cond,
+      array(
+        '_id' => true,
+        'connected_accounts' => true,
+      )
+    );
+
+    if ($user_id) $users->limit(1);
+
+    if (!$users->count()) return FALSE;
+
+    $count = 0;
+
+    $this->load->library('instagram');
+    $this->load->model('model_users', 'users');
+    $this->load->model('model_sources', 'sources');
+
+    foreach ($users as $user)
+    {
+      $this->users->set_user($user);
+
+      foreach ($user['connected_accounts'] as $account)
+      {
+        if ($account['type'] != 'instagram') continue;
+
+        $this->instagram->setAccessToken($account['access_token']['oauth_token']);
+
+        $folder = $this->sources->get_user_folder_by_source_id($account['id']);
+
+        $friends_count = 0;
+
+        if ($folder)
+        {
+          $friends = $this->instagram->getUserFollows('self', 500);
+
+          if ($friends)
+          {
+            $friends_count = count($friends);
+
+            foreach ($friends as &$friend)
+            {
+              if ($this->sources->add_instagram_person($folder['id'], $friend))
+              {
+                $count++;
+              }
+            }
+
+            unset($friend);
+          }
+
+          unset($friends);
+        }
+
+        unset($folder);
+
+        collection('users')->update(
+          array(
+            '_id' => $user['_id'],
+            'connected_accounts.id' => $account['id']
+          ),
+          array(
+            '$set' => array(
+              'connected_accounts.$.following.updated_at' => time(),
+              'connected_accounts.$.following.count' => $friends_count
+            )
+          )
+        );
+
+        unset($friends_count);
+      }
+    }
+
+    return $count;
+  }
+
   public function download_tweets()
   {
     $ts = time() - 65;

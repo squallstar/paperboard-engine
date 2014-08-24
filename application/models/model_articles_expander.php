@@ -36,8 +36,7 @@ class Model_articles_expander extends CI_Model
         ],
         [
           '_id' => true,
-          'url' => 1,
-          'url_host' => 1
+          'url' => 1
         ]
       )->sort(['processed_at' => -1])
        ->limit($limit)
@@ -109,6 +108,7 @@ class Model_articles_expander extends CI_Model
 
         if($curlError == "")
         {
+          $article['url'] = curl_getinfo($ch[$id], CURLINFO_EFFECTIVE_URL);
           if ($this->parse_article($article, curl_multi_getcontent($ch[$id]))) $count++;
         }
       }
@@ -180,10 +180,9 @@ class Model_articles_expander extends CI_Model
     if (isset($metas['og:url']) && strlen($metas['og:url']))
     {
       $article['url'] = $metas['og:url'];
-      $uri = parse_url($article['url']);
-      if (isset($uri['host'])) $article['url_host'] = $uri['host'];
-      unset($uri);
     }
+
+    $article['url_host'] = parse_url($article['url'])['host'];
 
     if (isset($metas['og:description']))
     {

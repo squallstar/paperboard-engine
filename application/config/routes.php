@@ -22,9 +22,10 @@ $route['v4/directory/([A-z0-9]+)'] = 'v4/directory/category_collections/$1';
 $route['v1/source_management/add_feed_category'] = 'v1/source_management/add_category';
 $route['v1/source_management/([A-z0-9]+)/add_feed'] = 'v1/source_management/add_feed/$1';
 $route['v1/source_management/([A-z0-9]+)/rename'] = 'v1/source_management/rename_category/$1';
-$route['v1/source_management/([A-z0-9]+)'] = 'v1/source_management/node/$1';
-
 $route['v1/source_management/add_twitter_account'] = 'v1/source_management/add_twitter_account';
+$route['v1/source_management/add_instagram_account'] = 'v1/source_management/add_instagram_account';
+$route['v(1|3)/source_management/([A-z0-9,\-]+)'] = 'v1/source_management/node/$2';
+
 $route['auth/twitter'] = 'v1/source_management/add_twitter_account';
 
 $route['v1/avatar'] = 'v3/user/avatar';

@@ -167,6 +167,10 @@ Class Model_collections extends CI_Model
     {
       $needs_recount = true;
     }
+    else if ($needs_recount)
+    {
+      $data['sources'] = $collection['sources'];
+    }
 
     $data['last_updated_at'] = time();
 

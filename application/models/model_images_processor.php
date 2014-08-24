@@ -138,6 +138,7 @@ class Model_images_processor extends CI_Model
         catch (Exception $e)
         {
           _log('Could not download image for article ' . $article['id'] . ': ' . $article['lead_image']['url_original']);
+          //$data['lead_image'] = null;
         }
       }
 

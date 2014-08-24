@@ -37,6 +37,18 @@ $config['twitter_consumer_secret'] = 'FiBsNbjAul4nVqo1mrkuIs0l2mKEEZHaEwEN6m1NHR
 
 /*
 |--------------------------------------------------------------------------
+| Instagram Consumer keys
+|--------------------------------------------------------------------------
+|
+| http://instagram.com/developer/clients/manage/
+| Callback url: http://hhvm.squallstar.it/v1/source_management/add_instagram_account
+|
+*/
+$config['instagram_consumer_key'] = '06e900c1a6914071940fdcd03f53d061';
+$config['instagram_consumer_secret'] = '70dc2060a027422a88f4c541d60983c7';
+
+/*
+|--------------------------------------------------------------------------
 | Amazon S3 Consumer keys
 |--------------------------------------------------------------------------
 |
@@ -164,7 +176,7 @@ $config['subclass_prefix'] = 'Cronycle_';
 | DO NOT CHANGE THIS UNLESS YOU FULLY UNDERSTAND THE REPERCUSSIONS!!
 |
 */
-$config['permitted_uri_chars'] = 'a-z 0-9~%.:_\-';
+$config['permitted_uri_chars'] = 'a-z 0-9~%.:_\-,';
 
 
 /*
