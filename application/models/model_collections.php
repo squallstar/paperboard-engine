@@ -399,7 +399,6 @@ Class Model_collections extends CI_Model
         'fetched_at' => false,
         'images_processed' => false,
         'assets' => false,
-        'type' => false,
         'lead_image_in_content' => false
       );
     }

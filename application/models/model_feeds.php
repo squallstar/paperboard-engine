@@ -12,6 +12,8 @@
 
 Class Model_feeds extends CI_Model
 {
+  const FOLLOWERS_OUTDATED_SECONDS = 600;
+
   private $_is_downloading;
 
   public function save($type, $title, $url, $external_id = null)
@@ -107,12 +109,9 @@ Class Model_feeds extends CI_Model
     set_time_limit(0);
     ini_set("memory_limit","128M");
 
-    // 10 minutes
-    $ts = time() - 600;
-
     $cond = array(
       'connected_accounts.type' => 'twitter',
-      'connected_accounts.following.updated_at' => ['$lt' => $ts]
+      'connected_accounts.following.updated_at' => ['$lt' => time() - self::FOLLOWERS_OUTDATED_SECONDS]
     );
 
     if ($user_id !== FALSE) $cond['_id'] = $user_id;
@@ -187,12 +186,9 @@ Class Model_feeds extends CI_Model
     set_time_limit(0);
     ini_set("memory_limit","128M");
 
-    // 10 minutes
-    $ts = time() - 600;
-
     $cond = array(
       'connected_accounts.type' => 'instagram',
-      'connected_accounts.following.updated_at' => ['$lt' => $ts]
+      'connected_accounts.following.updated_at' => ['$lt' => time() - self::FOLLOWERS_OUTDATED_SECONDS]
     );
 
     if ($user_id !== FALSE) $cond['_id'] = $user_id;
@@ -465,7 +461,7 @@ Class Model_feeds extends CI_Model
 
         $this->instagram->setAccessToken($account['access_token']['oauth_token']);
 
-        $pics = $this->instagram->getPics();
+        $pics = $this->instagram->getPics($account['processed_at'] == 0 ? 150 : 30);
 
         $count = count($pics);
 

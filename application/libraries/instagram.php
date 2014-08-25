@@ -126,8 +126,8 @@ class Instagram {
    * @param integer [optional] $limit     Limit of returned results
    * @return mixed
    */
-  public function getUserFeed($limit = 0) {
-    return $this->_makeCall('users/self/feed', true, array('count' => $limit));
+  public function getUserFeed($limit = 0, $max_id = null) {
+    return $this->_makeCall('users/self/feed', true, array('count' => $limit, 'max_id' => $max_id));
   }
 
   /**
@@ -567,21 +567,53 @@ class Instagram {
     return $this->_callbackurl;
   }
 
-  public function getPics()
+  public function getPics($limit = 30)
   {
-    $pics = $this->getUserFeed(120);
-
-    if ($pics->meta->code != 200) return [];
-
     $items = [];
+    $max_id = null;
+
+    # Instagram returns max 30 images per request
+    $loops = round($limit / 30);
+
+    while ($loops > 0)
+    {
+      $req = $this->getUserFeed($limit, $max_id);
+
+      if ($req->meta->code != 200)
+      {
+        $loops = 0;
+      }
+      else
+      {
+        foreach ($req->data as &$pic)
+        {
+          $items[] = $pic;
+        }
+
+        unset($pic);
+
+        if (isset($req->pagination->next_max_id))
+        {
+          $max_id = $req->pagination->next_max_id;
+        }
+
+        $loops--;
+      }
+
+      unset($req);
+    }
+
+    unset($max_id);
+    unset($loops);
 
     $now = time();
+    $pics = [];
 
-    foreach ($pics->data as $pic)
+    foreach ($items as &$pic)
     {
       $id = 'insta-' . $pic->id;
 
-      // Check if tweet exists
+      // Check if pic exists
       if (collection('articles')->count(['id' => $id])) continue;
 
       $ts = intval($pic->created_time);
@@ -631,9 +663,12 @@ class Instagram {
         ];
       }
 
-      $items[] = $d;
+      $pics[] = $d;
     }
 
-    return $items;
+    unset($pic);
+    unset($items);
+
+    return $pics;
   }
 }

@@ -363,6 +363,7 @@ class Manage_Controller extends Cronycle_Controller
 			case 'tweets':
 				$count = collection('articles')->count();
 				$tweets = collection('articles')->count(array('type' => 'tweet'));
+				$insta = collection('articles')->count(array('type' => 'instagram'));
 
 				return $this->json(200, [
 					'item' => [
@@ -372,8 +373,13 @@ class Manage_Controller extends Cronycle_Controller
 							'color' => '4C9FDB'
 						],
 						[
+							'value' => $insta,
+							'label' => 'Instagram (' . round(100*$insta/$count) . '%)',
+							'color' => '0C0450'
+						],
+						[
 							'value' => $count - $tweets,
-							'label' => 'Feeds articles (' . round(100*($count - $tweets)/$count) . '%)',
+							'label' => 'Feeds articles (' . round(100*($count - $tweets - $insta)/$count) . '%)',
 							'color' => 'FD9226'
 						]
 					]
@@ -403,6 +409,65 @@ class Manage_Controller extends Cronycle_Controller
 					'item' => [
 						'label' => 'Twitter timelines',
 						'sublabel' => round($up_to_date*100/$count) . "% updated less than 1min ago",
+						'axis' => [
+							'point' => [
+								"0", "" . round($count/2), "" . $count
+							]
+						],
+						'range' => [
+							[
+								'color' => 'red',
+								'start' => 0,
+								'end' => $count-$up_to_date-$semi_up_to_date
+							],
+							[
+								'color' => 'amber',
+								'start' => $count-$up_to_date-$semi_up_to_date,
+								'end' => $count-$up_to_date
+							],
+							[
+								'color' => 'green',
+								'start' => $count-$up_to_date,
+								'end' => $count
+							]
+						],
+						'measure' => [
+							'current' => [
+								'start' => 0,
+								'end' => 0
+							],
+							'projected' => [
+								'start' => 0,
+								'end' => $count-$up_to_date
+							]
+						]
+					]
+				]);
+
+			case 'instagramtimelines':
+				$accs = collection('users')->find(['connected_accounts.type' => 'instagram']);
+
+				$count = 0;
+				$up_to_date = 0;
+				$semi_up_to_date = 0;
+				$ts = time() - 120;
+				$ts_semi = time() - 180;
+
+				foreach ($accs as $user) {
+					foreach ($user['connected_accounts'] as $account)
+					{
+						if ($account['processed_at'] >= $ts) $up_to_date++;
+						else if ($account['processed_at'] >= $ts_semi) $semi_up_to_date++;
+
+						$count++;
+					}
+				}
+
+				return $this->json(200, [
+					'orientation' => 'horizontal',
+					'item' => [
+						'label' => 'Instagram timelines',
+						'sublabel' => round($up_to_date*100/$count) . "% updated less than 2mins ago",
 						'axis' => [
 							'point' => [
 								"0", "" . round($count/2), "" . $count
