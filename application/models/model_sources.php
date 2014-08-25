@@ -79,13 +79,18 @@ Class Model_sources extends CI_Model
 
   public function add_instagram_person($category_id, $data)
   {
+    if (is_array($data))
+    {
+      $data = (object) $data;
+    }
+
     return $this->_add_feed($category_id, array(
       'text' => $data->username,
       'sub_text' => $data->full_name,
       'type' => 'instagram_user',
       'can_be_deleted' => false,
       'can_be_hidden' => true,
-      'external_id' => $data->id,
+      'external_id' => intval($data->id),
       'external_key' => strtolower($data->username),
       'avatar' => $data->profile_picture
     ));

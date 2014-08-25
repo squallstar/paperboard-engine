@@ -83,8 +83,9 @@ class Service_Controller extends CI_Controller
 
     while (true)
     {
-      $added = $this->feeds->download_tweets();
-      sleep(8);
+      $this->feeds->download_tweets();
+      $this->feeds->download_instagram_pics();
+      sleep(5);
     }
   }
 

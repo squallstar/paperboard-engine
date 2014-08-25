@@ -17,7 +17,7 @@ Class Model_feeds extends CI_Model
   public function save($type, $title, $url, $external_id = null)
   {
     $feed = collection('feeds')->findAndModify(
-      array('url' => $url),
+      array('type' => $type, 'url' => $url),
       array(
         '$inc' => [
           'added_count' => 1
@@ -334,7 +334,7 @@ Class Model_feeds extends CI_Model
             {
               // Find source on db
               $source = collection('feeds')->findOne(
-                array('external_id' => $ex_id),
+                array('type' => 'twitter_user', 'external_id' => $ex_id),
                 array('_id' => true)
               );
 
@@ -381,6 +381,153 @@ Class Model_feeds extends CI_Model
           try
           {
             collection('articles')->batchInsert($tweets);
+            $added += $count;
+          }
+          catch (Exception $e)
+          {
+            log_message('error', $e->getMessage());
+          }
+        }
+
+        collection('users')->update(
+          array(
+            '_id' => $user['_id'],
+            'connected_accounts.id' => $account['id']
+          ),
+          array(
+            '$set' => array(
+              'connected_accounts.$.processed_at' => time()
+            )
+          )
+        );
+      }
+    }
+
+    foreach ($sources as &$source)
+    {
+      collection('feeds')->update(
+        array('_id' => $source['id']),
+        array(
+          '$inc' => array(
+            'articles_count' => $source['added']
+          )
+        )
+      );
+    }
+
+    unset($source);
+
+    return $added;
+  }
+
+  public function download_instagram_pics()
+  {
+    $ts = time() - 180;
+
+    $users = collection('users')->find(
+      array(
+        'connected_accounts' => [
+          '$elemMatch' => [
+            'type' => 'instagram',
+            'processed_at' => ['$lt' => $ts]
+          ]
+        ]
+      ),
+      array(
+        '_id' => true,
+        'connected_accounts' => true,
+      )
+    )->limit(30);
+
+    if ($users->count() == 0) return 0;
+
+    $added = 0;
+
+    $sources = [];
+
+    $this->load->library('instagram');
+    $this->load->model('model_users', 'users');
+    $this->load->model('model_sources', 'sources');
+
+    foreach ($users as $user)
+    {
+      _log("Checking connected instagram accounts for user " . $user['_id']);
+
+      $this->users->set_user($user);
+
+      foreach ($user['connected_accounts'] as $account)
+      {
+        if ($account['type'] != 'instagram' || $account['processed_at'] > $ts) continue;
+
+        _log("Downloading instagram pics for account " . $account['id'] . " (" . $account['access_token']['screen_name'] . ")");
+
+        $folder = $this->sources->get_user_folder_by_source_id($account['id']);
+
+        $this->instagram->setAccessToken($account['access_token']['oauth_token']);
+
+        $pics = $this->instagram->getPics();
+
+        $count = count($pics);
+
+        if (is_array($pics) && $count)
+        {
+          _log("Processing " . count($pics) . " pics.");
+
+          foreach ($pics as &$pic)
+          {
+            $ex_id = $pic['sources'][0]['external_id'];
+
+            if (!count($sources) || !in_array($ex_id, array_keys($sources)))
+            {
+              // Find source on db
+              $source = collection('feeds')->findOne(
+                array('type' => 'instagram_user', 'external_id' => $ex_id),
+                array('_id' => true)
+              );
+
+              if (!$source)
+              {
+                // Adds the person as a new source
+                $source = $this->sources->add_instagram_person($folder['id'], array(
+                  'id' => $ex_id,
+                  'full_name' => $pic['sources'][0]['full_name'],
+                  'username' => $pic['sources'][0]['screen_name'],
+                  'profile_picture' => $pic['sources'][0]['profile_image_url']
+                ));
+
+                _log("New instagram source added: " . $pic['sources'][0]['screen_name']);
+              }
+              else
+              {
+                // Existing
+                $source['id'] = $source['_id']->{'$id'};
+              }
+
+              // Source setup
+              $source['added'] = 0;
+              $sources[$ex_id] = $source;
+
+              $pic['source'] = $source['id'];
+            }
+            else
+            {
+              $pic['source'] = $sources[$ex_id]['id'];
+            }
+
+            $sources[$ex_id]['added']++;
+            $added++;
+          }
+
+          _log("Downloaded " . $added . " instagram new pics for user " . $user['_id']);
+        }
+
+        unset($pic);
+
+        if (is_array($pics) && $count > 0)
+        {
+          try
+          {
+            collection('articles')->batchInsert($pics);
             $added += $count;
           }
           catch (Exception $e)

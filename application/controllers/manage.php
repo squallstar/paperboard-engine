@@ -91,6 +91,14 @@ class Manage_Controller extends Cronycle_Controller
 					'yesterday' => collection('articles')->count(array('type' => 'tweet', 'processed_at' => ['$lt' => $today, '$gt' => strtotime("-1 day", $today)]))
 				)
 			),
+			'instagram' => array(
+				'sources' => collection('feeds')->count(array('type' => 'instagram_user')),
+				'count' => collection('articles')->count(array('type' => 'instagram')),
+				'added' => array(
+					'today' => collection('articles')->count(array('type' => 'instagram', 'processed_at' => ['$gt' => $today])),
+					'yesterday' => collection('articles')->count(array('type' => 'instagram', 'processed_at' => ['$lt' => $today, '$gt' => strtotime("-1 day", $today)]))
+				)
+			),
 			'articles' => array(
 				'count' => collection('articles')->count(),
 				'expanded' => [
@@ -189,7 +197,7 @@ class Manage_Controller extends Cronycle_Controller
 
 		$feed = new MongoCollection($this->db, 'feeds');
 		$feed->ensureIndex(array('type' => 1));
-		$feed->ensureIndex(array('url' => 1), array('unique' => true));
+		$feed->ensureIndex(array('url' => 1, 'type' => 1), array('unique' => true));
 		$feed->ensureIndex(array('processed_at' => 1));
 		$feed->ensureIndex(array('failed_count' => 1));
 		$feed->ensureIndex(array('external_id' => 1));
@@ -202,6 +210,7 @@ class Manage_Controller extends Cronycle_Controller
 		$art = new MongoCollection($this->db, 'articles');
 		$art->ensureIndex(array('id' => 1), array('unique' => true));
 		$art->ensureIndex(array('source' => 1));
+		$art->ensureIndex(array('type' => 1));
 		$art->ensureIndex(array('published_at' => -1));
 		$art->ensureIndex(array('processed_at' => -1));
 		$art->ensureIndex(array('fetched_at' => 1));
@@ -470,5 +479,11 @@ class Manage_Controller extends Cronycle_Controller
 					'item' => $items
 				]);
 		}
+	}
+
+	public function test()
+	{
+		$this->load->model('model_feeds', 'feeds');
+		$this->feeds->download_instagram_pics();
 	}
 }

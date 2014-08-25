@@ -567,4 +567,73 @@ class Instagram {
     return $this->_callbackurl;
   }
 
+  public function getPics()
+  {
+    $pics = $this->getUserFeed(120);
+
+    if ($pics->meta->code != 200) return [];
+
+    $items = [];
+
+    $now = time();
+
+    foreach ($pics->data as $pic)
+    {
+      $id = 'insta-' . $pic->id;
+
+      // Check if tweet exists
+      if (collection('articles')->count(['id' => $id])) continue;
+
+      $ts = intval($pic->created_time);
+
+      $d = array(
+        'id' => $id,
+        'type' => 'instagram',
+        'fetched_at' => $now,
+        'processed_at' => $now,
+        'published_at' => $ts,
+        'name' => $pic->caption ? $pic->caption->text : '',
+        'description' => isset($pic->location) && isset($pic->location->name) ? $pic->location->name : '',
+        'content' => '',
+        'url' => $pic->link,
+        'url_host' => 'instagram.com',
+        'lead_image' => [
+          'url_original' => $pic->images->standard_resolution->url,
+          'url_archived_medium' => $pic->images->standard_resolution->url,
+          'url_archived_small' => $pic->images->low_resolution->url,
+          'width' => $pic->images->standard_resolution->width,
+          'height' => $pic->images->standard_resolution->height
+        ],
+        'lead_image_in_content' => false,
+        'show_external_url' => true,
+        'assets' => [],
+        'tags' => $pic->tags,
+        'images_processed' => true,
+        'sources' => array(
+          [
+            'external_id' => intval($pic->user->id),
+            'full_name' => $pic->user->full_name,
+            'screen_name' => $pic->user->username,
+            'type' => 'InstagramUser',
+            'profile_image_url' => $pic->user->profile_picture,
+            'published_at' => $ts
+          ]
+        )
+      );
+
+      if ($pic->type == 'video')
+      {
+        $d['assets'][] = [
+          'type' => 'video',
+          'url_original' => $pic->videos->standard_resolution->url,
+          'width' => $pic->videos->standard_resolution->width,
+          'height' => $pic->videos->standard_resolution->height
+        ];
+      }
+
+      $items[] = $d;
+    }
+
+    return $items;
+  }
 }

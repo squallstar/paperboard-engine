@@ -176,11 +176,11 @@ class Source_management_Controller extends Cronycle_Controller
           array('_id' => $this->users->get('_id')),
           array(
             '$set' => array(
-              'full_name' => $resp->user->full_name,
-              'nickname' => $resp->user->username,
-              'avatar.small'  => $resp->user->profile_picture,
-              'avatar.medium' => $resp->user->profile_picture,
-              'avatar.high'   => $resp->user->profile_picture
+              'full_name' => $resp->user->full_name
+              // 'nickname' => $resp->user->username,
+              // 'avatar.small'  => $resp->user->profile_picture,
+              // 'avatar.medium' => $resp->user->profile_picture,
+              // 'avatar.high'   => $resp->user->profile_picture
             ),
             '$push' => array(
               'connected_accounts' => array(
@@ -216,6 +216,14 @@ class Source_management_Controller extends Cronycle_Controller
 
           $this->load->model('model_feeds', 'feeds');
           $this->feeds->update_instagram_followers($this->users->get('_id'));
+
+          // Create a collection with this data
+          $this->load->model('model_collections', 'collections');
+          $collection = $this->collections->create([
+            'name' => 'Instagram',
+            'type' => 'instagram',
+            'sources' => [$res['source_uri']]
+          ]);
 
           $cb = $this->session->userdata('callback');
           $this->session->unset_userdata('callback');
@@ -318,6 +326,14 @@ class Source_management_Controller extends Cronycle_Controller
 
           $this->load->model('model_feeds', 'feeds');
           $this->feeds->update_twitter_followers($this->users->get('_id'));
+
+          // Create a collection with this data
+          $this->load->model('model_collections', 'collections');
+          $collection = $this->collections->create([
+            'name' => '@' . $user->screen_name,
+            'type' => 'twitter',
+            'sources' => [$res['source_uri']]
+          ]);
 
           $cb = $this->session->userdata('callback');
           $this->session->unset_userdata('callback');

@@ -29,6 +29,7 @@ Class Model_collections extends CI_Model
       $data,
       array(
         'name'             => true,
+        'type'             => true,
         'position'         => true,
         'publicly_visible' => true,
         'settings'         => true,
