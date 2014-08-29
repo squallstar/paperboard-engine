@@ -636,7 +636,7 @@ class Instagram {
           'width' => $pic->images->standard_resolution->width,
           'height' => $pic->images->standard_resolution->height
         ],
-        'lead_image_in_content' => false,
+        'has_image' => true,
         'show_external_url' => true,
         'assets' => [],
         'tags' => $pic->tags,

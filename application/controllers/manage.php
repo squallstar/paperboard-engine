@@ -102,7 +102,7 @@ class Manage_Controller extends Cronycle_Controller
 			'articles' => array(
 				'count' => collection('articles')->count(),
 				'expanded' => [
-					'fetched' => collection('articles')->count(array('fetched_at' => array('$gt' => 0))),
+					'fetched' => collection('articles')->count(array('fetched_at' => array('$ne' => 0))),
 					'not_fetched' => collection('articles')->count(array('fetched_at' => 0)),
 					'fetched_today' => collection('articles')->count(array('fetched_at' => array('$gt' => $today))),
 					'with_content' => collection('articles')->count(array('content' => ['$ne' => ''])),
@@ -116,17 +116,17 @@ class Manage_Controller extends Cronycle_Controller
 				],
 				'average_per_feed' => round(collection('articles')->count() / collection('feeds')->count()),
 				'images' => array(
-					'with_images' => collection('articles')->count(['lead_image.url_original' => ['$exists' => true]]),
-					'without_images' => collection('articles')->count(['lead_image' => null]),
+					'with_images' => collection('articles')->count(['has_image' => true]),
+					'without_images' => collection('articles')->count(['has_image' => false]),
 					'processed' => [
-						'uploaded' => collection('articles')->count(['images_processed' => true, 'lead_image.url_original' => ['$exists' => true]]),
-						'not_uploaded' => collection('articles')->count(['images_processed' => false, 'lead_image.url_original' => ['$exists' => true]]),
+						'uploaded' => collection('articles')->count(['images_processed' => true, 'has_image' => true]),
+						'not_uploaded' => collection('articles')->count(['images_processed' => false, 'has_image' => true]),
 						'bucket' => $this->config->item('aws_bucket_name'),
 						'resolution' => [
-							'width' => collection('articles')->findOne(['images_processed' => true, 'lead_image.url_original' => ['$exists' => true]], ['lead_image' => 1])['lead_image']['width'],
+							'width' => collection('articles')->findOne(['images_processed' => true, 'has_image' => true], ['lead_image' => 1])['lead_image']['width'],
 							'height' => 'auto'
 						],
-						'last_uploaded' => collection('articles')->find(['images_processed' => true, 'lead_image.url_original' => ['$exists' => true]], ['lead_image' => 1])->limit(1)->sort(['published_at' => -1])->getNext()['lead_image']['url_archived_small']
+						'last_uploaded' => collection('articles')->find(['images_processed' => true, 'has_image' => true], ['lead_image' => 1])->limit(1)->sort(['published_at' => -1])->getNext()['lead_image']['url_archived_small']
 					]
 				)
 			),
@@ -188,6 +188,7 @@ class Manage_Controller extends Cronycle_Controller
 		$cat->ensureIndex(array('source_uri' => 1));
 
 		$cc = new MongoCollection($this->db, 'category_children');
+		$feed->ensureIndex(array('feed_id' => 1, 'category_id' => 1));
 		$cc->ensureIndex(array('external_key' => 1));
 		$cc->ensureIndex(array('category_id' => 1));
 		$cc->ensureIndex(array('source_uri' => 1));
@@ -197,6 +198,7 @@ class Manage_Controller extends Cronycle_Controller
 
 		$feed = new MongoCollection($this->db, 'feeds');
 		$feed->ensureIndex(array('type' => 1));
+		$feed->ensureIndex(array('url' => 1));
 		$feed->ensureIndex(array('url' => 1, 'type' => 1), array('unique' => true));
 		$feed->ensureIndex(array('processed_at' => 1));
 		$feed->ensureIndex(array('failed_count' => 1));
@@ -209,9 +211,8 @@ class Manage_Controller extends Cronycle_Controller
 
 		$art = new MongoCollection($this->db, 'articles');
 		$art->ensureIndex(array('id' => 1), array('unique' => true));
-		$art->ensureIndex(array('source' => 1));
+		$art->ensureIndex(array('source' => 1, 'published_at' => -1));
 		$art->ensureIndex(array('type' => 1));
-		$art->ensureIndex(array('published_at' => -1));
 		$art->ensureIndex(array('processed_at' => -1));
 		$art->ensureIndex(array('fetched_at' => 1));
 		$art->ensureIndex(array('images_processed' => 1));
@@ -309,7 +310,6 @@ class Manage_Controller extends Cronycle_Controller
 				]);
 
 			case 'fetched':
-				$fetched = collection('articles')->count(array('fetched_at' => array('$gt' => 0)));
 				return $this->json(200, [
 					'item' => [
 						[
@@ -321,18 +321,18 @@ class Manage_Controller extends Cronycle_Controller
 							'label' => 'Fetched in the last minute'
 						],
 						[
-							'value' => collection('articles')->count() - $fetched,
+							'value' => collection('articles')->count(array('fetched_at' => 0)),
 							'label' => 'Queued (not fetched yet)'
 						],
 					]
 				]);
 
 			case 'images':
-				$not = collection('articles')->count(['images_processed' => false, 'lead_image.url_original' => ['$exists' => true]]);
+				$not = collection('articles')->count(['images_processed' => false, 'has_image' => true]);
 				return $this->json(200, [
 					'item' => [
 						[
-							'value' => collection('articles')->count(['processed_at' => ['$gt' => $today], 'images_processed' => true, 'lead_image.url_original' => ['$exists' => true]]),
+							'value' => collection('articles')->count(['processed_at' => ['$gt' => $today], 'images_processed' => true, 'has_image' => true]),
 							'label' => 'Uploaded today',
 							'color' => '8DC345'
 						],
@@ -340,22 +340,6 @@ class Manage_Controller extends Cronycle_Controller
 							'value' => $not,
 							'label' => 'Queued (' . $not . ')',
 							'color' => 'ff0000'
-						]
-					]
-				]);
-
-			case 'withimages':
-				return $this->json(200, [
-					'item' => [
-						[
-							'value' => collection('articles')->count(['lead_image.url_original' => ['$exists' => true]]),
-							'label' => 'With images',
-							'color' => '8DC345'
-						],
-						[
-							'value' => collection('articles')->count(['lead_image' => null]),
-							'label' => 'Without images',
-							'color' => 'FF4E50'
 						]
 					]
 				]);
@@ -550,5 +534,34 @@ class Manage_Controller extends Cronycle_Controller
 	{
 		$this->load->model('model_feeds', 'feeds');
 		$this->feeds->download_instagram_pics();
+	}
+
+	public function fill()
+	{
+		set_time_limit(0);
+    ini_set("memory_limit", "256M");
+
+		$article = collection('articles')->findOne(['id' => 'tweet-504916664283328512']);
+		$article['source'] = collection('feeds')->findOne(['title' => 'DEMO.DEMO.DEMO'])['_id']->{'$id'};
+		unset($article['_id']);
+
+		for ($i=0; $i < 50000; $i++) {
+			$article['id'] = 'demo-' . newid() . rand(0,99999) . rand(0,999999);
+			$article['_id'] = $article['id'];
+			$article['processed_at'] = time();
+			collection('articles')->insert($article);
+		}
+	}
+
+	public function migrate()
+	{
+		set_time_limit(0);
+    ini_set("memory_limit", "256M");
+
+    collection('articles')->update(
+    	['lead_image.url_original' => ['$exists' => true]],
+    	['has_image' => true],
+    	['justOne' => false]
+    );
 	}
 }

@@ -34,7 +34,7 @@ class Service_Controller extends CI_Controller
       _log("Count updated for " . $this->runner->update_collections_metadata() . " collections");
 
       # Keep-alive heroku
-      file_get_contents("https://cronycle-web-hhvm.cronycle.com/");
+      file_get_contents("https://cronycle-web-hhvm.herokuapp.com/");
 
       sleep(600);
     }

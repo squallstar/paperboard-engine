@@ -63,7 +63,7 @@ $config['aws_bucket_name'] = 'cronycle-hhvm';
 |--------------------------------------------------------------------------
 |
 */
-define('DBCONN', '127.0.0.1:27017');
+define('DBCONN', 'mongodb://127.0.0.1:27017');
 define('DBNAME', 'cronyclesandbox');
 
 /*

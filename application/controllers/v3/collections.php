@@ -38,7 +38,6 @@ class Collections_Controller extends Cronycle_Controller
       foreach ($collections as &$collection)
       {
         $collection['links'] = iterator_to_array($this->collections->links($collection, 10), false);
-        unset($collection['feeds']);
 
         if ($has_favourites)
         {
@@ -50,6 +49,11 @@ class Collections_Controller extends Cronycle_Controller
 
         $how_many--;
         if ($how_many == 0) break;
+      }
+
+      foreach ($collections as &$collection)
+      {
+        unset($collection['feeds']);
       }
 
       unset($collection);

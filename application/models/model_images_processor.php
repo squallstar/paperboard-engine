@@ -69,9 +69,7 @@ class Model_images_processor extends CI_Model
 
     $articles = collection('articles')->find(
       [
-        'fetched_at' => [
-          '$gt' => 0
-        ],
+        'has_image' => true,
         'images_processed' => false
       ],
       [

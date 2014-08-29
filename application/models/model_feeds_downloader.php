@@ -357,9 +357,10 @@ class Model_feeds_downloader extends CI_Model
       'processed_at' => $now,
       'url_host'     => $domain,
       'lead_image'   => NULL,
+      'has_image'    => false,
       'assets'       => array(),
       'tags'         => array(),
-      'lead_image_in_content' => false,
+      'has_image'    => false,
       'show_external_url' => true,
       'fetched'      => false
     );
@@ -430,6 +431,7 @@ class Model_feeds_downloader extends CI_Model
 
       $data['fetched_at'] = time();
       $data['images_processed'] = false;
+      $data['has_image'] = true;
     }
     else
     {

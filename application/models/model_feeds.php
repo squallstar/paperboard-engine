@@ -72,7 +72,7 @@ Class Model_feeds extends CI_Model
       array(
         'type' => 'feed',
         'processed_at' => [
-          '$lt' => time() - 3600
+          '$lt' => time() - 1800
         ],
         'failed_count' => [
           '$lt' => 5

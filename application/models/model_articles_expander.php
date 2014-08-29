@@ -15,12 +15,15 @@ class Model_articles_expander extends CI_Model
   private $_is_working;
 
   private $_rules;
+  private $_common;
 
   public function __construct()
   {
     parent::__construct();
 
-    $this->_rules = json_decode(file_get_contents(APPPATH . 'libraries/reader-rules/rules.json'), true)['hosts'];
+    $data = json_decode(file_get_contents(APPPATH . 'libraries/reader-rules/rules.json'), true);
+    $this->_rules = &$data['hosts'];
+    $this->_common = &$data['common'];
 
     _log(count($this->_rules) . ' rules read from file');
   }
@@ -35,7 +38,7 @@ class Model_articles_expander extends CI_Model
           'fetched_at' => 0
         ],
         [
-          '_id' => true,
+          'id' => true,
           'url' => 1
         ]
       )->sort(['processed_at' => -1])
@@ -80,7 +83,7 @@ class Model_articles_expander extends CI_Model
       curl_setopt($curl,CURLOPT_USERAGENT,'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36');
 
 
-      $ch[$article['_id']->{'$id'}] = $curl;
+      $ch[$article['id']] = $curl;
       curl_multi_add_handle($mh, $curl);
     }
 
@@ -98,7 +101,7 @@ class Model_articles_expander extends CI_Model
 
     foreach ($articles as &$article)
     {
-      $id = $article['_id']->{'$id'};
+      $id = $article['id'];
 
       $article['fetched_at'] = time();
 
@@ -113,11 +116,10 @@ class Model_articles_expander extends CI_Model
         }
       }
 
-      $id = $article['_id'];
-      unset($article['_id']);
+      unset($article['id']);
 
       if ($update) collection('articles')->update(
-        ['_id' => $id],
+        ['id' => $id],
         ['$set' => $article]
       );
     }
@@ -132,9 +134,10 @@ class Model_articles_expander extends CI_Model
 
   function parse_article(&$article, &$html)
   {
-    _log("Parsing article " . $article['_id']->{'$id'});
+    _log("Parsing article " . $article['id']);
 
-    $html = mb_convert_encoding($html, 'HTML-ENTITIES', "UTF-8");
+    # Uses too much memory
+    #$html = mb_convert_encoding($html, 'HTML-ENTITIES', "UTF-8");
 
     $doc = new DOMDocument;
     $doc->loadHTML($html);
@@ -147,8 +150,14 @@ class Model_articles_expander extends CI_Model
     $metas = [];
 
     foreach ($xpath->query($query) as $meta) {
-      $metas[$meta->getAttribute('property')] = $meta->getAttribute('content');
+      $prop = $meta->getAttribute('property');
+      if (!isset($metas[$prop]))
+      {
+        $metas[$prop] = $meta->getAttribute('content');
+      }
     }
+
+    unset($prop);
 
     if (isset($metas['og:title']) && strlen($metas['og:title']) > 3)
     {
@@ -175,10 +184,27 @@ class Model_articles_expander extends CI_Model
       );
 
       $article['images_processed'] = false;
+      $article['has_image'] = true;
     }
 
     if (isset($metas['og:url']) && strlen($metas['og:url']))
     {
+      if (strpos('/', $metas['og:url']) === 0)
+      {
+        $url = parse_url($metas['og:url']);
+
+        if (strpos('//', $metas['og:url']) === 0)
+        {
+          $metas['og:url'] = $url['scheme'] . ':' . $metas['og:url'];
+        }
+        else
+        {
+          $metas['og:url'] = $url['scheme'] . '://' . $url['host'] . $metas['og:url'];
+        }
+
+        unset($url);
+      }
+
       $article['url'] = $metas['og:url'];
     }
 
@@ -244,6 +270,10 @@ class Model_articles_expander extends CI_Model
       }
 
       unset($rule);
+    }
+    else
+    {
+      $content = $xpath->query($this->_common['content']);
     }
 
     if (!is_null($content) && $content->length > 0)

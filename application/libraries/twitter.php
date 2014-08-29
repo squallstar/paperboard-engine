@@ -274,7 +274,7 @@ Class Twitter
 				'url' => $url,
 				'url_host' => parse_url($url)['host'],
 				'lead_image' => null,
-				'lead_image_in_content' => false,
+				'has_image' => false,
 				'show_external_url' => true,
 				'assets' => [],
 				'tags' => [],
@@ -303,6 +303,7 @@ Class Twitter
 			        'url_archived_small' => $media->media_url
 			      );
 			      $d['images_processed'] = false;
+			      $d['has_image'] = true;
 						break;
 					}
 				}

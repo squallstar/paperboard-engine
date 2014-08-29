@@ -31,7 +31,7 @@ class Model_runner extends CI_Model
 
       if (!isset($collection['cover_asset']['fixed']) || $collection['cover_asset']['fixed'] == false)
       {
-        foreach ($this->collections->links($collection, 10, null, null, ['lead_image' => 1]) as $link)
+        foreach ($this->collections->links($collection, 5, null, null, ['has_image' => 1]) as $link)
         {
           if ($link['lead_image'])
           {
