@@ -175,6 +175,7 @@ class Manage_Controller extends Cronycle_Controller
 		$col->ensureIndex(array('private_id' => 1), array('unique' => true));
 		$col->ensureIndex(array('user.id' => 1));
 		$col->ensureIndex(array('position' => 1));
+		$col->ensureIndex(array('sources' => 1));
 		$col->ensureIndex(array('publicly_visible' => 1));
 		$col->ensureIndex(array('category.slug' => 1));
 		$col->ensureIndex(array('followers.id' => 1));
@@ -216,6 +217,7 @@ class Manage_Controller extends Cronycle_Controller
 		$art->ensureIndex(array('processed_at' => -1));
 		$art->ensureIndex(array('fetched_at' => 1));
 		$art->ensureIndex(array('images_processed' => 1));
+		$art->ensureIndex(array('has_image' => 1));
 		$art->ensureIndex(array('name' => 'text', 'description' => 'text'));
 
 		echo 'done';
@@ -248,6 +250,9 @@ class Manage_Controller extends Cronycle_Controller
 
 	public function geckoboard($action, $sub_action = '')
 	{
+		set_time_limit(0);
+    ini_set("memory_limit", "256M");
+
 		$today = strtotime("00:00:00");
 
 		switch ($action) {
@@ -295,7 +300,7 @@ class Manage_Controller extends Cronycle_Controller
 				]);
 
 			case 'withcontent':
-				$ex = collection('articles')->count(array('content' => ['$ne' => '']));
+				$ex = collection('articles')->find(array('content' => ['$ne' => '']))->timeout(-1)->count();
 				$count = collection('articles')->count();
 				return $this->json(200, [
 					'item' => $ex,

@@ -112,16 +112,34 @@ class Model_articles_expander extends CI_Model
         if($curlError == "")
         {
           $article['url'] = curl_getinfo($ch[$id], CURLINFO_EFFECTIVE_URL);
-          if ($this->parse_article($article, curl_multi_getcontent($ch[$id]))) $count++;
+          $this->parse_article($article, curl_multi_getcontent($ch[$id]));
+          $count++;
+        }
+        else
+        {
+          _log('Cannot get content for article ' . $article['id'] . ' from ' . $article['url']);
         }
       }
 
       unset($article['id']);
 
-      if ($update) collection('articles')->update(
-        ['id' => $id],
-        ['$set' => $article]
-      );
+
+      try {
+        collection('articles')->update(
+          ['id' => $id],
+          ['$set' => $article]
+        );
+      } catch (Exception $e)
+      {
+        _log("Error expanding article " . $id);
+        collection('articles')->update(
+          ['id' => $id],
+          ['$set' => [
+            'fetched_at' => time()
+          ]]
+        );
+      }
+
     }
 
     unset($ch);
@@ -134,7 +152,13 @@ class Model_articles_expander extends CI_Model
 
   function parse_article(&$article, &$html)
   {
-    _log("Parsing article " . $article['id']);
+    if (!$html)
+    {
+      _log("Article " . $article['id'] . ' has no html content');
+      return false;
+    }
+
+    #_log("Parsing article " . $article['id']);
 
     # Uses too much memory
     #$html = mb_convert_encoding($html, 'HTML-ENTITIES', "UTF-8");
@@ -208,7 +232,12 @@ class Model_articles_expander extends CI_Model
       $article['url'] = $metas['og:url'];
     }
 
-    $article['url_host'] = parse_url($article['url'])['host'];
+    $url = $article['url'];
+    if (isset($url['host']))
+    {
+      $article['url_host'] = $url['host'];
+    }
+    unset($url);
 
     if (isset($metas['og:description']))
     {

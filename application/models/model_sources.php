@@ -198,7 +198,7 @@ Class Model_sources extends CI_Model
     // Updates the feed ids inside collections that selected this category
     $collections = collection('collections')->find(array(
       'user.id' => $this->users->get('_id'),
-      'sources' => 'category:' . $category_id
+      'sources' => $data['source_uri']
       ),
       array(
         'private_id' => true,

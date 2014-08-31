@@ -320,11 +320,9 @@ Class Model_collections extends CI_Model
     return ['id' => intval($collection_id)];
   }
 
-  public function links(&$collection, $limit = 40, $max_timestamp = null, $min_timestamp = null, $fields = array())
+  public function links(&$collection, $limit = 40, $max_timestamp = null, $min_timestamp = null, $fields = array(), $conditions = array())
   {
     $limit = $limit ? intval($limit) : 40;
-
-    $conditions = [];
 
     if (isset($collection['feeds']) && is_array($collection['feeds']))
     {
