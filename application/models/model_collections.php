@@ -12,6 +12,8 @@
 
 Class Model_collections extends CI_Model
 {
+  const MAX_LINKS_COUNT = 40000;
+
   public function __construct()
   {
     parent::__construct();
@@ -86,7 +88,7 @@ Class Model_collections extends CI_Model
     $this->load->model('model_sources', 'sources');
     $data['feeds'] = $this->sources->tree($data['sources'], true);
 
-    $data['total_links_count'] = $this->links($data, FALSE)->count();
+    $data['total_links_count'] = $this->links_count($data);
     $data['total_source_count'] = count($data['feeds']);
 
     $res = collection('collections')->insert($data);
@@ -180,7 +182,7 @@ Class Model_collections extends CI_Model
       $this->load->model('model_sources', 'sources');
       $data['feeds'] = $this->sources->tree($data['sources'], true);
 
-      $data['total_links_count'] = $this->links($data, FALSE)->count();
+      $data['total_links_count'] = $this->links_count($data);
       $data['total_source_count'] = count($data['feeds']);
     }
 
@@ -320,7 +322,22 @@ Class Model_collections extends CI_Model
     return ['id' => intval($collection_id)];
   }
 
-  public function links(&$collection, $limit = 40, $max_timestamp = null, $min_timestamp = null, $fields = array(), $conditions = array())
+  public function links_count(&$collection)
+  {
+    return $this->_links($collection, 0, null, null, [], [], false, false)->limit(self::MAX_LINKS_COUNT)->count(true);
+  }
+
+  public function links_ordered(&$collection, $limit = 40, $max_timestamp = null, $min_timestamp = null, $fields = [], $conditions = [])
+  {
+    return $this->_links($collection, $limit, $max_timestamp, $min_timestamp, $fields, $conditions, true, true);
+  }
+
+  public function links_not_ordered(&$collection, $limit = 40, $max_timestamp = null, $min_timestamp = null, $fields = [], $conditions = [])
+  {
+    return $this->_links($collection, $limit, $max_timestamp, $min_timestamp, $fields, $conditions, false, false);
+  }
+
+  private function _links(&$collection, $limit, $max_timestamp, $min_timestamp, $fields, $conditions, $sort, $hint)
   {
     $limit = $limit ? intval($limit) : 40;
 
@@ -345,6 +362,8 @@ Class Model_collections extends CI_Model
       );
     }
 
+    $n_filters = 0;
+
     if (isset($collection['filters']) && count($collection['filters']))
     {
       $text_filters = [];
@@ -368,9 +387,9 @@ Class Model_collections extends CI_Model
         }
       }
 
-      $c = count($text_filters);
+      $n_filters = count($text_filters);
 
-      if ($c)
+      if ($n_filters)
       {
         if ($c == 1 && strpos($text_filters[0], '-') === 0)
         {
@@ -408,9 +427,19 @@ Class Model_collections extends CI_Model
 
     unset($fields);
 
-    if ($limit !== FALSE)
+    if ($limit)
     {
-      $cursor->limit($limit)->sort(['published_at' => -1]);
+      $cursor->limit($limit);
+    }
+
+    if ($sort)
+    {
+      $cursor->sort(['published_at' => -1]);
+    }
+
+    if ($hint && !$n_filters)
+    {
+      $cursor->hint(['source' => 1, 'published_at' => -1]);
     }
 
     return $cursor;

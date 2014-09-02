@@ -37,7 +37,7 @@ class Collections_Controller extends Cronycle_Controller
 
       foreach ($collections as &$collection)
       {
-        $collection['links'] = iterator_to_array($this->collections->links($collection, 10), false);
+        $collection['links'] = iterator_to_array($this->collections->links_ordered($collection, 10), false);
 
         if ($has_favourites)
         {
@@ -267,7 +267,7 @@ class Collections_Controller extends Cronycle_Controller
 
     if ($collection)
     {
-      $links = $this->collections->links(
+      $links = $this->collections->links_ordered(
         $collection,
         $this->input->get('per_page'),
         $this->input->get('max_timestamp'),
@@ -360,12 +360,12 @@ class Collections_Controller extends Cronycle_Controller
     // Include the line below in the feeds to search only using the user sources
     //'feeds' => $this->sources->tree_ids()
 
-    $links = $this->collections->links(
+    $links = $this->collections->links_not_ordered(
       $cond,
       $this->input->get('per_page'),
       $this->input->get('max_timestamp'),
       $this->input->get('min_timestamp')
-    );
+    )->sort(['published_at' => -1]);
 
     $this->json(200, iterator_to_array($links, false));
   }
@@ -399,7 +399,7 @@ class Collections_Controller extends Cronycle_Controller
 
       // TODO: favourite order should be calcolated prior to the query (using per_page, min_timestamp, etc)
 
-      $links = iterator_to_array($this->collections->links(
+      $links = iterator_to_array($this->collections->links_ordered(
         $favourite_collection,
         $this->input->get('per_page'),
         $this->input->get('max_timestamp'),

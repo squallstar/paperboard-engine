@@ -26,12 +26,14 @@ class Model_runner extends CI_Model
     foreach ($collections as $collection)
     {
       $data = [
-        'total_links_count' => $this->collections->links($collection, FALSE)->count()
+        'total_links_count' => $this->collections->links_count($collection)
       ];
 
       if (!isset($collection['cover_asset']['fixed']) || $collection['cover_asset']['fixed'] == false)
       {
-        foreach ($this->collections->links($collection, 1, null, null, ['lead_image' => 1], ['has_image' => true]) as $link)
+        //foreach ($this->collections->links_not_ordered($collection, 1, null, null, ['lead_image' => 1], ['has_image' => true])->sort(['published_at' => -1]) as $link)
+        $cursor = $this->collections->links_ordered($collection, 8, null, null, ['lead_image' => 1])->sort(['published_at' => -1]);
+        foreach ($cursor as $link)
         {
           if ($link['lead_image'])
           {
@@ -40,6 +42,7 @@ class Model_runner extends CI_Model
             break;
           }
         }
+        unset($cursor);
       }
 
       if (collection('collections')->update(

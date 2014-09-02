@@ -108,6 +108,11 @@ class Model_images_processor extends CI_Model
       {
         try
         {
+          if (strpos($article['lead_image']['url_original'], '//') === 0)
+          {
+            $article['lead_image']['url_original'] = 'http:' . $article['lead_image']['url_original'];
+          }
+
           $image->clear();
           @$image->readImage($article['lead_image']['url_original']);
           $image->setFormat("jpeg");

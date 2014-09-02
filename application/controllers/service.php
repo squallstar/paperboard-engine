@@ -29,6 +29,8 @@ class Service_Controller extends CI_Controller
   {
     $this->load->model('model_runner', 'runner');
 
+    _log("Runner worker started!");
+
     while (true)
     {
       _log("Count updated for " . $this->runner->update_collections_metadata() . " collections");
@@ -44,7 +46,7 @@ class Service_Controller extends CI_Controller
   {
     $this->load->model('model_feeds', 'feeds');
 
-    _log("Downloader worker started!");
+    _log("Feeds downloader worker started!");
 
     while (true)
     {

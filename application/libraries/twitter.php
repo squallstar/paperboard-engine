@@ -275,8 +275,6 @@ Class Twitter
 				'url_host' => parse_url($url)['host'],
 				'lead_image' => null,
 				'has_image' => false,
-				'show_external_url' => true,
-				'assets' => [],
 				'tags' => [],
 				'images_processed' => true,
 				'sources' => array(

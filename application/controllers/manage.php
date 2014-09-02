@@ -198,10 +198,9 @@ class Manage_Controller extends Cronycle_Controller
 		$cc->ensureIndex(array('id' => 1));
 
 		$feed = new MongoCollection($this->db, 'feeds');
-		$feed->ensureIndex(array('type' => 1));
+		$feed->ensureIndex(array('type' => 1, 'processed_at' => 1));
 		$feed->ensureIndex(array('url' => 1));
 		$feed->ensureIndex(array('url' => 1, 'type' => 1), array('unique' => true));
-		$feed->ensureIndex(array('processed_at' => 1));
 		$feed->ensureIndex(array('failed_count' => 1));
 		$feed->ensureIndex(array('external_id' => 1));
 		$feed->ensureIndex(array('title' => 'text', 'url' => 'text'));
@@ -212,30 +211,56 @@ class Manage_Controller extends Cronycle_Controller
 
 		$art = new MongoCollection($this->db, 'articles');
 		$art->ensureIndex(array('id' => 1), array('unique' => true));
-		$art->ensureIndex(array('source' => 1, 'published_at' => -1));
-		$art->ensureIndex(array('type' => 1));
-		$art->ensureIndex(array('processed_at' => -1));
 		$art->ensureIndex(array('fetched_at' => 1));
-		$art->ensureIndex(array('images_processed' => 1));
-		$art->ensureIndex(array('has_image' => 1));
+		$art->ensureIndex(array('type' => 1));
 		$art->ensureIndex(array('name' => 'text', 'description' => 'text'));
+		$art->ensureIndex(array('has_image' => 1, 'images_processed' => 1));
+		$art->ensureIndex(array('source' => 1, 'published_at' => -1));
+
+		$art->ensureIndex(array('published_at' => -1));
+		$art->ensureIndex(array('processed_at' => 1)); // for stats
 
 		echo 'done';
 	}
 
 	public function expand()
 	{
+		$url = $this->input->get('url');
+
 		$this->load->model('model_articles_expander', 'expander');
 
-		$articles = [
-			[
-				'_id' => new MongoId(),
-				'url' => $this->input->get('url')
-			]
-		];
+		if ($url)
+		{
+			$articles = [
+				[
+					'id' => '1',
+					'url' => $this->input->get('url')
+				]
+			];
 
-		$this->expander->expand($articles, false);
-		var_dump($articles);
+			$this->expander->expand($articles, false);
+		}
+
+		echo '<hr />';
+		echo '<style>*{font-family:"Proxima Nova", sans-serif}</style>';
+		echo '<form method="GET"><input placeholder="http://example.org" style="width: 80%;padding:10px;font-size:14px;" name="url" value="' . $url . '"></form>';
+		echo '<hr />';
+
+		if (isset($articles))
+		{
+			echo '<h1>' . $articles[0]['name'] . '</h1>';
+			echo '<hr />';
+			echo '<img style="max-width:500px" src="' . $articles[0]['lead_image']['url_original'] . '" />';
+			echo '<hr />';
+			echo '<h4>Description</h4>';
+			echo '<p>' . $articles[0]['description'] . '</p>';
+			echo '<hr />';
+			if (isset($articles[0]['content']))
+			{
+				echo '<h4>Content</h4>';
+				echo '<p>' . $articles[0]['content'] . '</p>';
+			}
+		}
 	}
 
 	public function logs()
@@ -498,47 +523,42 @@ class Manage_Controller extends Cronycle_Controller
 					'responseTime' => rand(2, 20)
 				]);
 
-			case 'domains':
-				$pipeline = array(
-				    array(
-			        '$group' => array(
-			            '_id' => '$url_host',
-			            'value' => ['$sum' => 1]
-			        )
-				    ),
-				    array(
-				    	'$sort' => ['value' => -1]
-				    ),
-				    array(
-				    	'$limit' => 9
-				    )
-				);
-				$out = collection('articles')->aggregate($pipeline);
-				$items = [
-					[
-						'value' => collection('articles')->count(),
-						'label' => 'All articles'
-					]
-				];
+		// query is too slow
+		// 	case 'domains':
+		// 		$pipeline = array(
+		// 		    array(
+		// 	        '$group' => array(
+		// 	            '_id' => '$url_host',
+		// 	            'value' => ['$sum' => 1]
+		// 	        )
+		// 		    ),
+		// 		    array(
+		// 		    	'$sort' => ['value' => -1]
+		// 		    ),
+		// 		    array(
+		// 		    	'$limit' => 9
+		// 		    )
+		// 		);
+		// 		$out = collection('articles')->aggregate($pipeline);
+		// 		$items = [
+		// 			[
+		// 				'value' => collection('articles')->count(),
+		// 				'label' => 'All articles'
+		// 			]
+		// 		];
 
-				foreach ($out['result'] as $domain)
-				{
-					$items[] = [
-						'value' => $domain['value'],
-						'label' => $domain['_id']
-					];
-				}
+		// 		foreach ($out['result'] as $domain)
+		// 		{
+		// 			$items[] = [
+		// 				'value' => $domain['value'],
+		// 				'label' => $domain['_id']
+		// 			];
+		// 		}
 
-				return $this->json(200, [
-					'item' => $items
-				]);
+		// 		return $this->json(200, [
+		// 			'item' => $items
+		// 		]);
 		}
-	}
-
-	public function test()
-	{
-		$this->load->model('model_feeds', 'feeds');
-		$this->feeds->download_instagram_pics();
 	}
 
 	public function fill()
@@ -550,7 +570,7 @@ class Manage_Controller extends Cronycle_Controller
 		$article['source'] = collection('feeds')->findOne(['title' => 'DEMO.DEMO.DEMO'])['_id']->{'$id'};
 		unset($article['_id']);
 
-		for ($i=0; $i < 50000; $i++) {
+		for ($i=0; $i < 500000; $i++) {
 			$article['id'] = 'demo-' . newid() . rand(0,99999) . rand(0,999999);
 			$article['_id'] = $article['id'];
 			$article['processed_at'] = time();
@@ -560,13 +580,13 @@ class Manage_Controller extends Cronycle_Controller
 
 	public function migrate()
 	{
-		set_time_limit(0);
-    ini_set("memory_limit", "256M");
+		// set_time_limit(0);
+  //   ini_set("memory_limit", "256M");
 
-    collection('articles')->update(
-    	['lead_image.url_original' => ['$exists' => true]],
-    	['has_image' => true],
-    	['justOne' => false]
-    );
+  //   collection('articles')->update(
+  //   	['lead_image.url_original' => ['$exists' => true]],
+  //   	['has_image' => true],
+  //   	['justOne' => false]
+  //   );
 	}
 }

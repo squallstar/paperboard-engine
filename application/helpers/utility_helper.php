@@ -11,7 +11,7 @@ function collection($key = FALSE)
 {
 	$APP =& get_instance();
 	if (!isset($APP->db)) {
-		$APP->connection = new MongoClient(DBCONN);
+		$APP->connection = new MongoClient(DBCONN, ['socketTimeoutMS' => 60000]);
 		// Select a database
 		$a = DBNAME;
 		$APP->db = $APP->connection->$a;

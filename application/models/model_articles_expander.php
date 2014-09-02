@@ -42,6 +42,7 @@ class Model_articles_expander extends CI_Model
           'url' => 1
         ]
       )->sort(['processed_at' => -1])
+       ->hint(['fetched_at' => 1])
        ->limit($limit)
     , false);
 
@@ -65,7 +66,7 @@ class Model_articles_expander extends CI_Model
 
     $this->_is_working = true;
 
-    _log("Started to expand " . count($articles) . " articles");
+    if ($update) _log("Started to expand " . count($articles) . " articles");
 
     // multi curl
     $mh = curl_multi_init();
@@ -76,11 +77,11 @@ class Model_articles_expander extends CI_Model
       $curl = curl_init();
       curl_setopt($curl, CURLOPT_URL, $article['url']);
       curl_setopt($curl, CURLOPT_HEADER, 0);
-      curl_setopt($curl, CURLOPT_TIMEOUT, 7);
-      curl_setopt($curl, CURLOPT_MAXREDIRS, 5);
+      curl_setopt($curl, CURLOPT_TIMEOUT, 12);
+      curl_setopt($curl, CURLOPT_MAXREDIRS, 6);
       curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
       curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-      curl_setopt($curl,CURLOPT_USERAGENT,'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36');
+      curl_setopt($curl, CURLOPT_USERAGENT,'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36');
 
 
       $ch[$article['id']] = $curl;
@@ -279,7 +280,12 @@ class Model_articles_expander extends CI_Model
   {
     if (!isset($article['url_host']))
     {
-      $article['url_host'] = parse_url($article['url'])['host'];
+      try {
+        $article['url_host'] = parse_url($article['url'])['host'];
+      }
+      catch (Exception $e) {
+        return;
+      }
     }
 
     $content = null;
@@ -305,7 +311,7 @@ class Model_articles_expander extends CI_Model
       $content = $xpath->query($this->_common['content']);
     }
 
-    if (!is_null($content) && $content->length > 0)
+    if (isset($content->length) && $content->length > 0)
     {
       _log("Content found for domain " . $article['url_host']);
       $node = $content->item(0);

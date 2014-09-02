@@ -637,8 +637,6 @@ class Instagram {
           'height' => $pic->images->standard_resolution->height
         ],
         'has_image' => true,
-        'show_external_url' => true,
-        'assets' => [],
         'tags' => $pic->tags,
         'images_processed' => true,
         'sources' => array(

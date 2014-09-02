@@ -358,11 +358,9 @@ class Model_feeds_downloader extends CI_Model
       'url_host'     => $domain,
       'lead_image'   => NULL,
       'has_image'    => false,
-      'assets'       => array(),
       'tags'         => array(),
       'has_image'    => false,
-      'show_external_url' => true,
-      'fetched'      => false
+      'fetched_at'   => 0
     );
 
     if (count($entry->categories))
