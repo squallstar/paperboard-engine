@@ -148,9 +148,10 @@ class Manage_Controller extends Cronycle_Controller
 
 	public function recreate()
 	{
-		if (!$this->input->is_cli_request()) die('Please run this from CLI');
+		if (!$this->input->is_cli_request()) die('Please run this from CLI — ALSO CHECK THE DB INDEXES FIRST');
 
 		ini_set("memory_limit","128M");
+		set_time_limit(0);
 
 		$this->db->drop();
 
@@ -213,7 +214,7 @@ class Manage_Controller extends Cronycle_Controller
 		$art->ensureIndex(array('id' => 1), array('unique' => true));
 		$art->ensureIndex(array('fetched_at' => 1));
 		$art->ensureIndex(array('type' => 1));
-		$art->ensureIndex(array('name' => 'text', 'description' => 'text'));
+		$art->ensureIndex(array('name' => 'text', 'description' => 'text', 'source' => 1, 'published_at' => -1));
 		$art->ensureIndex(array('has_image' => 1, 'images_processed' => 1));
 		$art->ensureIndex(array('source' => 1, 'published_at' => -1));
 

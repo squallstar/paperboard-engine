@@ -638,7 +638,7 @@ class Instagram {
         ],
         'has_image' => true,
         'tags' => $pic->tags,
-        'images_processed' => true,
+        'images_processed' => false,
         'sources' => array(
           [
             'external_id' => intval($pic->user->id),
@@ -653,8 +653,7 @@ class Instagram {
 
       if ($pic->type == 'video')
       {
-        $d['assets'][] = [
-          'type' => 'video',
+        $d['video'] = [
           'url_original' => $pic->videos->standard_resolution->url,
           'width' => $pic->videos->standard_resolution->width,
           'height' => $pic->videos->standard_resolution->height

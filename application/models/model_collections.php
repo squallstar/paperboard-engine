@@ -324,20 +324,20 @@ Class Model_collections extends CI_Model
 
   public function links_count(&$collection)
   {
-    return $this->_links($collection, 0, null, null, [], [], false, false)->limit(self::MAX_LINKS_COUNT)->count(true);
+    return $this->_links($collection, 0, null, null, [], [], false)->limit(self::MAX_LINKS_COUNT)->count(true);
   }
 
   public function links_ordered(&$collection, $limit = 40, $max_timestamp = null, $min_timestamp = null, $fields = [], $conditions = [])
   {
-    return $this->_links($collection, $limit, $max_timestamp, $min_timestamp, $fields, $conditions, true, true);
+    return $this->_links($collection, $limit, $max_timestamp, $min_timestamp, $fields, $conditions, true);
   }
 
   public function links_not_ordered(&$collection, $limit = 40, $max_timestamp = null, $min_timestamp = null, $fields = [], $conditions = [])
   {
-    return $this->_links($collection, $limit, $max_timestamp, $min_timestamp, $fields, $conditions, false, false);
+    return $this->_links($collection, $limit, $max_timestamp, $min_timestamp, $fields, $conditions, false);
   }
 
-  private function _links(&$collection, $limit, $max_timestamp, $min_timestamp, $fields, $conditions, $sort, $hint)
+  private function _links(&$collection, $limit, $max_timestamp, $min_timestamp, $fields, $conditions, $sort)
   {
     $limit = $limit ? intval($limit) : 40;
 
@@ -361,8 +361,6 @@ Class Model_collections extends CI_Model
         '$gt' => intval($min_timestamp)
       );
     }
-
-    $n_filters = 0;
 
     if (isset($collection['filters']) && count($collection['filters']))
     {
@@ -391,7 +389,7 @@ Class Model_collections extends CI_Model
 
       if ($n_filters)
       {
-        if ($c == 1 && strpos($text_filters[0], '-') === 0)
+        if ($n_filters == 1 && strpos($text_filters[0], '-') === 0)
         {
           // Mongo can't search only negated documents
           array_unshift($text_filters, "");
@@ -401,6 +399,8 @@ Class Model_collections extends CI_Model
           '$search' => implode(' ', $text_filters)
         );
       }
+
+      unset($n_filters);
     }
 
     if (isset($collection['article_ids']))
@@ -425,6 +425,7 @@ Class Model_collections extends CI_Model
       $fields
     );
 
+    unset($conditions);
     unset($fields);
 
     if ($limit)
@@ -435,11 +436,6 @@ Class Model_collections extends CI_Model
     if ($sort)
     {
       $cursor->sort(['published_at' => -1]);
-    }
-
-    if ($hint && !$n_filters)
-    {
-      $cursor->hint(['source' => 1, 'published_at' => -1]);
     }
 
     return $cursor;
