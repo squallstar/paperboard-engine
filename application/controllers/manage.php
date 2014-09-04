@@ -148,80 +148,61 @@ class Manage_Controller extends Cronycle_Controller
 
 	public function recreate()
 	{
-		if (!$this->input->is_cli_request()) die('Please run this from CLI — ALSO CHECK THE DB INDEXES FIRST');
+		if (!$this->input->is_cli_request()) die('Please run this from CLI');
 
 		ini_set("memory_limit","128M");
 		set_time_limit(0);
 
-		$this->db->drop();
+		$this->config->load('schema');
+		$db_schema = $this->config->item('db_schema');
 
-		$users = new MongoCollection($this->db, 'users');
-		$users->ensureIndex(array('email' => 1), array('unique' => true));
-		$users->ensureIndex(array('password' => 1));
-		$users->ensureIndex(array('auth_token' => 1), array('unique' => true));
-		$users->ensureIndex(array('connected_accounts.id' => 1));
-		$users->ensureIndex(array('connected_accounts.following.updated_at' => 1));
+		if ($db_schema['drop_database'])
+		{
+			$this->db->drop();
+		}
 
-		$cats = new MongoCollection($this->db, 'categories');
-		$cats->ensureIndex(array('id' => 1), array('unique' => true));
-		$cats->ensureIndex(array('slug' => 1), array('unique' => true));
+		$created = 0;
 
-		collection('categories')->save(array('id' => newid('c'), 'name' => 'Featured', 'slug' => 'top-picks', 'collection_count' => 0));
-		collection('categories')->save(array('id' => newid('c'), 'name' => 'Tech', 'slug' => 'tech', 'collection_count' => 0));
-		collection('categories')->save(array('id' => newid('c'), 'name' => 'Business', 'slug' => 'business', 'collection_count' => 0));
-		collection('categories')->save(array('id' => newid('c'), 'name' => 'Sport', 'slug' => 'sport', 'collection_count' => 0));
+		foreach ($db_schema['collections'] as $collection_name => $schema)
+		{
+			$collection = new MongoCollection($this->db, $collection_name);
 
-		$col = new MongoCollection($this->db, 'collections');
-		$col->ensureIndex(array('id' => 1), array('unique' => true));
-		$col->ensureIndex(array('private_id' => 1), array('unique' => true));
-		$col->ensureIndex(array('user.id' => 1));
-		$col->ensureIndex(array('position' => 1));
-		$col->ensureIndex(array('sources' => 1));
-		$col->ensureIndex(array('publicly_visible' => 1));
-		$col->ensureIndex(array('category.slug' => 1));
-		$col->ensureIndex(array('followers.id' => 1));
+			if (isset($schema['indexes']))
+			{
+				foreach ($schema['indexes'] as $index)
+				{
+					if (isset($index[1]))
+					{
+						$collection->ensureIndex($index[0], $index[1]);
+					}
+					else
+					{
+						$collection->ensureIndex($index[0]);
+					}
+				}
+			}
 
-		$cat = new MongoCollection($this->db, 'user_categories');
-		$cat->ensureIndex(array('id' => 1), array('unique' => true));
-		$cat->ensureIndex(array('user_id' => 1));
-		$cat->ensureIndex(array('text' => 1));
-		$cat->ensureIndex(array('children.id' => 1));
-		$cat->ensureIndex(array('children.external_key' => 1));
-		$cat->ensureIndex(array('source_uri' => 1));
+			if (($db_schema['drop_database'] || $db_schema['insert_data']) && isset($schema['data']))
+			{
+				foreach ($schema['data'] as $record)
+				{
+					try
+					{
+						$collection->insert($record);
+					}
+					catch (Exception $e) {
 
-		$cc = new MongoCollection($this->db, 'category_children');
-		$feed->ensureIndex(array('feed_id' => 1, 'category_id' => 1));
-		$cc->ensureIndex(array('external_key' => 1));
-		$cc->ensureIndex(array('category_id' => 1));
-		$cc->ensureIndex(array('source_uri' => 1));
-		$cc->ensureIndex(array('feed_id' => 1));
-		$cc->ensureIndex(array('user_id' => 1));
-		$cc->ensureIndex(array('id' => 1));
+					}
+				}
+			}
 
-		$feed = new MongoCollection($this->db, 'feeds');
-		$feed->ensureIndex(array('type' => 1, 'processed_at' => 1));
-		$feed->ensureIndex(array('url' => 1));
-		$feed->ensureIndex(array('url' => 1, 'type' => 1), array('unique' => true));
-		$feed->ensureIndex(array('failed_count' => 1));
-		$feed->ensureIndex(array('external_id' => 1));
-		$feed->ensureIndex(array('title' => 'text', 'url' => 'text'));
+			$created++;
+		}
 
-		$counters = new MongoCollection($this->db, 'counters');
-		$counters->insert(array('_id' => 'user_id', 'seq' => 0));
-		$counters->insert(array('_id' => 'collection_id', 'seq' => 0));
-
-		$art = new MongoCollection($this->db, 'articles');
-		$art->ensureIndex(array('id' => 1), array('unique' => true));
-		$art->ensureIndex(array('fetched_at' => 1));
-		$art->ensureIndex(array('type' => 1));
-		$art->ensureIndex(array('name' => 'text', 'description' => 'text', 'source' => 1, 'published_at' => -1));
-		$art->ensureIndex(array('has_image' => 1, 'images_processed' => 1));
-		$art->ensureIndex(array('source' => 1, 'published_at' => -1));
-
-		$art->ensureIndex(array('published_at' => -1));
-		$art->ensureIndex(array('processed_at' => 1)); // for stats
-
-		echo 'done';
+		$this->json(200, [
+			'created' => $created,
+			'schema' => $this->config->item('db_schema')
+		]);
 	}
 
 	public function expand()
