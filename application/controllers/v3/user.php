@@ -23,11 +23,19 @@ class User_Controller extends Cronycle_Controller
 
   public function check_email()
   {
-    if ($this->method != 'get') return;
+    if ($this->method != 'get' && $this->method != 'post') return;
 
     $this->load->helper('email');
 
-    $email = $this->input->get_post('email');
+    if ($this->method == 'get')
+    {
+      $email = $this->input->get_post('email');
+    }
+    else
+    {
+      $this->set_body_request();
+      $email = $this->request['email'];
+    }
 
     if (valid_email($email))
     {

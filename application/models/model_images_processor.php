@@ -77,6 +77,7 @@ class Model_images_processor extends CI_Model
         'lead_image.url_original' => true
       ]
     )->sort(['published_at' => -1])
+     ->hint(['has_image' => 1, 'images_processed' => 1])
      ->limit($limit);
 
     $this->_is_working = true;

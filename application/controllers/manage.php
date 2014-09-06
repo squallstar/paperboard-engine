@@ -571,4 +571,124 @@ class Manage_Controller extends Cronycle_Controller
   //   	['justOne' => false]
   //   );
 	}
+
+	public function search()
+	{
+		/*
+		"restaurants" london
+		"restaurants" paris
+		*/
+
+		$str = '{
+   "match": "and",
+   "items": [
+      "restaurants",
+      {
+         "match": "or",
+         "items": [
+            "london",
+            "paris"
+         ]
+      },
+      {
+         "match": "or",
+         "items": [
+            "hipsters",
+            "indie"
+         ]
+      },
+      {
+         "match": "or",
+         "items": [
+            "soho",
+            "brick lane"
+         ]
+      }
+   ]
+}';
+
+		$data = json_decode($str);
+
+		$query = '';
+
+		$this->flatQuery($data, $query);
+
+		$res = collection('articles')->find(
+			[
+				'$text' => ['$search' => $query]
+			]
+		)->limit(10);
+
+		var_dump(iterator_to_array($res));
+	}
+
+	public function flatQuery(&$grp, &$phrase)
+	{
+		foreach ($grp->items as $item)
+		{
+			if (is_string($item))
+			{
+				if ($grp->match == 'and') $phrase .= ' "' . $item . '"';
+				else $phrase .= ' ' . $item;
+			}
+			else
+			{
+				$this->flatQuery($item, $phrase);
+			}
+		}
+	}
+
+	public function queryForGroup(&$grp, &$phrases)
+	{
+		if ($grp->match == 'and')
+		{
+			foreach ($grp->items as $item)
+			{
+				if (is_string($item))
+				{
+					if (count($phrases))
+					{
+						foreach ($phrases as &$phrase) {
+							$phrase .= ' "' . $item . '"';
+						}
+					}
+					else
+					{
+						$phrases[] = '"' . $item . '"';
+					}
+				}
+				else
+				{
+					$this->queryForGroup($item, $phrases);
+				}
+			}
+		}
+		else
+		{
+			$orig_phrases = $phrases;
+			$phrases = [];
+
+			foreach ($grp->items as $item)
+			{
+				if (is_string($item))
+				{
+					if (count($orig_phrases))
+					{
+						foreach ($orig_phrases as &$phrase)
+						{
+							$phrases[] = $phrase . ' ' . $item;
+						}
+					}
+					else
+					{
+						$phrases[] = $item;
+					}
+				}
+				else
+				{
+					$this->queryForGroup($item, $phrases);
+				}
+			}
+		}
+	}
 }

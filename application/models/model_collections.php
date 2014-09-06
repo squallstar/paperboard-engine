@@ -362,6 +362,8 @@ Class Model_collections extends CI_Model
       );
     }
 
+    $n_filters = 0;
+
     if (isset($collection['filters']) && count($collection['filters']))
     {
       $text_filters = [];
@@ -399,8 +401,6 @@ Class Model_collections extends CI_Model
           '$search' => implode(' ', $text_filters)
         );
       }
-
-      unset($n_filters);
     }
 
     if (isset($collection['article_ids']))
@@ -425,7 +425,6 @@ Class Model_collections extends CI_Model
       $fields
     );
 
-    unset($conditions);
     unset($fields);
 
     if ($limit)
@@ -437,6 +436,14 @@ Class Model_collections extends CI_Model
     {
       $cursor->sort(['published_at' => -1]);
     }
+
+    if ($n_filters == 0 && isset($conditions['source']))
+    {
+      $cursor->hint(['source' => 1, 'published_at' => -1]);
+    }
+
+    unset($n_filters);
+    unset($conditions);
 
     return $cursor;
   }
