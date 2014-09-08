@@ -1,3 +1,10 @@
+<Files admin>
+AuthName "admin"
+AuthType Basic
+AuthUserFile /home/httpd/squallstar/.hhvm-admin-passwd
+require valid-user
+</Files>
+
 RewriteEngine on
 RewriteCond %{SCRIPT_FILENAME} !-f
 RewriteCond %{SCRIPT_FILENAME} !-d
