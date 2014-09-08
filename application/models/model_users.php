@@ -248,6 +248,65 @@ Class Model_users extends CI_Model
     );
   }
 
+  public function delete_user($id)
+  {
+    $id = intval($id);
+
+    $user = collection('users')->findOne(['_id' => $id]);
+
+    $c = [
+      'users' => 0,
+      'feeds' => 0
+    ];
+
+    if ($user)
+    {
+      $c['users'] = 1;
+
+      $sources = collection('category_children')->find(['type' => 'feed', 'user_id' => $id], ['feed_id' => 1]);
+
+      $this->load->model('model_sources', 'sources');
+      $c['feeds'] = $this->sources->purge_category_children($sources);
+
+      collection('collections')->remove(['user.id' => $id]);
+
+      collection('category_children')->remove(['user_id' => $id]);
+      collection('user_categories')->remove(['user_id' => $id]);
+    }
+
+    collection('users')->remove(['_id' => $id], ['justOne' => true]);
+
+    return $user ? $c : false;
+  }
+
+  public function unlink_account_from_user($user_id, $account_id)
+  {
+    $user_id = intval($user_id);
+
+    $user = collection('users')->count([
+      '_id' => $user_id,
+      'connected_accounts.id' => $account_id
+    ]);
+
+    if ($user)
+    {
+      $res = collection('users')->update(
+        ['_id' => $user_id],
+        [
+          '$pull' => [
+            'connected_accounts' => [
+              'id' => $account_id
+            ]
+          ]
+        ]
+      );
+
+      return $res;
+    }
+
+    return false;
+  }
+
   public function get_favourites($just_ids = false)
   {
     $fields = ['_id' => false];

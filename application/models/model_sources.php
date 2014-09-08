@@ -554,4 +554,24 @@ Class Model_sources extends CI_Model
 
     return $ids;
   }
+
+  public function purge_category_children($sources)
+  {
+    $n = 0;
+
+    foreach ($sources as $source)
+    {
+      $feed = collection('feeds')->findOne(['_id' => $source['feed_id']], ['_id' => 1, 'added_count' => 1]);
+
+      if ($feed['added_count'] <= 1)
+      {
+        $n++;
+
+        collection('feeds')->remove(['_id' => $source['feed_id']], ['justOne' => true]);
+        collection('articles')->remove(['source' => $feed['_id']]);
+      }
+    }
+
+    return $n;
+  }
 }

@@ -177,6 +177,7 @@ class Source_management_Controller extends Cronycle_Controller
           array(
             '$set' => array(
               'full_name' => $resp->user->full_name
+              // TODO: Update only if connected accounts is 0
               // 'nickname' => $resp->user->username,
               // 'avatar.small'  => $resp->user->profile_picture,
               // 'avatar.medium' => $resp->user->profile_picture,
@@ -188,6 +189,7 @@ class Source_management_Controller extends Cronycle_Controller
                 'processed_at' => 0,
                 'connected_at' => time(),
                 'type' => 'instagram',
+                'avatar' => $resp->user->profile_picture,
                 'access_token' => array(
                   'oauth_token' => $resp->access_token,
                   'user_id' => $resp->user->id,
@@ -298,6 +300,7 @@ class Source_management_Controller extends Cronycle_Controller
                 'connected_at' => time(),
                 'type' => 'twitter',
                 'access_token' => $access_token,
+                'avatar' => $user->profile_image_url_https,
                 'following' => array(
                   'count' => $user->friends_count,
                   'updated_at' => 0
@@ -315,7 +318,7 @@ class Source_management_Controller extends Cronycle_Controller
           $this->sources->add_twitter_person($res['id'], [
             'id' => $user->id,
             'name' => $user->name,
-            'screen_name' => $user->screen_name,
+            'screen_name' => $user->screen_name . ' (you)',
             'avatar' => $user->profile_image_url_https
           ]);
 
