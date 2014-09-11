@@ -222,9 +222,9 @@ Class Model_sources extends CI_Model
     return $data;
   }
 
-  public function delete($node_id)
+  public function find_node_by_id($node_id)
   {
-    $node = collection('category_children')->findOne(
+    return collection('category_children')->findOne(
       array(
         'id' => $node_id,
         'user_id' => $this->users->id()
@@ -234,6 +234,57 @@ Class Model_sources extends CI_Model
         'category_id' => true
       )
     );
+  }
+
+  public function move_node($node_id, $new_category_id)
+  {
+    $node = $this->find_node_by_id($node_id);
+
+    if ($node)
+    {
+      $category = collection('user_categories')->findOne(
+        [
+          'id' => $new_category_id,
+          'user_id' => $this->users->id()
+        ],
+        ['id' => 1]
+      );
+
+      if ($category)
+      {
+        try
+        {
+          $res = collection('category_children')->update(
+            ['id' => $node_id],
+            ['$set' => ['category_id' => $new_category_id]]
+          ) ? true : false;
+
+          collection('user_categories')->update(
+            ['id' => $node['category_id']],
+            ['$inc' => ['added_count' => -1]]
+          );
+
+          collection('user_categories')->update(
+            ['id' => $new_category_id],
+            ['$inc' => ['added_count' => 1]]
+          );
+
+          return $res;
+        }
+        catch (Exception $e)
+        {
+          log_message('error', 'Moving node ' . $node_id . ' to folder ' . $new_category_id . ': ' . $e->getMessage());
+          return false;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  public function delete($node_id)
+  {
+    $node = $this->find_node_by_id($node_id);
 
     if ($node)
     {

@@ -77,6 +77,30 @@ class Source_management_Controller extends Cronycle_Controller
     if ($this->method == 'delete') return $this->delete_node($node_id);
   }
 
+  public function move_node($nodes_ids)
+  {
+    if (!$this->require_token()) return;
+
+    if ($this->method != 'post') return $this->json(404);
+
+    $moved = [];
+    $nodes = explode(',', $nodes_ids);
+
+    $new_folder = $this->input->get_post('new_parent_id');
+
+    if (!$new_folder)
+    {
+      return $this->json(422, ['errors' => ['New folder is required']]);
+    }
+
+    foreach ($nodes as &$node_id)
+    {
+      $moved[] = $this->sources->move_node($node_id, $new_folder);
+    }
+
+    $this->json(200, $moved);
+  }
+
   public function delete_node($node_id)
   {
     $nodes = explode(',', $node_id);
