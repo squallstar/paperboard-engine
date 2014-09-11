@@ -124,6 +124,14 @@ Class Model_users extends CI_Model
     return false;
   }
 
+  public function reauthenticate()
+  {
+    if ($this->_auth_token)
+    {
+      $this->authenticate($this->_auth_token);
+    }
+  }
+
   public function get($key = null)
   {
     if ($key)
@@ -158,9 +166,9 @@ Class Model_users extends CI_Model
       'auth_token'     => $this->_generate_token(),
 
       'avatar' => array(
-        'high'   => 'http://cronycle-staging-avatar.s3.amazonaws.com/uploads/high_cronycle-logo.png',
-        'medium' => 'http://cronycle-staging-avatar.s3.amazonaws.com/uploads/medium_cronycle-logo.png',
-        'small'  => 'http://cronycle-staging-avatar.s3.amazonaws.com/uploads/small_cronycle-logo.png'
+        'high'   => $this->config->base_url('assets/images/avatar/high.png'),
+        'medium' => $this->config->base_url('assets/images/avatar/medium.png'),
+        'small'  => $this->config->base_url('assets/images/avatar/small.png')
       ),
 
       'bucket' => new stdClass,

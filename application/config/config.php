@@ -59,6 +59,16 @@ $config['aws_bucket_name'] = 'cronycle-hhvm';
 
 /*
 |--------------------------------------------------------------------------
+| Feedly Consumer keys
+|--------------------------------------------------------------------------
+|
+*/
+$config['feedly_api_url'] = 'https://sandbox.feedly.com';
+$config['feedly_client_id'] = 'sandbox';
+$config['feedly_client_secret'] = 'YDRYI5E8OP2JKXYSDW79';
+
+/*
+|--------------------------------------------------------------------------
 | MongoDB - Database connection settings
 |--------------------------------------------------------------------------
 |

@@ -52,7 +52,7 @@ class Service_Controller extends CI_Controller
     {
       if (!$this->feeds->download())
       {
-        sleep(4);
+        sleep(10);
       }
     }
   }
@@ -72,7 +72,7 @@ class Service_Controller extends CI_Controller
         _log('Updated ' . $count . " followers.");
       }
 
-      sleep(250);
+      sleep(400);
     }
   }
 

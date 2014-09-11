@@ -358,14 +358,14 @@ class Collections_Controller extends Cronycle_Controller
     if (count($cond['feeds']) == 0) unset($cond['feeds']);
 
     // Include the line below in the feeds to search only using the user sources
-    //'feeds' => $this->sources->tree_ids()
+    $conf['feeds'] = $this->sources->tree_ids();
 
-    $links = $this->collections->links_not_ordered(
+    $links = $this->collections->links_ordered(
       $cond,
       $this->input->get('per_page'),
       $this->input->get('max_timestamp'),
       $this->input->get('min_timestamp')
-    )->sort(['published_at' => -1]);
+    );
 
     $this->json(200, iterator_to_array($links, false));
   }

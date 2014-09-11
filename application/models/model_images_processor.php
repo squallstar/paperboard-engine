@@ -14,7 +14,7 @@ class Model_images_processor extends CI_Model
 {
   const AWS_URL = 'https://s3-eu-west-1.amazonaws.com/';
 
-  const DEFAULT_WIDTH = 400;
+  const DEFAULT_WIDTH = 430;
 
   const DEFAULT_JPEG_QUALITY = 83;
 

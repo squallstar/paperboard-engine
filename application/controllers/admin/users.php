@@ -21,6 +21,9 @@ class Users_Controller extends CI_Controller
 
   public function index()
   {
+    ini_set("memory_limit","256M");
+    set_time_limit(0);
+
     $this->load->model('model_users', 'users');
 
     $delete = $this->input->get('delete');

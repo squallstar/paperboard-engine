@@ -12,6 +12,8 @@
 
 Class Model_sources extends CI_Model
 {
+  const MAX_CHILDREN_FOR_CATEGORY = 1000;
+
   public function __construct()
   {
     parent::__construct();
@@ -531,7 +533,7 @@ Class Model_sources extends CI_Model
     $category['children'] = iterator_to_array(collection('category_children')->find(
       ['category_id' => $category['id']],
       ['_id' => false, 'category_id' => false, 'feed_id' => false]
-    )->sort(['external_key' => 1]));
+    )->limit(self::MAX_CHILDREN_FOR_CATEGORY)->sort(['external_key' => 1]));
   }
 
   public function tree_ids()

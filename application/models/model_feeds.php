@@ -308,7 +308,7 @@ Class Model_feeds extends CI_Model
       {
         if ($account['type'] != 'twitter' || $account['processed_at'] > $ts) continue;
 
-        _log("Downloading tweets for account " . $account['id'] . " (" . $account['access_token']['screen_name'] . ")");
+        _log("Downloading tweets for account " . $account['id'] . " (" . $account['screen_name'] . ")");
 
         $folder = $this->sources->get_user_folder_by_source_id($account['id']);
 
@@ -435,7 +435,7 @@ Class Model_feeds extends CI_Model
       )
     )->limit(30);
 
-    if ($users->count() == 0) return 0;
+    if ($users->count(true) == 0) return 0;
 
     $added = 0;
 
@@ -455,7 +455,7 @@ Class Model_feeds extends CI_Model
       {
         if ($account['type'] != 'instagram' || $account['processed_at'] > $ts) continue;
 
-        _log("Downloading instagram pics for account " . $account['id'] . " (" . $account['access_token']['screen_name'] . ")");
+        _log("Downloading instagram pics for account " . $account['id'] . " (" . $account['screen_name'] . ")");
 
         $folder = $this->sources->get_user_folder_by_source_id($account['id']);
 

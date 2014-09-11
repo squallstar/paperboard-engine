@@ -165,7 +165,7 @@ class Source_management_Controller extends Cronycle_Controller
             '$pull' => [
               'connected_accounts' => [
                 'type' => 'instagram',
-                'access_token.screen_name' => $resp->user->username
+                'screen_name' => $resp->user->username
               ]
             ]
           ],
@@ -190,10 +190,11 @@ class Source_management_Controller extends Cronycle_Controller
                 'connected_at' => time(),
                 'type' => 'instagram',
                 'avatar' => $resp->user->profile_picture,
+                'screen_name' => $resp->user->username,
+                'full_name' => $resp->user->full_name,
                 'access_token' => array(
                   'oauth_token' => $resp->access_token,
                   'user_id' => $resp->user->id,
-                  'screen_name' => $resp->user->username
                 ),
                 'following' => array(
                   'count' => 0,
@@ -206,6 +207,8 @@ class Source_management_Controller extends Cronycle_Controller
 
         if ($res)
         {
+          $this->users->reauthenticate();
+
           $res = $this->sources->add_instagram_category($account_id, $resp->user->username, $resp->user->full_name);
 
           // Also adds myself as a source
@@ -276,12 +279,14 @@ class Source_management_Controller extends Cronycle_Controller
             '$pull' => [
               'connected_accounts' => [
                 'type' => 'twitter',
-                'access_token.screen_name' => $user->screen_name
+                'screen_name' => $user->screen_name
               ]
             ]
           ],
           ['multiple' => true]
         );
+
+        unset($access_token['screen_name']);
 
         $res = collection('users')->update(
           array('_id' => $this->users->get('_id')),
@@ -300,6 +305,8 @@ class Source_management_Controller extends Cronycle_Controller
                 'connected_at' => time(),
                 'type' => 'twitter',
                 'access_token' => $access_token,
+                'screen_name' => $user->screen_name,
+                'full_name' => $user->name,
                 'avatar' => $user->profile_image_url_https,
                 'following' => array(
                   'count' => $user->friends_count,
@@ -312,6 +319,8 @@ class Source_management_Controller extends Cronycle_Controller
 
         if ($res)
         {
+          $this->users->reauthenticate();
+
           $res = $this->sources->add_twitter_category($account_id, '@' . $user->screen_name, $user->name);
 
           // Also adds myself as a source
@@ -352,5 +361,24 @@ class Source_management_Controller extends Cronycle_Controller
 
     $this->session->set_userdata('callback', $this->input->get('d'));
     redirect($this->twitter->get_loginurl($token));
+  }
+
+  public function add_feedly_account()
+  {
+    if (!$this->require_token()) return;
+
+    $this->load->helper('url');
+    $this->load->library(['feedly', 'session']);
+
+    $token = $this->users->token();
+
+    if ($this->input->get('code'))
+    {
+
+    }
+
+    $this->session->set_userdata('callback', $this->input->get('d'));
+
+    redirect($this->feedly->getLoginUrl(current_url()));
   }
 }

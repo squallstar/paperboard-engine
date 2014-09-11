@@ -18,7 +18,7 @@ class Model_runner extends CI_Model
 
     $collections = collection('collections')->find(
       [],
-      ['id' => true, 'feeds' => true, 'sources' => true, 'cover_asset.fixed' => true]
+      ['id' => true, 'user.id' => true, 'feeds' => true, 'sources' => true, 'cover_asset.fixed' => true]
     );
 
     $i = 0;
@@ -45,12 +45,30 @@ class Model_runner extends CI_Model
         unset($cursor);
       }
 
-      if (collection('collections')->update(
-        ['id' => $collection['id']],
-        [
-          '$set' => $data
-        ]
-      )) $i++;;
+      $user = collection('users')->findOne(['_id' => $collection['user']['id']], [
+        'full_name' => 1, 'avatar.small' => 1
+      ]);
+
+      if ($user)
+      {
+        $data['user'] = [
+          'id' => $user['_id'],
+          'full_name' => $user['full_name'],
+          'image_url' => $user['avatar']['small']
+        ];
+
+        if (collection('collections')->update(
+          ['id' => $collection['id']],
+          [
+            '$set' => $data
+          ]
+        )) $i++;;
+      }
+      else
+      {
+        // Dead collection?
+        collection('collections')->remove(['id' => $collection['id']], ['justOne' => true]);
+      }
     }
 
     unset($data);

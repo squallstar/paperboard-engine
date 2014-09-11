@@ -41,7 +41,7 @@
               {
                 ?>
                 <li>
-                  <p><?php echo $account['type']; ?>: <strong><?php echo $account['access_token']['screen_name']; ?></strong><br />
+                  <p><?php echo $account['type']; ?>: <strong><?php echo isset($account['screen_name']) ? $account['screen_name'] : $account['access_token']['screen_name']; ?></strong><br />
                     Following <strong><?php echo $account['following']['count']; ?></strong> people. Updated at <?php echo date('Y-m-d H:i', $account['following']['updated_at']); ?><br />
                     <a href="<?php echo current_url() . '?unlink=' . $user['_id'] . '&account=' . $account['id']; ?>">Unlink account</a></p>
                 </li>

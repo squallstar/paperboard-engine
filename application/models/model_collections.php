@@ -52,7 +52,7 @@ Class Model_collections extends CI_Model
       'name' => 'New collection',
       'description' => '',
       'position' => 0,
-      'publicly_visible' => true,
+      'publicly_visible' => false,
       'partner_identifier' => null,
       'type' => 'standard',
       'total_links_count' => 0,
