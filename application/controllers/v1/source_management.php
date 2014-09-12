@@ -195,8 +195,10 @@ class Source_management_Controller extends Cronycle_Controller
           ['multiple' => true]
         );
 
+        $collection_uri = 'instagram:' . $resp->user->username;
+
         $res = collection('users')->update(
-          array('_id' => $this->users->get('_id')),
+          array('_id' => $this->users->id()),
           array(
             '$set' => array(
               'full_name' => $resp->user->full_name
@@ -250,8 +252,9 @@ class Source_management_Controller extends Cronycle_Controller
           $collection = $this->collections->create([
             'name' => 'Instagram',
             'type' => 'instagram',
-            'sources' => [$res['source_uri']]
-          ]);
+            'sources' => [$res['source_uri']],
+            'account_key' => $collection_uri
+          ], false);
 
           $cb = $this->input->cookie('callback');
 
@@ -322,10 +325,12 @@ class Source_management_Controller extends Cronycle_Controller
           ['multiple' => true]
         );
 
+        $collection_uri = 'twitter:' . $user->screen_name;
+
         unset($access_token['screen_name']);
 
         $res = collection('users')->update(
-          array('_id' => $this->users->get('_id')),
+          array('_id' => $this->users->id()),
           array(
             '$set' => array(
               'full_name' => $user->name,
@@ -380,8 +385,9 @@ class Source_management_Controller extends Cronycle_Controller
           $collection = $this->collections->create([
             'name' => '@' . $user->screen_name,
             'type' => 'twitter',
-            'sources' => [$res['source_uri']]
-          ]);
+            'sources' => [$res['source_uri']],
+            'account_key' => $collection_uri
+          ], false);
 
           $cb = $this->input->cookie('callback');
 
@@ -460,8 +466,10 @@ class Source_management_Controller extends Cronycle_Controller
         ['multiple' => true]
       );
 
+      $collection_uri = 'feedly:' . $res->id;
+
       $op = collection('users')->update(
-        array('_id' => $this->users->get('_id')),
+        array('_id' => $this->users->id()),
         array(
           // '$set' => array(
           //   'full_name' => $user->name,
@@ -517,8 +525,8 @@ class Source_management_Controller extends Cronycle_Controller
                 'text' => $title
               ),
               array(
-                '_id' => true,
-                'id' => true
+                'id' => true,
+                'source_uri' => true
               )
             );
 
@@ -547,8 +555,9 @@ class Source_management_Controller extends Cronycle_Controller
               $this->collections->create([
                 'name' => $title,
                 'type' => 'feedly',
-                'sources' => [$cat['id']]
-              ]);
+                'sources' => [$cat['source_uri']],
+                'account_key' => $collection_uri . ':' . $cat['id']
+              ], false);
             }
           }
 

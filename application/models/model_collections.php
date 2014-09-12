@@ -43,9 +43,9 @@ Class Model_collections extends CI_Model
     );
   }
 
-  private function _prepare($data = array())
+  private function _prepare($data = array(), $filter = true)
   {
-    $data = $this->_filter_fields($data);
+    if ($filter) $data = $this->_filter_fields($data);
 
     return array_replace_recursive(array(
       'id' => next_id('collection'),
@@ -84,15 +84,23 @@ Class Model_collections extends CI_Model
     ), $data);
   }
 
-  public function create($data = array())
+  public function create($data = array(), $filter = true)
   {
-    $data = $this->_prepare($data);
+    $data = $this->_prepare($data, $filter);
 
     $this->load->model('model_sources', 'sources');
     $data['feeds'] = $this->sources->tree($data['sources'], true);
 
     $data['total_links_count'] = $this->links_count($data);
     $data['total_source_count'] = count($data['feeds']);
+
+    if (isset($data['account_key']))
+    {
+      collection('collections')->remove([
+        'user.id' => $this->users->id(),
+        'account_key' => $data['account_key']
+      ]);
+    }
 
     $res = collection('collections')->insert($data);
 

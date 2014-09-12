@@ -180,6 +180,7 @@ Class Model_users extends CI_Model
       'password'       => md5($data['password']),
       'full_name'      => $data['full_name'],
       'nickname'       => $data['full_name'],
+      'optin_token'    => $data['optin_token'],
       'auth_token'     => $this->_generate_token(),
 
       'avatar' => array(
@@ -207,6 +208,15 @@ Class Model_users extends CI_Model
 
     if ($res)
     {
+      $this->load->model('model_mailer', 'mailer');
+
+      $this->mailer->send_welcome([
+        '_id' => $data['_id'],
+        'email' => $data['email'],
+        'full_name' => $data['full_name'],
+        'optin_token' => $data['optin_token']
+      ]);
+
       $user = array(
         'auth_token' => $data['auth_token'],
         'user'       => $this->find($data['_id'], true)

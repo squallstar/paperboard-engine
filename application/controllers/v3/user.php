@@ -105,7 +105,8 @@ class User_Controller extends Cronycle_Controller
     $resp = $this->users->sign_up(array(
       'email' => $data['email'],
       'password' => $data['password'],
-      'full_name' => $data['full_name']
+      'full_name' => $data['full_name'],
+      'optin_token' => md5($data['email'] . time())
     ));
 
     if ($resp)
