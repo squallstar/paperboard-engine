@@ -21,4 +21,28 @@ class Directory_Controller extends Cronycle_Controller
       )
     ));
   }
+
+  public function tags()
+  {
+    $pipeline = [
+      ['$unwind' => '$tags'],
+      ['$group' => [
+        '_id' => '$tags',
+        'value' => ['$sum' => 1]
+      ]],
+      ['$sort' => ['value' => -1]],
+      ['$limit' => 30]
+    ];
+
+    $res = collection('collections')->aggregate($pipeline)['result'];
+
+    $tags = [];
+
+    foreach ($res as $tag)
+    {
+      $tags[] = $tag['_id'];
+    }
+
+    $this->json(200, $tags);
+  }
 }

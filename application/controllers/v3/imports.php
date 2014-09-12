@@ -40,13 +40,15 @@ class Imports_Controller extends Cronycle_Controller
     $n_cat = 0;
     $n_feed = 0;
 
+    $user_id = $this->users->id();
+
     foreach ($xml->body->outline as $outline)
     {
       $title = (string) $outline['title'];
 
       $cat = collection('user_categories')->findOne(
         array(
-          'user_id' => $this->users->get('_id'),
+          'user_id' => $user_id,
           'text' => $title
         ),
         array(

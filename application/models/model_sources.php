@@ -391,12 +391,15 @@ Class Model_sources extends CI_Model
     $feeds = [];
 
     foreach ($sources as &$source) {
+      if (strpos($source, ':') === FALSE) continue;
+
       list($type, $id) = explode(':', $source);
 
       switch ($type) {
         case 'category':
         case 'twitter_account':
         case 'instagram_account':
+        case 'feedly_account':
           $categories[] = $id;
           break;
 

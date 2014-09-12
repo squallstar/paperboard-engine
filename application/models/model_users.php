@@ -103,7 +103,24 @@ Class Model_users extends CI_Model
   public function load_user()
   {
     if ($this->_user) return true;
-    return $this->authenticate($this->input->get_post('auth_token'));
+
+    $token = $this->input->get_post('auth_token');
+
+    if (!$token) $token = $this->input->cookie('auth_token');
+
+    return $this->authenticate($token);
+  }
+
+  public function store_token()
+  {
+    if ($this->_auth_token)
+    {
+      $this->input->set_cookie([
+        'name' => 'auth_token',
+        'value' => $this->_auth_token,
+        'expire' => 432000
+      ]);
+    }
   }
 
   public function authenticate($token)

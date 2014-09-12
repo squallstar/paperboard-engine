@@ -51,4 +51,9 @@ class Cronycle_Controller extends CI_Controller
          ->set_status_header($code)
          ->set_output(json_encode($data));
   }
+
+  protected function meta_redirect($url)
+  {
+    $this->load->view('meta-redirect', ['url' => $url]);
+  }
 }

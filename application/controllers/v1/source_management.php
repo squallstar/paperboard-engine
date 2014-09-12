@@ -166,7 +166,6 @@ class Source_management_Controller extends Cronycle_Controller
     if (!$this->require_token()) return;
 
     $this->load->helper('url');
-    $this->load->library('session');
     $this->load->library('instagram', [
       'callback' => current_url() . '?auth_token=' . $this->users->token()
     ]);
@@ -254,10 +253,16 @@ class Source_management_Controller extends Cronycle_Controller
             'sources' => [$res['source_uri']]
           ]);
 
-          $cb = $this->session->userdata('callback');
-          $this->session->unset_userdata('callback');
+          $cb = $this->input->cookie('callback');
 
-          return redirect($cb ? $cb : $this->config->item('client_base_url'));
+          if ($cb)
+          {
+            return redirect($cb);
+          }
+          else
+          {
+            return $this->load->view('connected-account', ['type' => 'instagram']);
+          }
         }
         else
         {
@@ -266,8 +271,15 @@ class Source_management_Controller extends Cronycle_Controller
       }
     }
 
-    $this->session->set_userdata('callback', $this->input->get('d'));
-    redirect($this->instagram->getLoginUrl(['basic', 'likes', 'comments']));
+    $this->input->set_cookie([
+      'name' => 'callback',
+      'value' => $this->input->get('d'),
+      'expire' => 0
+    ]);
+
+    $this->users->store_token();
+
+    $this->meta_redirect($this->instagram->getLoginUrl(['basic', 'likes', 'comments']));
   }
 
   public function add_twitter_account()
@@ -371,20 +383,35 @@ class Source_management_Controller extends Cronycle_Controller
             'sources' => [$res['source_uri']]
           ]);
 
-          $cb = $this->session->userdata('callback');
-          $this->session->unset_userdata('callback');
+          $cb = $this->input->cookie('callback');
 
-          return redirect($cb ? $cb : $this->config->item('client_base_url'));
+          if ($cb)
+          {
+            return redirect($cb);
+          }
+          else
+          {
+            return $this->load->view('connected-account', ['type' => 'twitter']);
+          }
         }
         else
         {
           return $this->json(422, ['errors' => ['Cannot add the twitter account']]);
         }
       }
+      else
+      {
+        return show_error('Could not verify your Twitter account.');
+      }
     }
 
-    $this->session->set_userdata('callback', $this->input->get('d'));
-    redirect($this->twitter->get_loginurl($token));
+    $this->input->set_cookie([
+      'name' => 'callback',
+      'value' => $this->input->get('d'),
+      'expire' => 0
+    ]);
+
+    $this->meta_redirect($this->twitter->get_loginurl($token));
   }
 
   public function add_feedly_account()
@@ -392,17 +419,179 @@ class Source_management_Controller extends Cronycle_Controller
     if (!$this->require_token()) return;
 
     $this->load->helper('url');
-    $this->load->library(['feedly', 'session']);
+    $this->load->library('feedly');
 
     $token = $this->users->token();
 
-    if ($this->input->get('code'))
+    if ($code = $this->input->get('code'))
     {
+      $res = $this->feedly->getAccessToken($code);
 
+      if (isset($res->errorCode))
+      {
+        return show_error(ucfirst($res->errorMessage), 401, 'Feedly Connect');
+      }
+
+      $this->feedly->setAccessToken($res->access_token);
+
+      $user = $this->feedly->getProfile();
+
+      if (isset($user->errorCode))
+      {
+        return show_error(ucfirst($user->errorMessage), 401, 'Feedly Connect: User profile');
+      }
+
+      $user->full_name = $user->givenName . ' ' . $user->familyName;
+
+      $account_id = newid('fdl');
+      $source_uri = 'feedly_account:' . $account_id;
+
+      // As a requirement, we remove this feedly account from other users if they connected it
+      collection('users')->update(
+        [],
+        [
+          '$pull' => [
+            'connected_accounts' => [
+              'type' => 'feedly',
+              'access_token.user_id' => $res->id
+            ]
+          ]
+        ],
+        ['multiple' => true]
+      );
+
+      $op = collection('users')->update(
+        array('_id' => $this->users->get('_id')),
+        array(
+          // '$set' => array(
+          //   'full_name' => $user->name,
+          //   'nickname' => $user->screen_name
+          // ),
+          '$push' => array(
+            'connected_accounts' => array(
+              'id' => $source_uri,
+              'processed_at' => 0,
+              'connected_at' => time(),
+              'type' => 'feedly',
+              'access_token' => [
+                'user_id' => $res->id,
+                'token' => $res->access_token,
+                'refresh_token' => $res->refresh_token,
+                'expires_at' => time() + $res->expires_in
+              ],
+              'full_name' => $user->full_name,
+              'screen_name' => $user->full_name,
+              'avatar' => $user->picture,
+              'opml' => [
+                'processed_at' => 0,
+                'categories_count' => 0,
+                'feeds_count' => 0
+              ]
+            )
+          )
+        )
+      );
+
+      if ($op)
+      {
+        $this->users->reauthenticate();
+
+        $xml = $this->feedly->getOpml();
+
+        if ($xml)
+        {
+          $n_cat = 0;
+          $n_feed = 0;
+
+          $user_id = $this->users->id();
+
+          $this->load->model('model_collections', 'collections');
+
+          foreach ($xml->body->outline as $outline)
+          {
+            $title = (string) $outline['title'];
+
+            $cat = collection('user_categories')->findOne(
+              array(
+                'user_id' => $user_id,
+                'text' => $title
+              ),
+              array(
+                '_id' => true,
+                'id' => true
+              )
+            );
+
+            $exist = $cat ? true : false;
+
+            if (!$exist)
+            {
+              $cat = $this->sources->add_feed_category($title);
+            }
+
+            if ($cat && isset($cat['id']))
+            {
+              foreach ($outline->outline as $rss)
+              {
+                if ($rss['type'] != 'rss') continue;
+
+                $this->sources->add_feed($cat['id'], (string)$rss['title'], (string)$rss['xmlUrl']);
+                $n_feed++;
+              }
+
+              $n_cat++;
+            }
+
+            if (!$exist)
+            {
+              $this->collections->create([
+                'name' => $title,
+                'type' => 'feedly',
+                'sources' => [$cat['id']]
+              ]);
+            }
+          }
+
+          collection('users')->update(
+            array(
+              '_id' => $user_id,
+              'connected_accounts.id' => $source_uri
+            ),
+            array(
+              '$set' => array(
+                'connected_accounts.$.opml.processed_at' => time(),
+                'connected_accounts.$.opml.categories_count' => $n_cat,
+                'connected_accounts.$.opml.feeds_count' => $n_feed
+              )
+            )
+          );
+        }
+
+        $cb = $this->input->cookie('callback');
+
+        if ($cb)
+        {
+          return redirect($cb);
+        }
+        else
+        {
+          return $this->load->view('connected-account', ['type' => 'feedly']);
+        }
+      }
+      else
+      {
+        return show_error('Please try later');
+      }
     }
 
-    $this->session->set_userdata('callback', $this->input->get('d'));
+    $this->input->set_cookie([
+      'name' => 'callback',
+      'value' => $this->input->get('d'),
+      'expire' => 0
+    ]);
 
-    redirect($this->feedly->getLoginUrl(current_url()));
+    $this->users->store_token();
+
+    $this->meta_redirect($this->feedly->getLoginUrl(current_url()));
   }
 }

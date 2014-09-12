@@ -41,15 +41,20 @@
               {
                 ?>
                 <li>
-                  <p><?php echo $account['type']; ?>: <strong><?php echo isset($account['screen_name']) ? $account['screen_name'] : $account['access_token']['screen_name']; ?></strong><br />
-                    Following <strong><?php echo $account['following']['count']; ?></strong> people. Updated at <?php echo date('Y-m-d H:i', $account['following']['updated_at']); ?><br />
+                  <p><?php echo $account['type']; ?>: <strong><?php echo isset($account['screen_name']) ? $account['screen_name'] : $account['access_token']['screen_name']; ?></strong>
+                  <?php if (isset($account['following'])) { ?><br />
+                    Following <strong><?php echo $account['following']['count']; ?></strong> people. Updated at <?php echo date('Y-m-d H:i', $account['following']['updated_at']); ?><?php } ?>
+                    <br />
                     <a href="<?php echo current_url() . '?unlink=' . $user['_id'] . '&account=' . $account['id']; ?>">Unlink account</a></p>
                 </li>
                 <?php
               }
             ?>
             <li>
-              <a href="<?php echo $client_url . '?auth_token=' . $user['auth_token']; ?>" target="_blank">Impersonate user</a>
+              <a href="<?php echo 'http://rails.paperboard.me?access_token=' . $user['auth_token']; ?>" target="_blank">Impersonate on Paperboard</a>
+            </li>
+            <li>
+              <a href="<?php echo $client_url . '?auth_token=' . $user['auth_token']; ?>" target="_blank">Impersonate on Cronycle</a>
             </li>
             <li>
               <a href="<?php echo current_url() . '?delete=' . $user['_id']; ?>" onclick="return confirm('Are you sure?');">Delete user</a>

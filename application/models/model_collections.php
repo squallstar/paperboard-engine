@@ -37,7 +37,8 @@ Class Model_collections extends CI_Model
         'settings'         => true,
         'filters'          => true,
         'sources'          => true,
-        'category'         => true
+        'category'         => true,
+        'tags'             => true
       )
     );
   }
@@ -77,7 +78,9 @@ Class Model_collections extends CI_Model
         'image_url' => $this->users->get('avatar')['small']
       ),
       'sources' => [],
-      'feeds' => []
+      'feeds' => [],
+      'tags' => [],
+      'featured' => false
     ), $data);
   }
 

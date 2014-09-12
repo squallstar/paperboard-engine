@@ -66,6 +66,7 @@ $config['aws_bucket_name'] = 'cronycle-hhvm';
 $config['feedly_api_url'] = 'https://sandbox.feedly.com';
 $config['feedly_client_id'] = 'sandbox';
 $config['feedly_client_secret'] = 'YDRYI5E8OP2JKXYSDW79';
+$config['feedly_redirect_uri'] = 'http://api.paperboard.me/v1/source_management/add_feedly_account';
 
 /*
 |--------------------------------------------------------------------------
@@ -284,7 +285,7 @@ $config['cache_path'] = '';
 | MUST set an encryption key.  See the user guide for info.
 |
 */
-$config['encryption_key'] = 'asd89ha89sdh783h2';
+$config['encryption_key'] = 'asd89ha89sdh783h2AP!';
 
 /*
 |--------------------------------------------------------------------------
@@ -304,8 +305,8 @@ $config['encryption_key'] = 'asd89ha89sdh783h2';
 | 'sess_time_to_update'		= how many seconds between CI refreshing Session Information
 |
 */
-$config['sess_cookie_name']		= 'ci_session';
-$config['sess_expiration']		= 7200;
+$config['sess_cookie_name']		= 'api_probe';
+$config['sess_expiration']		= 0;
 $config['sess_expire_on_close']	= FALSE;
 $config['sess_encrypt_cookie']	= FALSE;
 $config['sess_use_database']	= FALSE;
@@ -326,7 +327,7 @@ $config['sess_time_to_update']	= 300;
 |
 */
 $config['cookie_prefix']	= "";
-$config['cookie_domain']	= "";
+$config['cookie_domain']	= ".paperboard.me";
 $config['cookie_path']		= "/";
 $config['cookie_secure']	= FALSE;
 

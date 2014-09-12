@@ -23,6 +23,9 @@ $config['db_schema'] = [
         ],
         [
           ['connected_accounts.following.updated_at' => 1]
+        ],
+        [
+          ['connected_accounts.access_token.user_id' => 1]
         ]
       ]
     ],
@@ -69,6 +72,12 @@ $config['db_schema'] = [
         ],
         [
           ['followers.id' => 1]
+        ],
+        [
+          ['tags' => 1]
+        ],
+        [
+          ['featured' => 1]
         ]
       ]
     ],

@@ -579,7 +579,7 @@ class Instagram {
     {
       $req = $this->getUserFeed($limit, $max_id);
 
-      if ($req->meta->code != 200)
+      if (!$req || !isset($req->meta) || $req->meta->code != 200)
       {
         $loops = 0;
       }
