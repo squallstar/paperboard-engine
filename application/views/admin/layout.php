@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>Admin</title>
+  <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
   <link rel="stylesheet" type="text/css" href="<?php echo base_url('assets/css/admin.css'); ?>" />
 </head>
 <body>

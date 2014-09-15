@@ -3,7 +3,7 @@
     <meta http-equiv="refresh" content="0; url=<?php echo $url; ?>" />
     <style>
 html, body {
-  margin: 0;padding:0; background-color: #FFF;
+  margin: 0;padding:0; background-color: #E5E5E5;
 }
 .spinner {
   position: absolute;

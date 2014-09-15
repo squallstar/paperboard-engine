@@ -39,4 +39,37 @@ class Boards_Controller extends CI_Controller
       'boards' => $boards
     ]);
   }
+
+  public function update($id)
+  {
+    $id = intval($id);
+
+    if (!$this->input->is_ajax_request())
+    {
+      exit('No direct route access allowed');
+    }
+
+    $data = [];
+
+    if ($tags = $this->input->post('tags'))
+    {
+      $data['tags'] = [];
+      foreach (explode(',', $tags) as $tag)
+      {
+        $data['tags'][] = trim($tag);
+      }
+    }
+
+    if ($featured = $this->input->post('featured'))
+    {
+      $data['featured'] = $featured == 'true' ? true : false;
+    }
+
+    $res = collection('collections')->update(
+      ['id' => $id],
+      ['$set' => $data]
+    );
+
+    echo $res ? 1 : 0;
+  }
 }
