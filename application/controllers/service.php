@@ -12,6 +12,14 @@
 
 class Service_Controller extends CI_Controller
 {
+  const SLEEP_TIME_JOBS = 30;
+  const SLEEP_TIME_RUNNER = 600;
+  const SLEEP_TIME_DOWNLOADER = 10;
+  const SLEEP_TIME_FOLLOWERS = 400;
+  const SLEEP_TIME_TWEETS = 8;
+  const SLEEP_TIME_EXPANDER = 10;
+  const SLEEP_TIME_IMAGES = 10;
+
   public function __construct()
   {
     parent::__construct();
@@ -22,6 +30,20 @@ class Service_Controller extends CI_Controller
     if (!$this->input->is_cli_request())
     {
       die('Services can only be launched by CLI');
+    }
+  }
+
+  public function start_jobs()
+  {
+    $this->load->model('threads/jobs_processor', 'jobs');
+
+    _log("Jobs processor worker started!");
+
+    while (true)
+    {
+      $this->jobs->process();
+
+      sleep(self::SLEEP_TIME_JOBS);
     }
   }
 
@@ -38,7 +60,7 @@ class Service_Controller extends CI_Controller
       # Keep-alive heroku
       file_get_contents("https://cronycle-web-hhvm.herokuapp.com/");
 
-      sleep(600);
+      sleep(self::SLEEP_TIME_RUNNER);
     }
   }
 
@@ -52,7 +74,7 @@ class Service_Controller extends CI_Controller
     {
       if (!$this->feeds->download())
       {
-        sleep(10);
+        sleep(self::SLEEP_TIME_DOWNLOADER);
       }
     }
   }
@@ -72,7 +94,7 @@ class Service_Controller extends CI_Controller
         _log('Updated ' . $count . " followers.");
       }
 
-      sleep(400);
+      sleep(self::SLEEP_TIME_FOLLOWERS);
     }
   }
 
@@ -87,7 +109,7 @@ class Service_Controller extends CI_Controller
     {
       $this->feeds->download_tweets();
       $this->feeds->download_instagram_pics();
-      sleep(8);
+      sleep(self::SLEEP_TIME_TWEETS);
     }
   }
 
@@ -101,7 +123,7 @@ class Service_Controller extends CI_Controller
     {
       if ($this->expander->start($n) != $n)
       {
-        sleep(10);
+        sleep(self::SLEEP_TIME_EXPANDER);
       }
     }
   }
@@ -116,7 +138,7 @@ class Service_Controller extends CI_Controller
     {
       if ($this->images->process($n) != $n)
       {
-        sleep(10);
+        sleep(self::SLEEP_TIME_IMAGES);
       }
     }
   }

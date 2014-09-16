@@ -456,10 +456,12 @@ class Instagram {
     }
 
     $jsonData = curl_exec($ch);
-    if (false === $jsonData) {
-      throw new Exception("Error: _makeCall() - cURL error: " . curl_error($ch));
-    }
     curl_close($ch);
+
+    if (false === $jsonData) {
+      #throw new Exception("Error: _makeCall() - cURL error: " . curl_error($ch));
+      return false;
+    }
 
     return json_decode($jsonData);
   }

@@ -149,6 +149,17 @@ $config['db_schema'] = [
       ]
     ],
 
+    'jobs' => [
+      'indexes' => [
+        [
+          ['type' => 1]
+        ],
+        [
+          ['added_at' => -1]
+        ]
+      ]
+    ],
+
     'articles' => [
       'indexes' => [
         [
