@@ -24,23 +24,32 @@ class Directory_Controller extends Cronycle_Controller
 
   public function tags()
   {
-    $pipeline = [
-      ['$unwind' => '$tags'],
-      ['$group' => [
-        '_id' => '$tags',
-        'value' => ['$sum' => 1]
-      ]],
-      ['$sort' => ['value' => -1]],
-      ['$limit' => 30]
-    ];
+    $this->load->model('model_tags', 'tags');
 
-    $res = collection('collections')->aggregate($pipeline)['result'];
+    $filter = [];
 
+    if ($this->input->get('filter')) $filter = explode(',', $this->input->get('filter'));
+
+    $ids = [];
+
+    $limit = 25;
     $tags = [];
 
-    foreach ($res as $tag)
+    if (count($filter))
     {
-      $tags[] = $tag['_id'];
+      $tags = $this->tags->suggested(15, $filter);
+
+      $limit -= count($tags);
+
+      foreach ($tags as $tag)
+      {
+        $filter[] = $tag['name'];
+      }
+    }
+
+    if ($limit > 0)
+    {
+      $tags = array_merge($tags, $this->tags->popular($limit, $filter));
     }
 
     $this->json(200, $tags);

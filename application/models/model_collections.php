@@ -511,4 +511,57 @@ Class Model_collections extends CI_Model
       ]
     );
   }
+
+  public function suggested($limit = 30, $tags)
+  {
+    $pipeline = [
+      [
+        '$unwind' => '$tags'
+      ],
+      [
+        '$match' => [
+          'tags' => [
+            '$in' => $tags
+          ]
+        ]
+      ],
+      [
+        '$group' => [
+          '_id' => '$id',
+          'value' => ['$sum' => 1]
+        ]
+      ],
+      [
+        '$sort' => ['value' => -1]
+      ],
+      [
+        '$limit' => $limit
+      ]
+    ];
+
+    $res = collection('collections')->aggregate($pipeline)['result'];
+
+    $collections = [];
+
+    if (count($res))
+    {
+      $fields = $this->_default_excluded_fields();
+      $ids = [];
+
+      foreach ($res as $collection) {
+        $ids[] = $collection['_id'];
+      }
+
+      $res = collection('collections')->find(
+        [
+          'user.id' => ['$ne' => $this->users->id()],
+          //'followers.id' => ['$nin' => [$this->users->id()]],
+          'id' => ['$in' => $ids]
+        ],
+        $fields
+      )->limit($limit);
+
+      return iterator_to_array($res);
+    }
+  }
 }

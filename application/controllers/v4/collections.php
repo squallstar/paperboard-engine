@@ -83,4 +83,22 @@ class Collections_Controller extends Cronycle_Controller
       ]
     ));
   }
+
+  public function suggested()
+  {
+    if (!$this->input->get('tags')) return $this->json(422, ['errors' => ['tags param is required']]);
+
+    $this->load->model('model_collections', 'collections');
+
+    $tags = explode(',', $this->input->get('tags'));
+
+    $collections = $this->collections->suggested(10, $tags);
+
+    foreach ($collections as &$collection)
+    {
+      $collection['links'] = iterator_to_array($this->collections->links_ordered($collection, 3), false);
+    }
+
+    $this->json(200, $collections);
+  }
 }
