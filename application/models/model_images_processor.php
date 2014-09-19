@@ -30,6 +30,28 @@ class Model_images_processor extends CI_Model
     $this->_bucket = $this->config->item('aws_bucket_name');
   }
 
+  public function delete_asset($asset)
+  {
+    if (isset($asset['url_archived_small']) && strlen($asset['url_archived_small']))
+    {
+      if (strpos($asset['url_archived_small'], $this->_bucket) !== FALSE)
+      {
+        $name = str_replace(self::AWS_URL . $this->_bucket . '/', '', $asset['url_archived_small']);
+
+        try
+        {
+          return S3::deleteObject($this->_bucket, $name);
+        }
+        catch (Exception $e)
+        {
+          log_message('error', $e->getMessage() . ' ' . $name);
+        }
+      }
+    }
+
+    return true;
+  }
+
   public function upload_image($folder, $filename, $width = 'auto', $height = 0)
   {
     $image = false;

@@ -622,6 +622,18 @@ class Manage_Controller extends Cronycle_Controller
 		var_dump(iterator_to_array($res));
 	}
 
+	public function cleanup()
+	{
+		set_time_limit(0);
+    ini_set("memory_limit", "256M");
+
+		$this->load->model('model_feeds', 'feeds');
+
+		$res = $this->feeds->cleanup_unused_articles(100, 1000);
+
+		$this->json(200, $res);
+	}
+
 	public function flatQuery(&$grp, &$phrase)
 	{
 		foreach ($grp->items as $item)

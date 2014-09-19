@@ -562,4 +562,70 @@ Class Model_feeds extends CI_Model
 
     return $added;
   }
+
+  public function cleanup_unused_articles($feeds_limit = 50, $articles_limit = 100)
+  {
+    $this->load->model('model_images_processor', 'images');
+
+    $data = [
+      'feeds' => 0,
+      'articles' => 0
+    ];
+
+    foreach (collection('feeds')->find([], ['_id' => 1])->limit($feeds_limit) as $feed)
+    {
+      if (collection('category_children')->count(['feed_id' => $feed['_id']]) == 0)
+      {
+        $feed_id = $feed['_id']->{'$id'};
+
+        $count = collection('articles')->count(['source' => $feed_id, 'has_image' => false]);
+
+        if ($count)
+        {
+          if (collection('articles')->remove(['source' => $feed_id, 'has_image' => false]))
+          {
+            $data['articles'] += $count;
+          }
+        }
+
+        foreach (collection('articles')->find(
+          [
+            'source' => $feed_id
+          ],
+          [
+            '_id' => 1,
+            'has_image' => 1,
+            'images_processed' => 1,
+            'lead_image' => 1
+          ])->limit($articles_limit) as $article)
+        {
+          if ($this->purge_article($article)) $data['articles']++;
+        }
+
+        if (collection('articles')->count(['source' => $feed_id]) == 0)
+        {
+          if (collection('feeds')->remove(['_id' => $feed['_id']], ['justOne' => 1])) $data['feeds']++;
+        }
+      }
+    }
+
+    return $data;
+  }
+
+  public function purge_article(&$article)
+  {
+    $done = true;
+
+    if ($article['lead_image'])
+    {
+      $done = $this->images->delete_asset($article['lead_image']);
+    }
+
+    if ($done)
+    {
+      return collection('articles')->remove(['_id' => $article['_id']], ['justOne' => true]);
+    }
+
+    return false;
+  }
 }

@@ -13,7 +13,7 @@
 class Service_Controller extends CI_Controller
 {
   const SLEEP_TIME_JOBS = 30;
-  const SLEEP_TIME_RUNNER = 600;
+  const SLEEP_TIME_RUNNER = 300;
   const SLEEP_TIME_DOWNLOADER = 10;
   const SLEEP_TIME_FOLLOWERS = 400;
   const SLEEP_TIME_TWEETS = 8;
@@ -50,12 +50,16 @@ class Service_Controller extends CI_Controller
   public function start_runner()
   {
     $this->load->model('model_runner', 'runner');
+    $this->load->model('model_feeds', 'feeds');
 
     _log("Runner worker started!");
 
     while (true)
     {
       _log("Count updated for " . $this->runner->update_collections_metadata() . " collections");
+
+      $res = $this->feeds->cleanup_unused_articles(20, 250);
+      _log("Removed " . $res['feeds'] . " unused sources with " . $res['articles'] . " articles.");
 
       # Keep-alive heroku
       file_get_contents("https://cronycle-web-hhvm.herokuapp.com/");
