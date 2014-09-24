@@ -70,3 +70,19 @@ table td, table th {
   border: 1px solid #CCC;
   padding: 10px;
 }
+
+input[type="text"] {
+  padding: 6px 6px;
+  font-size: 13px;
+  width: 100%;
+}
+
+input[type="submit"] {
+  padding: 7px 19px;
+  display: block;
+  background: #5FBF60;
+  border: 1px solid #4CA159;
+  color: #FFF;
+  font-size: 13px;
+  border-radius: 4px;
+}

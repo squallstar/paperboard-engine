@@ -187,6 +187,14 @@ $config['db_schema'] = [
           ['name' => 'text', 'description' => 'text', 'source' => 1, 'published_at' => -1]
         ]
       ]
+    ],
+
+    'parsers' => [
+      'indexes' => [
+        [
+          ['host' => 1], ['unique' => true]
+        ]
+      ]
     ]
   ]
 ];

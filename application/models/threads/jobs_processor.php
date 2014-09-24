@@ -31,7 +31,8 @@ class Jobs_processor extends CI_Model
       switch ($job['type'])
       {
         case 'email':
-          $processed = $this->mailer->process_job($job['specs']);
+          $this->mailer->process_job($job['specs']);
+          $processed = true;
           break;
       }
 

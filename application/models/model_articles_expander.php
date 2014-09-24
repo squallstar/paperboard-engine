@@ -21,11 +21,19 @@ class Model_articles_expander extends CI_Model
   {
     parent::__construct();
 
-    $data = json_decode(file_get_contents(APPPATH . 'libraries/reader-rules/rules.json'), true);
-    $this->_rules = &$data['hosts'];
-    $this->_common = &$data['common'];
+    $this->_rules = [];
 
-    _log(count($this->_rules) . ' rules read from file');
+    foreach (collection('parsers')->find([], ['host' => 1, 'xpath' => 1, 'cleanup' => 1]) as $rule)
+    {
+      $this->_rules[$rule['host']] = $rule;
+    }
+
+    $this->_common = [
+      "content" => "//div[@id=\"article-body\" or @class=\"article-body\" or @itemprop=\"articleBody\"]",
+      "image" => "//*/meta[@property=\"og:image\")]"
+    ];
+
+    if ($this->input->is_cli_request()) _log(count($this->_rules) . ' rules read from db');
   }
 
   public function start($limit = 30)
@@ -281,7 +289,11 @@ class Model_articles_expander extends CI_Model
     if (!isset($article['url_host']))
     {
       try {
-        $article['url_host'] = parse_url($article['url'])['host'];
+        $url = parse_url($article['url']);
+        if ($url && isset($url['host']))
+        {
+          $article['url_host'] = $url['host'];
+        }
       }
       catch (Exception $e) {
         return;
@@ -299,9 +311,9 @@ class Model_articles_expander extends CI_Model
         $this->_cleanup_doc($xpath->document);
       }
 
-      if (isset($rule['content']))
+      if (isset($rule['xpath']))
       {
-        $content = $xpath->query($rule['content']);
+        $content = $xpath->query($rule['xpath']);
       }
 
       unset($rule);
