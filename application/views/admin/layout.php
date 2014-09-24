@@ -12,6 +12,7 @@
       <li><a href="/admin/users">Users</a></li>
       <li><a href="/admin/boards">Boards</a></li>
       <li><a href="/admin/parsers">Parsers</a></li>
+      <li><a href="/admin/parsers/expand">Expander</a></li>
     </ul>
   </header>
   <div id="content"><?php

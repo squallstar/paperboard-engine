@@ -13,7 +13,7 @@
 
       <tr>
         <td align="center"><input type="text" name="host" placeholder="Host"/></td>
-        <td align="center"><input style="font-family:monospace" type="text" name="xpath" placeholder="XPath:"/></td>
+        <td align="center"><input style="font-family:monospace" type="text" name="xpath" placeholder="XPath:" value="//div[contains(@class, 'article-entry')]"/></td>
         <td align="center"><input type="text" name="example" placeholder="Example url"/></td>
         <td>
           <input type="checkbox" name="cleanup" value="Y" /> Cleanup
@@ -41,6 +41,7 @@
               <article>
                 <p><strong><?php echo $rule['example_fetch']['name']; ?></strong></p>
                 <p><small><?php echo $rule['example_fetch']['description']; ?></small></p>
+                <?php if (isset($rule['example_fetch']['content']) && strlen($rule['example_fetch']['content']) > 0) { ?><a class="toggle-content" href="#">Reveal/hide content</a><div class="the-content"><?php echo $rule['example_fetch']['content']; ?></div><?php } ?>
                 <?php if (isset($rule['example_fetch']['lead_image'])) { ?><p><img src="<?php echo $rule['example_fetch']['lead_image']['url_original']; ?>" width="100"/></p><?php } ?>
               </article>
             <?php } ?>
@@ -74,6 +75,20 @@
 <script>
 $(document).ready(function() {
 
+  $('input[name="example"]').keyup(function() {
+    $host = $('input[name="host"]')
+    if ($host.val() == '') {
+      var link = document.createElement("a");
+      link.href = $(this).val();
+      $host.val(link.hostname);
+    }
+  });
+
+  $('a.toggle-content').click(function(event) {
+    event.preventDefault();
+    $(this).next().slideToggle();
+  });
+
   $('table').on('click', '.edit-rule', function(event) {
     event.preventDefault();
 
@@ -97,10 +112,11 @@ $(document).ready(function() {
       cleanup: cleanup
     }, function(data) {
       if (data == 1) {
-        $tr.css('opacity', 1);
-        $tr.find('.host').html(host);
-        $tr.find('.xpath').html(xpath);
-        $tr.find('.example-url').html(example);
+        window.location.href = '<?php echo current_url(); ?>';
+        // $tr.css('opacity', 1);
+        // $tr.find('.host').html(host);
+        // $tr.find('.xpath').html(xpath);
+        // $tr.find('.example-url').html(example);
       } else {
         alert("Cannot save " + host);
       }
@@ -110,5 +126,6 @@ $(document).ready(function() {
 </script>
 
 <style>
+.the-content {display:none;}
 a {word-break: break-all;text-decoration: none;color:#147FDF;}
 </style>

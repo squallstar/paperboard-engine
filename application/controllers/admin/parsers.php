@@ -19,26 +19,29 @@ class Parsers_Controller extends CI_Controller
     $this->load->helper('admin');
   }
 
-  public function import()
+  public function expand()
   {
-    $data = file_get_contents(APPPATH . 'libraries/reader-rules/rules.json');
-    $rules = json_decode($data, true)['hosts'];
+    $res = false;
 
-    foreach ($rules as $host => $values)
+    $url = $this->input->post('url');
+
+    if ($url)
     {
-      if (collection('parsers')->count(['host' => $host])) continue;
+      $this->load->model('model_articles_expander', 'expander');
 
-      $data = [
-        'checked_at' => 0,
-        'added_at' => time(),
-        'host' => $host,
-        'example' => '',
-        'xpath' => $values['content'],
-        'cleanup' => isset($values['cleanup']) ? true : false
+      $articles = [
+        ['id' => 'demo', 'url' => $url]
       ];
 
-      collection('parsers')->insert($data);
+      $this->expander->expand($articles, false);
+      ob_clean();
+
+      $res = $articles[0];
     }
+
+    load_admin_view('admin/parsers/expand', [
+      'article' => $res
+    ]);
   }
 
   public function index()
@@ -72,7 +75,7 @@ class Parsers_Controller extends CI_Controller
         $res = $this->expander->expand($articles, false);
         ob_clean();
 
-        if ($res)
+        if ($res && isset($articles[0]['content']))
         {
           collection('parsers')->update(['_id' => $id], [
             '$set' => [

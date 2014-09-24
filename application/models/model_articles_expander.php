@@ -23,7 +23,7 @@ class Model_articles_expander extends CI_Model
 
     $this->_rules = [];
 
-    foreach (collection('parsers')->find([], ['host' => 1, 'xpath' => 1, 'cleanup' => 1]) as $rule)
+    foreach (collection('parsers')->find([], ['_id' => false, 'host' => true, 'xpath' => true, 'cleanup' => true]) as $rule)
     {
       $this->_rules[$rule['host']] = $rule;
     }
@@ -172,8 +172,19 @@ class Model_articles_expander extends CI_Model
     # Uses too much memory
     #$html = mb_convert_encoding($html, 'HTML-ENTITIES', "UTF-8");
 
+    // $config = array(
+    //   'clean' => 'yes',
+    //   'hide-comments' => 'yes',
+    //   'output-html' => 'yes',
+    // );
+    // $tidy = tidy_parse_string($html, $config, 'utf8');
+    // $tidy->cleanRepair();
+
+    // $html = $tidy->value;
+
     $doc = new DOMDocument;
     $doc->loadHTML($html);
+    #$dom->strictErrorChecking = false;
 
     libxml_clear_errors();
 
@@ -248,21 +259,18 @@ class Model_articles_expander extends CI_Model
     }
     unset($url);
 
-    if (isset($metas['og:description']))
+    $desc = $xpath->query('//html/head/meta[@name="description" or @name="Description"]');
+
+    if ($desc->length > 0)
+    {
+      $article['description'] = trim($desc->item(0)->getAttribute('content'));
+    }
+    else if (isset($metas['og:description']))
     {
       $article['description'] = trim($metas['og:description']);
     }
-    else
-    {
-      $desc = $xpath->query('//html/head/meta[@name="description" or @name="Description"]');
 
-      if ($desc->length > 0)
-      {
-        $article['description'] = trim($desc->item(0)->getAttribute('content'));
-      }
-
-      unset($desc);
-    }
+    unset($desc);
 
     $this->find_content($xpath, $article);
 
