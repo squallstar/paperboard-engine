@@ -360,7 +360,8 @@ class Model_feeds_downloader extends CI_Model
       'has_image'    => false,
       'tags'         => array(),
       'has_image'    => false,
-      'fetched_at'   => 0
+      'fetched_at'   => 0,
+      'fetched'      => false
     );
 
     if (count($entry->categories))
@@ -428,12 +429,12 @@ class Model_feeds_downloader extends CI_Model
       );
 
       $data['fetched_at'] = time();
+      #$data['fetched'] = true;
       $data['images_processed'] = false;
       $data['has_image'] = true;
     }
     else
     {
-      $data['fetched_at'] = 0;
       $data['images_processed'] = true;
     }
 

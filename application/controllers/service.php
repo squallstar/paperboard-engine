@@ -17,7 +17,7 @@ class Service_Controller extends CI_Controller
   const SLEEP_TIME_DOWNLOADER = 10;
   const SLEEP_TIME_FOLLOWERS = 400;
   const SLEEP_TIME_TWEETS = 8;
-  const SLEEP_TIME_EXPANDER = 10;
+  const SLEEP_TIME_EXPANDER = 5;
   const SLEEP_TIME_IMAGES = 10;
 
   public function __construct()
@@ -121,7 +121,7 @@ class Service_Controller extends CI_Controller
   {
     $this->load->model('model_articles_expander', 'expander');
 
-    $n = 30;
+    $n = 10;
 
     while (true)
     {

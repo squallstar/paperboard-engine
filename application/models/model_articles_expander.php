@@ -12,6 +12,8 @@
 
 class Model_articles_expander extends CI_Model
 {
+  const USE_GOOSE = true;
+
   private $_is_working;
 
   private $_rules;
@@ -43,14 +45,14 @@ class Model_articles_expander extends CI_Model
     $articles = iterator_to_array(
       collection('articles')->find(
         [
-          'fetched_at' => 0
+          'fetched' => false
         ],
         [
           'id' => true,
           'url' => 1
         ]
       )->sort(['processed_at' => -1])
-       ->hint(['fetched_at' => 1])
+       ->hint(['fetched' => 1])
        ->limit($limit)
     , false);
 
@@ -68,6 +70,21 @@ class Model_articles_expander extends CI_Model
     return $n;
   }
 
+  private function _curl_for_url($url)
+  {
+    $curl = curl_init();
+
+    curl_setopt($curl, CURLOPT_URL, $url);
+    curl_setopt($curl, CURLOPT_HEADER, 0);
+    curl_setopt($curl, CURLOPT_TIMEOUT, 12);
+    curl_setopt($curl, CURLOPT_MAXREDIRS, 6);
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+    curl_setopt($curl, CURLOPT_USERAGENT,'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36');
+
+    return $curl;
+  }
+
   public function expand(&$articles = array(), $update = true)
   {
     libxml_use_internal_errors(true);
@@ -82,15 +99,9 @@ class Model_articles_expander extends CI_Model
 
     foreach ($articles as $article)
     {
-      $curl = curl_init();
-      curl_setopt($curl, CURLOPT_URL, $article['url']);
-      curl_setopt($curl, CURLOPT_HEADER, 0);
-      curl_setopt($curl, CURLOPT_TIMEOUT, 12);
-      curl_setopt($curl, CURLOPT_MAXREDIRS, 6);
-      curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-      curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-      curl_setopt($curl, CURLOPT_USERAGENT,'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36');
+      $url = self::USE_GOOSE ? '127.0.0.1:9000/api/article?url=' . urlencode($article['url']) : $article['url'];
 
+      $curl = $this->_curl_for_url($url);
 
       $ch[$article['id']] = $curl;
       curl_multi_add_handle($mh, $curl);
@@ -112,6 +123,7 @@ class Model_articles_expander extends CI_Model
     {
       $id = $article['id'];
 
+      $article['fetched'] = true;
       $article['fetched_at'] = time();
 
       if (isset($ch[$id]))
@@ -120,7 +132,11 @@ class Model_articles_expander extends CI_Model
 
         if($curlError == "")
         {
-          $article['url'] = curl_getinfo($ch[$id], CURLINFO_EFFECTIVE_URL);
+          if (!self::USE_GOOSE)
+          {
+            $article['url'] = curl_getinfo($ch[$id], CURLINFO_EFFECTIVE_URL);
+          }
+
           $this->parse_article($article, curl_multi_getcontent($ch[$id]));
           $count++;
         }
@@ -144,7 +160,8 @@ class Model_articles_expander extends CI_Model
         collection('articles')->update(
           ['id' => $id],
           ['$set' => [
-            'fetched_at' => time()
+            'fetched_at' => time(),
+            'fetched' => true
           ]]
         );
       }
@@ -159,12 +176,80 @@ class Model_articles_expander extends CI_Model
     return $count;
   }
 
+  private function _parse_with_goose(&$article, &$data)
+  {
+    $article['extractor'] = 'goose';
+    $article['name'] = $data->title;
+    $article['url'] = $data->url;
+    $article['url_host'] = $data->domain;
+    $article['description'] = $data->description;
+    $article['content'] = $data->body;
+
+    if (isset($data->image->src))
+    {
+      $article['lead_image'] = [
+        'type' => 'image',
+        'url_original' => $data->image->src,
+        'url_archived_small' => $data->image->src,
+        'width' => $data->image->width,
+        'height' => $data->image->height
+      ];
+
+      $article['images_processed'] = false;
+      $article['has_image'] = true;
+    }
+
+    if (isset($data->entities))
+    {
+      $article['entities'] = [];
+      usort($data->entities, function($a, $b) {
+        return ($a->frequency < $b->frequency) ? 1 : -1;
+      });
+
+      foreach ($data->entities as $entity)
+      {
+        if (count($article['entities']) < 6)
+        {
+          $article['entities'][] = $entity;
+        }
+      }
+    }
+
+    return true;
+  }
+
   function parse_article(&$article, &$html)
   {
     if (!$html)
     {
       _log("Article " . $article['id'] . ' has no html content');
       return false;
+    }
+
+    if (self::USE_GOOSE)
+    {
+      $goose = json_decode($html);
+
+      if (isset($goose->article))
+      {
+        $goose = json_decode($html)->article;
+        $this->_parse_with_goose($article, $goose);
+        unset($goose);
+        return true;
+      }
+      else
+      {
+        unset($goose);
+
+        $curl = $this->_curl_for_url($article['url']);
+        $html = curl_exec($curl);
+        unset($curl);
+
+        if (!$html)
+        {
+          return false;
+        }
+      }
     }
 
     #_log("Parsing article " . $article['id']);
@@ -189,6 +274,8 @@ class Model_articles_expander extends CI_Model
     libxml_clear_errors();
 
     $xpath = new DOMXPath($doc);
+
+    $article['extractor'] = 'dom';
 
     $query = '//*/meta[starts-with(@property, \'og:\')]';
     $metas = [];

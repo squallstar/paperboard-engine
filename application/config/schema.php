@@ -166,6 +166,9 @@ $config['db_schema'] = [
           ['id' => 1], ['unique' => true]
         ],
         [
+          ['fetched' => 1]
+        ],
+        [
           ['fetched_at' => 1]
         ],
         [

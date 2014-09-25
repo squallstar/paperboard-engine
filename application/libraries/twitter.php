@@ -265,6 +265,7 @@ Class Twitter
 			$d = array(
 				'id' => $id,
 				'type' => 'tweet',
+				'fetched' => false,
 				'fetched_at' => 0,
 				'processed_at' => $now,
 				'published_at' => $ts,

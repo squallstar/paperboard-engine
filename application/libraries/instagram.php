@@ -623,6 +623,7 @@ class Instagram {
       $d = array(
         'id' => $id,
         'type' => 'instagram',
+        'fetched' => true,
         'fetched_at' => $now,
         'processed_at' => $now,
         'published_at' => $ts,

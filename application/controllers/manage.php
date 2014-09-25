@@ -237,6 +237,13 @@ class Manage_Controller extends Cronycle_Controller
 			echo '<h4>Description</h4>';
 			echo '<p>' . $articles[0]['description'] . '</p>';
 			echo '<hr />';
+
+			if (isset($articles[0]['entities']))
+			{
+				echo '<p>' . json_encode($articles[0]['entities']) . '</p>';
+				echo '<hr />';
+			}
+
 			if (isset($articles[0]['content']))
 			{
 				echo '<h4>Content</h4>';
