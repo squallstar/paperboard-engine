@@ -18,7 +18,13 @@ class Model_runner extends CI_Model
 
     $collections = collection('collections')->find(
       [],
-      ['id' => true, 'user.id' => true, 'feeds' => true, 'sources' => true, 'cover_asset.fixed' => true]
+      [
+        'id' => true,
+        'user.id' => true,
+        'feeds' => true,
+        'sources' => true,
+        'cover_asset.fixed' => true
+      ]
     );
 
     $i = 0;
@@ -29,21 +35,58 @@ class Model_runner extends CI_Model
         'total_links_count' => $this->collections->links_count($collection)
       ];
 
-      if (!isset($collection['cover_asset']['fixed']) || $collection['cover_asset']['fixed'] == false)
+      $cursor = $this->collections->links_ordered($collection, 400, null, null, ['lead_image' => 1, 'entities' => 1])->sort(['published_at' => -1]);
+
+      $needs_cover = !isset($collection['cover_asset']['fixed']) || $collection['cover_asset']['fixed'] == false;
+
+      $entities = [];
+
+      foreach ($cursor as $link)
       {
-        //foreach ($this->collections->links_not_ordered($collection, 1, null, null, ['lead_image' => 1], ['has_image' => true])->sort(['published_at' => -1]) as $link)
-        $cursor = $this->collections->links_ordered($collection, 8, null, null, ['lead_image' => 1])->sort(['published_at' => -1]);
-        foreach ($cursor as $link)
+        if ($needs_cover)
         {
           if ($link['lead_image'])
           {
             $data['cover_asset'] = $link['lead_image'];
             $data['cover_asset']['fixed'] = false;
-            break;
+            $needs_cover = false;
           }
         }
-        unset($cursor);
+
+        if (isset($link['entities']) && count($link['entities']))
+        {
+          foreach ($link['entities'] as &$entity)
+          {
+            if (isset($entities[$entity['text']]))
+            {
+              $entities[$entity['text']] += $entity['frequency'];
+            }
+            else
+            {
+              $entities[$entity['text']] = $entity['frequency'];
+            }
+          }
+
+          unset($entity);
+        }
       }
+
+      if (count($entities))
+      {
+        $data['tags'] = [];
+
+        arsort($entities);
+
+        foreach ($entities as $text => $freq)
+        {
+          $data['tags'][] = $text;
+
+          if (count($data['tags']) > 20) break;
+        }
+      }
+
+      unset($needs_cover);
+      unset($cursor);
 
       $user = collection('users')->findOne(['_id' => $collection['user']['id']], [
         'full_name' => 1, 'avatar.small' => 1

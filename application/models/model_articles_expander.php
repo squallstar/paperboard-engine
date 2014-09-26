@@ -12,9 +12,13 @@
 
 class Model_articles_expander extends CI_Model
 {
-  const USE_GOOSE = true;
+  const GOOSE_ENABLED = true;
+  const GOOSE_INSTANCES = 6;
+  const GOOSE_URL = "http://paperboard-goose-{i}.herokuapp.com/";
 
   private $_is_working;
+
+  private $_i_counter;
 
   private $_rules;
   private $_common;
@@ -24,6 +28,8 @@ class Model_articles_expander extends CI_Model
     parent::__construct();
 
     $this->_rules = [];
+
+    $this->_i_counter = 0;
 
     foreach (collection('parsers')->find([], ['_id' => false, 'host' => true, 'xpath' => true, 'cleanup' => true]) as $rule)
     {
@@ -61,8 +67,6 @@ class Model_articles_expander extends CI_Model
     if ($n)
     {
       $count = $this->expand($articles);
-
-      _log("Expanded " . $count . " articles");
     }
 
     unset($articles);
@@ -85,6 +89,13 @@ class Model_articles_expander extends CI_Model
     return $curl;
   }
 
+  private function _get_goose_url($article_url)
+  {
+    $this->_i_counter++;
+    if ($this->_i_counter > self::GOOSE_INSTANCES) $this->_i_counter = 0;
+    return str_replace('{i}', $this->_i_counter, self::GOOSE_URL) . 'api/article?url=' . urlencode($article_url);
+  }
+
   public function expand(&$articles = array(), $update = true)
   {
     libxml_use_internal_errors(true);
@@ -93,13 +104,24 @@ class Model_articles_expander extends CI_Model
 
     if ($update) _log("Started to expand " . count($articles) . " articles");
 
+    $start = microtime();
+    $start = explode(' ', $start);
+    $start = $start[1] + $start[0];
+
     // multi curl
     $mh = curl_multi_init();
     $ch = array();
 
     foreach ($articles as $article)
     {
-      $url = self::USE_GOOSE ? '127.0.0.1:9000/api/article?url=' . urlencode($article['url']) : $article['url'];
+      if (self::GOOSE_ENABLED)
+      {
+        $url = $this->_get_goose_url($article['url']);
+      }
+      else
+      {
+        $url = $article['url'];
+      }
 
       $curl = $this->_curl_for_url($url);
 
@@ -132,7 +154,7 @@ class Model_articles_expander extends CI_Model
 
         if($curlError == "")
         {
-          if (!self::USE_GOOSE)
+          if (!self::GOOSE_ENABLED)
           {
             $article['url'] = curl_getinfo($ch[$id], CURLINFO_EFFECTIVE_URL);
           }
@@ -165,8 +187,14 @@ class Model_articles_expander extends CI_Model
           ]]
         );
       }
-
     }
+
+    $end = microtime();
+    $end = explode(' ', $end);
+    $end = $end[1] + $end[0];
+    $tot = round(($end - $start), 3);
+
+    _log("Expanded in " . $tot . "s. (" . round($tot / count($articles), 3) . " per article)");
 
     unset($ch);
     unset($article);
@@ -226,7 +254,7 @@ class Model_articles_expander extends CI_Model
       return false;
     }
 
-    if (self::USE_GOOSE)
+    if (self::GOOSE_ENABLED)
     {
       $goose = json_decode($html);
 

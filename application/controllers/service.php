@@ -56,7 +56,7 @@ class Service_Controller extends CI_Controller
 
     while (true)
     {
-      _log("Count updated for " . $this->runner->update_collections_metadata() . " collections");
+      _log("Stats updated for " . $this->runner->update_collections_metadata() . " collections");
 
       $res = $this->feeds->cleanup_unused_articles(20, 250);
       _log("Removed " . $res['feeds'] . " unused sources with " . $res['articles'] . " articles.");
