@@ -1,5 +1,8 @@
 <?php
 
+// Composer Autoload
+include_once './vendor/autoload.php';
+
 /*
  *-------------------
  * CORS CONFIGURATION

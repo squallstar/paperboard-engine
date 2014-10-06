@@ -1,0 +1,6 @@
+{
+  "minimum-stability": "dev",
+  "require": {
+    "scotteh/php-goose": "dev-master"
+  }
+}
