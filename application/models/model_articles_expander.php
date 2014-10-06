@@ -234,13 +234,16 @@ class Model_articles_expander extends CI_Model
         return ($a->frequency < $b->frequency) ? 1 : -1;
       });
 
-      foreach ($data->entities as $entity)
+      foreach ($data->entities as &$entity)
       {
         if (count($article['entities']) < 6)
         {
+          $entity->ltext = strtolower($entity->text);
           $article['entities'][] = $entity;
         }
       }
+
+      unset($entity);
     }
 
     return true;

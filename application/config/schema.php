@@ -188,6 +188,9 @@ $config['db_schema'] = [
         ],
         [
           ['name' => 'text', 'description' => 'text', 'source' => 1, 'published_at' => -1]
+        ],
+        [
+          ['entities.ltext' => 1]
         ]
       ]
     ],
