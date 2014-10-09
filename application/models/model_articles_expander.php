@@ -10,11 +10,15 @@
  *
  */
 
+use Goose\Client as GooseClient;
+
 class Model_articles_expander extends CI_Model
 {
-  const GOOSE_ENABLED = true;
+  const GOOSE_ENABLED = false;
   const GOOSE_INSTANCES = 6;
   const GOOSE_URL = "http://paperboard-goose-{i}.herokuapp.com/";
+
+  const GOOSE_INTERNAL_PHP = true;
 
   private $_is_working;
 
@@ -23,6 +27,8 @@ class Model_articles_expander extends CI_Model
   private $_rules;
   private $_common;
 
+  private $_goose;
+
   public function __construct()
   {
     parent::__construct();
@@ -30,6 +36,11 @@ class Model_articles_expander extends CI_Model
     $this->_rules = [];
 
     $this->_i_counter = 0;
+
+    if (self::GOOSE_INTERNAL_PHP)
+    {
+      $this->_goose = new GooseClient();
+    }
 
     foreach (collection('parsers')->find([], ['_id' => false, 'host' => true, 'xpath' => true, 'cleanup' => true]) as $rule)
     {
@@ -80,7 +91,7 @@ class Model_articles_expander extends CI_Model
 
     curl_setopt($curl, CURLOPT_URL, $url);
     curl_setopt($curl, CURLOPT_HEADER, 0);
-    curl_setopt($curl, CURLOPT_TIMEOUT, 12);
+    curl_setopt($curl, CURLOPT_TIMEOUT, 10);
     curl_setopt($curl, CURLOPT_MAXREDIRS, 6);
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
@@ -194,7 +205,7 @@ class Model_articles_expander extends CI_Model
     $end = $end[1] + $end[0];
     $tot = round(($end - $start), 3);
 
-    _log("Expanded in " . $tot . "s. (" . round($tot / count($articles), 3) . " per article)");
+    if ($update) _log("Expanded in " . $tot . "s. (" . round($tot / count($articles), 3) . " per article)");
 
     unset($ch);
     unset($article);
@@ -281,6 +292,51 @@ class Model_articles_expander extends CI_Model
           return false;
         }
       }
+    }
+    else if (self::GOOSE_INTERNAL_PHP)
+    {
+      $article['extractor'] = 'php-goose';
+
+      $data = $this->_goose->extractContent($article['url'], $html);
+
+      $article['name'] = trim($data->getTitle());
+      $article['url_host'] = $data->getDomain();
+
+      if ($data->getMetaDescription()) $article['description'] = $data->getMetaDescription();
+
+      if ($data->getTopImage())
+      {
+        $article['lead_image'] = array(
+          'type' => 'image',
+          'url_original' => $data->getTopImage(),
+          'url_archived_small' => $data->getTopImage()
+        );
+
+        $article['images_processed'] = false;
+        $article['has_image'] = true;
+      }
+
+      if ($data->getHtmlArticle())
+      {
+        $article['content'] = $data->getHtmlArticle();
+      }
+
+      $article['entities'] = [];
+      $tags = $data->getPopularWords(6);
+
+      if (count($tags))
+      {
+        foreach ($tags as $word => &$frequency)
+        {
+          $article['entities'][] = [
+            'text' => $word,
+            'frequency' => $frequency,
+            'ltext' => strtolower($word)
+          ];
+        }
+      }
+
+      return true;
     }
 
     #_log("Parsing article " . $article['id']);

@@ -1,5 +1,9 @@
 {
   "minimum-stability": "dev",
+  "repositories": [{
+      "type": "vcs",
+      "url": "http://github.com/squallstar/php-goose"
+  }],
   "require": {
     "scotteh/php-goose": "dev-master"
   }

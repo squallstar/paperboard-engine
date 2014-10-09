@@ -53,9 +53,9 @@ $config['instagram_consumer_secret'] = '70dc2060a027422a88f4c541d60983c7';
 |--------------------------------------------------------------------------
 |
 */
-$config['aws_consumer_key'] = 'AKIAIAHTPBFSK76RTJOA';
-$config['aws_consumer_secret'] = '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';
-$config['aws_bucket_name'] = 'cronycle-hhvm';
+$config['aws_consumer_key'] = 'AKIAJ7GVISSR34Y3CSIA';
+$config['aws_consumer_secret'] = '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';
+$config['aws_bucket_name'] = 'paperboard';
 
 /*
 |--------------------------------------------------------------------------
@@ -65,7 +65,7 @@ $config['aws_bucket_name'] = 'cronycle-hhvm';
 */
 $config['feedly_api_url'] = 'https://sandbox.feedly.com';
 $config['feedly_client_id'] = 'sandbox';
-$config['feedly_client_secret'] = 'YDRYI5E8OP2JKXYSDW79';
+$config['feedly_client_secret'] = 'A0SXFX54S3K0OC9GNCXG';
 $config['feedly_redirect_uri'] = 'http://api.paperboard.me/v1/source_management/add_feedly_account';
 
 /*

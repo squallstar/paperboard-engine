@@ -10,6 +10,8 @@
  *
  */
 
+use Goose\Client as GooseClient;
+
 class Manage_Controller extends Cronycle_Controller
 {
 	public function __construct()
@@ -102,8 +104,8 @@ class Manage_Controller extends Cronycle_Controller
 			'articles' => array(
 				'count' => collection('articles')->count(),
 				'expanded' => [
-					'fetched' => collection('articles')->count(array('fetched_at' => array('$ne' => 0))),
-					'not_fetched' => collection('articles')->count(array('fetched_at' => 0)),
+					'fetched' => collection('articles')->count(array('fetched' => true)),
+					'not_fetched' => collection('articles')->count(array('fetched' => false)),
 					'fetched_today' => collection('articles')->count(array('fetched_at' => array('$gt' => $today))),
 					'with_content' => collection('articles')->count(array('content' => ['$ne' => ''])),
 					'without_content' => collection('articles')->count(array('content' => ''))
@@ -709,5 +711,64 @@ class Manage_Controller extends Cronycle_Controller
 				}
 			}
 		}
+	}
+
+	public function phpgoose()
+	{
+		$start = microtime();
+    $start = explode(' ', $start);
+    $start = $start[1] + $start[0];
+
+		$goose = new GooseClient();
+
+		$url = $this->input->get('url');
+		$content = file_get_contents($url);
+		$article = $goose->extractContent($url, $content);
+
+		$end = microtime();
+    $end = explode(' ', $end);
+    $end = $end[1] + $end[0];
+    $tot = round(($end - $start), 3);
+
+		$start = microtime();
+    $start = explode(' ', $start);
+    $start = $start[1] + $start[0];
+
+		$a = [
+			['id' => 1, 'url' => $this->input->get('url')]
+		];
+
+		$this->load->model('model_articles_expander', 'expander');
+		$this->expander->expand($a, false);
+
+		$end = microtime();
+    $end = explode(' ', $end);
+    $end = $end[1] + $end[0];
+    $tot2 = round(($end - $start), 3);
+
+		$a = $a[0];
+
+		$this->json(200, [
+			'time' => [
+				'php' => $tot,
+				'java' => $tot2
+			],
+			'data' => [
+				'title_p' => trim($article->getTitle()),
+				'title_j' => $a['name'],
+				'description_p' => $article->getMetaDescription(),
+				'description_j' => $a['description'],
+				'published_at' => $article->getPublishDate(),
+				'image_p' => $article->getTopImage(),
+				'image_j' => $a['lead_image'],
+				'url_p' => $article->getDomain(),
+				'url_j' => $a['url_host'],
+				'tags_p' => $article->getPopularWords(),
+				'tags_j' => $a['entities'],
+				'content_p' => $article->getHtmlArticle(),
+				'content_j' => $a['content'],
+				'og' => $article->getOpenGraphData()
+			]
+		]);
 	}
 }

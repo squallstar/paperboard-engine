@@ -121,7 +121,7 @@ class Service_Controller extends CI_Controller
   {
     $this->load->model('model_articles_expander', 'expander');
 
-    $n = 10;
+    $n = 30;
 
     while (true)
     {

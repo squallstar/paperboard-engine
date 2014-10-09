@@ -25,7 +25,7 @@ class Model_runner extends CI_Model
         'sources' => true,
         'cover_asset.fixed' => true
       ]
-    );
+    )->sort(['id' => -1]);
 
     $i = 0;
 
@@ -57,6 +57,8 @@ class Model_runner extends CI_Model
         {
           foreach ($link['entities'] as &$entity)
           {
+            if (!isset($entity['frequency'])) $entity['frequency'] = 1;
+
             if (isset($entities[$entity['text']]))
             {
               $entities[$entity['text']] += $entity['frequency'];
@@ -71,15 +73,18 @@ class Model_runner extends CI_Model
         }
       }
 
+      $data['tags'] = [];
+      $data['tags_orig'] = [];
+
       if (count($entities))
       {
-        $data['tags'] = [];
 
         arsort($entities);
 
         foreach ($entities as $text => $freq)
         {
-          $data['tags'][] = $text;
+          $data['tags'][] = strtolower($text);
+          $data['tags_orig'][] = $text;
 
           if (count($data['tags']) > 20) break;
         }

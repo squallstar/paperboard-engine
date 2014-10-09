@@ -4,7 +4,7 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "488fde83bdb72ef0b73cf1c2aa1d8fb6",
+    "hash": "4ff37ead288cf824b4bc519e32f4f744",
     "packages": [
         {
             "name": "guzzlehttp/guzzle",
@@ -129,19 +129,19 @@
             "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "https://github.com/scotteh/php-goose.git",
-                "reference": "577374c25ee77bb34b401a7d4f38381dd65621aa"
+                "url": "https://github.com/squallstar/php-goose.git",
+                "reference": "2fba8436c158cf0601a047311173be9dacc7f670"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/scotteh/php-goose/zipball/577374c25ee77bb34b401a7d4f38381dd65621aa",
-                "reference": "577374c25ee77bb34b401a7d4f38381dd65621aa",
+                "url": "https://api.github.com/repos/squallstar/php-goose/zipball/2fba8436c158cf0601a047311173be9dacc7f670",
+                "reference": "2fba8436c158cf0601a047311173be9dacc7f670",
                 "shasum": ""
             },
             "require": {
                 "guzzlehttp/guzzle": "4.*",
                 "php": ">=5.4.0",
-                "symfony/css-selector": "2.6.*@dev"
+                "symfony/css-selector": "2.5.*"
             },
             "type": "library",
             "extra": {
@@ -154,7 +154,6 @@
                     "Goose\\": "src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "Apache-2.0"
             ],
@@ -175,21 +174,24 @@
                 "text",
                 "website"
             ],
-            "time": "2014-10-06 10:14:17"
+            "support": {
+                "source": "https://github.com/squallstar/php-goose/tree/master"
+            },
+            "time": "2014-10-09 15:14:29"
         },
         {
             "name": "symfony/css-selector",
-            "version": "dev-master",
+            "version": "2.5.x-dev",
             "target-dir": "Symfony/Component/CssSelector",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/CssSelector.git",
-                "reference": "0c11572e1420ae1e59309bb188f8daed5545717c"
+                "reference": "12fd0ca37da4816d4bfca7870b85ed16bb8fc032"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/CssSelector/zipball/0c11572e1420ae1e59309bb188f8daed5545717c",
-                "reference": "0c11572e1420ae1e59309bb188f8daed5545717c",
+                "url": "https://api.github.com/repos/symfony/CssSelector/zipball/12fd0ca37da4816d4bfca7870b85ed16bb8fc032",
+                "reference": "12fd0ca37da4816d4bfca7870b85ed16bb8fc032",
                 "shasum": ""
             },
             "require": {
@@ -198,7 +200,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.6-dev"
+                    "dev-master": "2.5-dev"
                 }
             },
             "autoload": {
@@ -226,7 +228,7 @@
             ],
             "description": "Symfony CssSelector Component",
             "homepage": "http://symfony.com",
-            "time": "2014-10-01 05:53:11"
+            "time": "2014-10-01 05:50:18"
         }
     ],
     "packages-dev": [],

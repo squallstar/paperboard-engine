@@ -14,7 +14,9 @@ class Model_images_processor extends CI_Model
 {
   const AWS_URL = 'https://s3-eu-west-1.amazonaws.com/';
 
-  const DEFAULT_WIDTH = 430;
+  const DEFAULT_WIDTH_THUMBNAIL = 430;
+
+  const DEFAULT_WIDTH_NORMAL = 640;
 
   const DEFAULT_JPEG_QUALITY = 83;
 
@@ -32,11 +34,21 @@ class Model_images_processor extends CI_Model
 
   public function delete_asset($asset)
   {
-    if (isset($asset['url_archived_small']) && strlen($asset['url_archived_small']))
+    foreach (['url_archived_small', 'url_archived_medium'] as $key)
     {
-      if (strpos($asset['url_archived_small'], $this->_bucket) !== FALSE)
+      $this->_delete_assets($asset, $key);
+    }
+
+    return true;
+  }
+
+  private function _delete_assets($asset, $key)
+  {
+    if (isset($asset[$key]) && strlen($asset[$key]))
+    {
+      if (strpos($asset[$key], $this->_bucket) !== FALSE)
       {
-        $name = str_replace(self::AWS_URL . $this->_bucket . '/', '', $asset['url_archived_small']);
+        $name = str_replace(self::AWS_URL . $this->_bucket . '/', '', $asset[$key]);
 
         try
         {
@@ -48,8 +60,6 @@ class Model_images_processor extends CI_Model
         }
       }
     }
-
-    return true;
   }
 
   public function upload_image($folder, $filename, $width = 'auto', $height = 0)
@@ -96,7 +106,8 @@ class Model_images_processor extends CI_Model
       ],
       [
         'id' => true,
-        'lead_image.url_original' => true
+        'lead_image.url_original' => true,
+        'url_host' => true
       ]
     )->sort(['published_at' => -1])
      ->hint(['has_image' => 1, 'images_processed' => 1])
@@ -136,26 +147,42 @@ class Model_images_processor extends CI_Model
             $article['lead_image']['url_original'] = 'http:' . $article['lead_image']['url_original'];
           }
 
+          $s3path = 'articles/' . date('Ymd/') . $article['id'] . time();
+
+          $url = $article['lead_image']['url_original'];
+
+          if (strpos($url, '/') === 0)
+          {
+            $url = 'http://' . $article['url_host'] . $url;
+          }
+
+          // 1. Medium size
           $image->clear();
-          @$image->readImage($article['lead_image']['url_original']);
+          @$image->readImage($url);
           $image->setFormat("jpeg");
           $image->setCompressionQuality(self::DEFAULT_JPEG_QUALITY);
-          $image->thumbnailImage(self::DEFAULT_WIDTH, 0);
+          //$im_thumb = clone $im;
+          $image->thumbnailImage(self::DEFAULT_WIDTH_NORMAL, 0);
+          $medium_name = $s3path . '_m.jpg';
 
-          $name = 'articles/' . date('Ymd/') . $article['id'] . time() . '_s.jpg';
+          $sizes = $image->getImageGeometry();
 
-          $res = S3::putObject("$image", $this->_bucket, $name, S3::ACL_PUBLIC_READ, array(), array('Content-Type' => 'image/jpeg'));
+          $normal_uploaded = S3::putObject("$image", $this->_bucket, $medium_name, S3::ACL_PUBLIC_READ, array(), array('Content-Type' => 'image/jpeg'));
 
-          if ($res)
+          // 2. Thumbnail
+          $image->thumbnailImage(self::DEFAULT_WIDTH_THUMBNAIL, 0);
+          $thumb_name = $s3path . '_s.jpg';
+
+          $thumb_uploaded = S3::putObject("$image", $this->_bucket, $thumb_name, S3::ACL_PUBLIC_READ, array(), array('Content-Type' => 'image/jpeg'));
+
+          if ($normal_uploaded || $thumb_uploaded)
           {
-            $d = $image->getImageGeometry();
-
             $data['lead_image'] = [
               'url_original' => $article['lead_image']['url_original'],
-              'url_archived_small' => $aws_url . $name,
-              'url_archived_medium' => $aws_url . $name,
-              'width' => $d['width'],
-              'height' => $d['height']
+              'url_archived_small' => $aws_url . $thumb_name,
+              'url_archived_medium' => $aws_url . $medium_name,
+              'width' => $sizes['width'],
+              'height' => $sizes['height']
             ];
 
             unset($d);

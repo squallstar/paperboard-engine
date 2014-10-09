@@ -298,6 +298,37 @@ class Collections_Controller extends Cronycle_Controller
     }
   }
 
+  public function follow_many()
+  {
+    if (!$this->require_token() || $this->method != 'post') return;
+    $this->set_body_request();
+
+    if (!isset($this->request['boards']))
+    {
+      return $this->json(422, ['errors' => ['board param is required']]);
+    }
+
+    $ids = $this->request['boards'];
+
+    $resp = [];
+
+    if (is_array($ids) && count($ids))
+    {
+      foreach ($ids as $id)
+      {
+        $resp[$id] = $this->collections->follow($id) ? true : false;
+      }
+
+      $this->json(200, [
+        'followed' => $resp
+      ]);
+    }
+    else
+    {
+      $this->json(422, ['errors' => ['Board IDs are required']]);
+    }
+  }
+
   public function search_links()
   {
     if (!$this->require_token()) return;

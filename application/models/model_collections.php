@@ -21,7 +21,25 @@ Class Model_collections extends CI_Model
 
   private function _default_excluded_fields()
   {
-    return array('_id' => false, 'sources' => false, 'feeds' => false, 'followers' => false);
+    return [
+      '_id' => false,
+      'description' => false,
+      'sources' => false,
+      'feeds' => false,
+      'followers' => false,
+      'tags' => false,
+      'account_key' => false,
+      'featured' => false,
+      'last_updated_at' => false,
+      'average_rating' => false,
+      'total_ratings' => false,
+      'partner_identifier' => false
+    ];
+  }
+
+  public function articles_excluded_fields()
+  {
+    return $this->_default_excluded_fields();
   }
 
   private function _filter_fields($data = array())
@@ -563,6 +581,10 @@ Class Model_collections extends CI_Model
       )->limit($limit);
 
       return iterator_to_array($res);
+    }
+    else
+    {
+      return [];
     }
   }
 }

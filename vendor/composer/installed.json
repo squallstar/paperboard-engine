@@ -1,58 +1,5 @@
 [
     {
-        "name": "symfony/css-selector",
-        "version": "dev-master",
-        "version_normalized": "9999999-dev",
-        "target-dir": "Symfony/Component/CssSelector",
-        "source": {
-            "type": "git",
-            "url": "https://github.com/symfony/CssSelector.git",
-            "reference": "0c11572e1420ae1e59309bb188f8daed5545717c"
-        },
-        "dist": {
-            "type": "zip",
-            "url": "https://api.github.com/repos/symfony/CssSelector/zipball/0c11572e1420ae1e59309bb188f8daed5545717c",
-            "reference": "0c11572e1420ae1e59309bb188f8daed5545717c",
-            "shasum": ""
-        },
-        "require": {
-            "php": ">=5.3.3"
-        },
-        "time": "2014-10-01 05:53:11",
-        "type": "library",
-        "extra": {
-            "branch-alias": {
-                "dev-master": "2.6-dev"
-            }
-        },
-        "installation-source": "source",
-        "autoload": {
-            "psr-0": {
-                "Symfony\\Component\\CssSelector\\": ""
-            }
-        },
-        "notification-url": "https://packagist.org/downloads/",
-        "license": [
-            "MIT"
-        ],
-        "authors": [
-            {
-                "name": "Symfony Community",
-                "homepage": "http://symfony.com/contributors"
-            },
-            {
-                "name": "Jean-François Simon",
-                "email": "jeanfrancois.simon@sensiolabs.com"
-            },
-            {
-                "name": "Fabien Potencier",
-                "email": "fabien@symfony.com"
-            }
-        ],
-        "description": "Symfony CssSelector Component",
-        "homepage": "http://symfony.com"
-    },
-    {
         "name": "guzzlehttp/streams",
         "version": "dev-master",
         "version_normalized": "9999999-dev",
@@ -175,26 +122,79 @@
         ]
     },
     {
+        "name": "symfony/css-selector",
+        "version": "2.5.x-dev",
+        "version_normalized": "2.5.9999999.9999999-dev",
+        "target-dir": "Symfony/Component/CssSelector",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/symfony/CssSelector.git",
+            "reference": "12fd0ca37da4816d4bfca7870b85ed16bb8fc032"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/symfony/CssSelector/zipball/12fd0ca37da4816d4bfca7870b85ed16bb8fc032",
+            "reference": "12fd0ca37da4816d4bfca7870b85ed16bb8fc032",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.3.3"
+        },
+        "time": "2014-10-01 05:50:18",
+        "type": "library",
+        "extra": {
+            "branch-alias": {
+                "dev-master": "2.5-dev"
+            }
+        },
+        "installation-source": "source",
+        "autoload": {
+            "psr-0": {
+                "Symfony\\Component\\CssSelector\\": ""
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "Symfony Community",
+                "homepage": "http://symfony.com/contributors"
+            },
+            {
+                "name": "Jean-François Simon",
+                "email": "jeanfrancois.simon@sensiolabs.com"
+            },
+            {
+                "name": "Fabien Potencier",
+                "email": "fabien@symfony.com"
+            }
+        ],
+        "description": "Symfony CssSelector Component",
+        "homepage": "http://symfony.com"
+    },
+    {
         "name": "scotteh/php-goose",
         "version": "dev-master",
         "version_normalized": "9999999-dev",
         "source": {
             "type": "git",
-            "url": "https://github.com/scotteh/php-goose.git",
-            "reference": "577374c25ee77bb34b401a7d4f38381dd65621aa"
+            "url": "https://github.com/squallstar/php-goose.git",
+            "reference": "2fba8436c158cf0601a047311173be9dacc7f670"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/scotteh/php-goose/zipball/577374c25ee77bb34b401a7d4f38381dd65621aa",
-            "reference": "577374c25ee77bb34b401a7d4f38381dd65621aa",
+            "url": "https://api.github.com/repos/squallstar/php-goose/zipball/2fba8436c158cf0601a047311173be9dacc7f670",
+            "reference": "2fba8436c158cf0601a047311173be9dacc7f670",
             "shasum": ""
         },
         "require": {
             "guzzlehttp/guzzle": "4.*",
             "php": ">=5.4.0",
-            "symfony/css-selector": "2.6.*@dev"
+            "symfony/css-selector": "2.5.*"
         },
-        "time": "2014-10-06 10:14:17",
+        "time": "2014-10-09 15:14:29",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -207,7 +207,6 @@
                 "Goose\\": "src/"
             }
         },
-        "notification-url": "https://packagist.org/downloads/",
         "license": [
             "Apache-2.0"
         ],
@@ -227,6 +226,9 @@
             "scraping",
             "text",
             "website"
-        ]
+        ],
+        "support": {
+            "source": "https://github.com/squallstar/php-goose/tree/master"
+        }
     }
 ]
