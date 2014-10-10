@@ -129,18 +129,18 @@
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/CssSelector.git",
-            "reference": "12fd0ca37da4816d4bfca7870b85ed16bb8fc032"
+            "reference": "7cdf543a3f31935aae58de4e6e607d4bdeb3f5dc"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/symfony/CssSelector/zipball/12fd0ca37da4816d4bfca7870b85ed16bb8fc032",
-            "reference": "12fd0ca37da4816d4bfca7870b85ed16bb8fc032",
+            "url": "https://api.github.com/repos/symfony/CssSelector/zipball/7cdf543a3f31935aae58de4e6e607d4bdeb3f5dc",
+            "reference": "7cdf543a3f31935aae58de4e6e607d4bdeb3f5dc",
             "shasum": ""
         },
         "require": {
             "php": ">=5.3.3"
         },
-        "time": "2014-10-01 05:50:18",
+        "time": "2014-10-09 16:00:03",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -181,12 +181,12 @@
         "source": {
             "type": "git",
             "url": "https://github.com/squallstar/php-goose.git",
-            "reference": "2fba8436c158cf0601a047311173be9dacc7f670"
+            "reference": "8820a3832920c417568156e7bfc40a367096aa82"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/squallstar/php-goose/zipball/2fba8436c158cf0601a047311173be9dacc7f670",
-            "reference": "2fba8436c158cf0601a047311173be9dacc7f670",
+            "url": "https://api.github.com/repos/squallstar/php-goose/zipball/8820a3832920c417568156e7bfc40a367096aa82",
+            "reference": "8820a3832920c417568156e7bfc40a367096aa82",
             "shasum": ""
         },
         "require": {
@@ -194,7 +194,7 @@
             "php": ">=5.4.0",
             "symfony/css-selector": "2.5.*"
         },
-        "time": "2014-10-09 15:14:29",
+        "time": "2014-10-10 14:40:41",
         "type": "library",
         "extra": {
             "branch-alias": {

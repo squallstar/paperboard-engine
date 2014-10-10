@@ -18,6 +18,23 @@ class Articles_Controller extends Cronycle_Controller
     $this->load->model('model_collections', 'collections');
   }
 
+  public function view($article_id)
+  {
+    $article = collection('articles')->findOne(
+      ['id' => $article_id],
+      ['_id' => false, 'has_image' => false, 'images_processed' => false, 'extractor' => false, 'source' => false, 'fetched' => false, 'fetched_at' => false, 'processed_at' => false]
+    );
+
+    if ($article)
+    {
+      $this->json(200, $article);
+    }
+    else
+    {
+      $this->json(404, ['errors' => ['Article not found']]);
+    }
+  }
+
   public function suggested($article_id)
   {
     $article = collection('articles')->findOne(['id' => $article_id], ['_id' => false, 'entities' => true]);

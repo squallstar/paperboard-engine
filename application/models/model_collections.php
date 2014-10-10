@@ -442,11 +442,11 @@ Class Model_collections extends CI_Model
       $fields = array(
         '_id' => false,
         'source' => false,
-        'fetched' => false,
         'fetched_at' => false,
         'images_processed' => false,
         'assets' => false,
-        'has_image' => false
+        'has_image' => false,
+        'content' => false
       );
     }
 
