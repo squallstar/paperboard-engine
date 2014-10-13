@@ -552,22 +552,22 @@ class Manage_Controller extends Cronycle_Controller
 		}
 	}
 
-	public function fill()
-	{
-		set_time_limit(0);
-    ini_set("memory_limit", "256M");
+	// public function fill()
+	// {
+	// 	set_time_limit(0);
+ //    ini_set("memory_limit", "256M");
 
-		$article = collection('articles')->findOne(['id' => 'tweet-504916664283328512']);
-		$article['source'] = collection('feeds')->findOne(['title' => 'DEMO.DEMO.DEMO'])['_id']->{'$id'};
-		unset($article['_id']);
+	// 	$article = collection('articles')->findOne(['id' => 'tweet-504916664283328512']);
+	// 	$article['source'] = collection('feeds')->findOne(['title' => 'DEMO.DEMO.DEMO'])['_id']->{'$id'};
+	// 	unset($article['_id']);
 
-		for ($i=0; $i < 500000; $i++) {
-			$article['id'] = 'demo-' . newid() . rand(0,99999) . rand(0,999999);
-			$article['_id'] = $article['id'];
-			$article['processed_at'] = time();
-			collection('articles')->insert($article);
-		}
-	}
+	// 	for ($i=0; $i < 500000; $i++) {
+	// 		$article['id'] = 'demo-' . newid() . rand(0,99999) . rand(0,999999);
+	// 		$article['_id'] = $article['id'];
+	// 		$article['processed_at'] = time();
+	// 		collection('articles')->insert($article);
+	// 	}
+	// }
 
 	public function migrate()
 	{
@@ -629,18 +629,6 @@ class Manage_Controller extends Cronycle_Controller
 		)->limit(10);
 
 		var_dump(iterator_to_array($res));
-	}
-
-	public function cleanup()
-	{
-		set_time_limit(0);
-    ini_set("memory_limit", "256M");
-
-		$this->load->model('model_feeds', 'feeds');
-
-		$res = $this->feeds->cleanup_unused_articles(100, 1000);
-
-		$this->json(200, $res);
 	}
 
 	public function flatQuery(&$grp, &$phrase)

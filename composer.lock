@@ -8,7 +8,7 @@
     "packages": [
         {
             "name": "guzzlehttp/guzzle",
-            "version": "dev-master",
+            "version": "4.2.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/guzzle.git",
@@ -73,16 +73,16 @@
         },
         {
             "name": "guzzlehttp/streams",
-            "version": "dev-master",
+            "version": "2.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/streams.git",
-                "reference": "30d5c8e7646e004768054c4143a433c89bc9ece0"
+                "reference": "f91b721d73f0e561410903b3b3c90a5d0e40b534"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/streams/zipball/30d5c8e7646e004768054c4143a433c89bc9ece0",
-                "reference": "30d5c8e7646e004768054c4143a433c89bc9ece0",
+                "url": "https://api.github.com/repos/guzzle/streams/zipball/f91b721d73f0e561410903b3b3c90a5d0e40b534",
+                "reference": "f91b721d73f0e561410903b3b3c90a5d0e40b534",
                 "shasum": ""
             },
             "require": {
@@ -94,7 +94,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.1-dev"
+                    "dev-master": "2.0-dev"
                 }
             },
             "autoload": {
@@ -122,7 +122,7 @@
                 "Guzzle",
                 "stream"
             ],
-            "time": "2014-09-15 01:45:40"
+            "time": "2014-08-17 21:15:53"
         },
         {
             "name": "scotteh/php-goose",
@@ -130,12 +130,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/squallstar/php-goose.git",
-                "reference": "8820a3832920c417568156e7bfc40a367096aa82"
+                "reference": "e4a9198b656c8c93551a4f2c42efb7a7a237e7ce"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/squallstar/php-goose/zipball/8820a3832920c417568156e7bfc40a367096aa82",
-                "reference": "8820a3832920c417568156e7bfc40a367096aa82",
+                "url": "https://api.github.com/repos/squallstar/php-goose/zipball/e4a9198b656c8c93551a4f2c42efb7a7a237e7ce",
+                "reference": "e4a9198b656c8c93551a4f2c42efb7a7a237e7ce",
                 "shasum": ""
             },
             "require": {
@@ -177,7 +177,7 @@
             "support": {
                 "source": "https://github.com/squallstar/php-goose/tree/master"
             },
-            "time": "2014-10-10 14:40:41"
+            "time": "2014-10-13 11:10:08"
         },
         {
             "name": "symfony/css-selector",

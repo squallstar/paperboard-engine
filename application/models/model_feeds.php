@@ -563,6 +563,31 @@ Class Model_feeds extends CI_Model
     return $added;
   }
 
+  public function cleanup_old_articles($limit = 100, $days = 40)
+  {
+    $ts = strtotime('-' . intval($days) . ' days', time());
+
+    $articles = collection('articles')->find(
+      ['processed_at' => ['$lt' => $ts]],
+      [
+        '_id' => 1,
+        'name' => 1,
+        'has_image' => 1,
+        'images_processed' => 1,
+        'lead_image' => 1
+      ]
+    )->limit($limit);
+
+    $i = 0;
+
+    foreach ($articles as $article)
+    {
+      if ($this->purge_article($article, true)) $i++;
+    }
+
+    return $i;
+  }
+
   public function cleanup_unused_articles($feeds_limit = 50, $articles_limit = 100)
   {
     $this->load->model('model_images_processor', 'images');
@@ -612,16 +637,16 @@ Class Model_feeds extends CI_Model
     return $data;
   }
 
-  public function purge_article(&$article)
+  public function purge_article(&$article, $force = false)
   {
     $done = true;
 
-    if ($article['lead_image'])
+    if (isset($article['lead_image']))
     {
       $done = $this->images->delete_asset($article['lead_image']);
     }
 
-    if ($done)
+    if ($done || $force)
     {
       return collection('articles')->remove(['_id' => $article['_id']], ['justOne' => true]);
     }

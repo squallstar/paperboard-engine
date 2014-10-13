@@ -1,40 +1,35 @@
 [
     {
-        "name": "guzzlehttp/streams",
-        "version": "dev-master",
-        "version_normalized": "9999999-dev",
+        "name": "symfony/css-selector",
+        "version": "2.5.x-dev",
+        "version_normalized": "2.5.9999999.9999999-dev",
+        "target-dir": "Symfony/Component/CssSelector",
         "source": {
             "type": "git",
-            "url": "https://github.com/guzzle/streams.git",
-            "reference": "30d5c8e7646e004768054c4143a433c89bc9ece0"
+            "url": "https://github.com/symfony/CssSelector.git",
+            "reference": "7cdf543a3f31935aae58de4e6e607d4bdeb3f5dc"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/guzzle/streams/zipball/30d5c8e7646e004768054c4143a433c89bc9ece0",
-            "reference": "30d5c8e7646e004768054c4143a433c89bc9ece0",
+            "url": "https://api.github.com/repos/symfony/CssSelector/zipball/7cdf543a3f31935aae58de4e6e607d4bdeb3f5dc",
+            "reference": "7cdf543a3f31935aae58de4e6e607d4bdeb3f5dc",
             "shasum": ""
         },
         "require": {
-            "php": ">=5.4.0"
+            "php": ">=5.3.3"
         },
-        "require-dev": {
-            "phpunit/phpunit": "~4.0"
-        },
-        "time": "2014-09-15 01:45:40",
+        "time": "2014-10-09 16:00:03",
         "type": "library",
         "extra": {
             "branch-alias": {
-                "dev-master": "2.1-dev"
+                "dev-master": "2.5-dev"
             }
         },
         "installation-source": "source",
         "autoload": {
-            "psr-4": {
-                "GuzzleHttp\\Stream\\": "src/"
-            },
-            "files": [
-                "src/functions.php"
-            ]
+            "psr-0": {
+                "Symfony\\Component\\CssSelector\\": ""
+            }
         },
         "notification-url": "https://packagist.org/downloads/",
         "license": [
@@ -42,22 +37,25 @@
         ],
         "authors": [
             {
-                "name": "Michael Dowling",
-                "email": "mtdowling@gmail.com",
-                "homepage": "https://github.com/mtdowling"
+                "name": "Symfony Community",
+                "homepage": "http://symfony.com/contributors"
+            },
+            {
+                "name": "Jean-François Simon",
+                "email": "jeanfrancois.simon@sensiolabs.com"
+            },
+            {
+                "name": "Fabien Potencier",
+                "email": "fabien@symfony.com"
             }
         ],
-        "description": "Provides a simple abstraction over streams of data (Guzzle 4+)",
-        "homepage": "http://guzzlephp.org/",
-        "keywords": [
-            "Guzzle",
-            "stream"
-        ]
+        "description": "Symfony CssSelector Component",
+        "homepage": "http://symfony.com"
     },
     {
         "name": "guzzlehttp/guzzle",
-        "version": "dev-master",
-        "version_normalized": "9999999-dev",
+        "version": "4.2.3",
+        "version_normalized": "4.2.3.0",
         "source": {
             "type": "git",
             "url": "https://github.com/guzzle/guzzle.git",
@@ -122,36 +120,41 @@
         ]
     },
     {
-        "name": "symfony/css-selector",
-        "version": "2.5.x-dev",
-        "version_normalized": "2.5.9999999.9999999-dev",
-        "target-dir": "Symfony/Component/CssSelector",
+        "name": "guzzlehttp/streams",
+        "version": "2.1.0",
+        "version_normalized": "2.1.0.0",
         "source": {
             "type": "git",
-            "url": "https://github.com/symfony/CssSelector.git",
-            "reference": "7cdf543a3f31935aae58de4e6e607d4bdeb3f5dc"
+            "url": "https://github.com/guzzle/streams.git",
+            "reference": "f91b721d73f0e561410903b3b3c90a5d0e40b534"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/symfony/CssSelector/zipball/7cdf543a3f31935aae58de4e6e607d4bdeb3f5dc",
-            "reference": "7cdf543a3f31935aae58de4e6e607d4bdeb3f5dc",
+            "url": "https://api.github.com/repos/guzzle/streams/zipball/f91b721d73f0e561410903b3b3c90a5d0e40b534",
+            "reference": "f91b721d73f0e561410903b3b3c90a5d0e40b534",
             "shasum": ""
         },
         "require": {
-            "php": ">=5.3.3"
+            "php": ">=5.4.0"
         },
-        "time": "2014-10-09 16:00:03",
+        "require-dev": {
+            "phpunit/phpunit": "~4.0"
+        },
+        "time": "2014-08-17 21:15:53",
         "type": "library",
         "extra": {
             "branch-alias": {
-                "dev-master": "2.5-dev"
+                "dev-master": "2.0-dev"
             }
         },
         "installation-source": "source",
         "autoload": {
-            "psr-0": {
-                "Symfony\\Component\\CssSelector\\": ""
-            }
+            "psr-4": {
+                "GuzzleHttp\\Stream\\": "src/"
+            },
+            "files": [
+                "src/functions.php"
+            ]
         },
         "notification-url": "https://packagist.org/downloads/",
         "license": [
@@ -159,20 +162,17 @@
         ],
         "authors": [
             {
-                "name": "Symfony Community",
-                "homepage": "http://symfony.com/contributors"
-            },
-            {
-                "name": "Jean-François Simon",
-                "email": "jeanfrancois.simon@sensiolabs.com"
-            },
-            {
-                "name": "Fabien Potencier",
-                "email": "fabien@symfony.com"
+                "name": "Michael Dowling",
+                "email": "mtdowling@gmail.com",
+                "homepage": "https://github.com/mtdowling"
             }
         ],
-        "description": "Symfony CssSelector Component",
-        "homepage": "http://symfony.com"
+        "description": "Provides a simple abstraction over streams of data (Guzzle 4+)",
+        "homepage": "http://guzzlephp.org/",
+        "keywords": [
+            "Guzzle",
+            "stream"
+        ]
     },
     {
         "name": "scotteh/php-goose",
@@ -181,12 +181,12 @@
         "source": {
             "type": "git",
             "url": "https://github.com/squallstar/php-goose.git",
-            "reference": "8820a3832920c417568156e7bfc40a367096aa82"
+            "reference": "e4a9198b656c8c93551a4f2c42efb7a7a237e7ce"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/squallstar/php-goose/zipball/8820a3832920c417568156e7bfc40a367096aa82",
-            "reference": "8820a3832920c417568156e7bfc40a367096aa82",
+            "url": "https://api.github.com/repos/squallstar/php-goose/zipball/e4a9198b656c8c93551a4f2c42efb7a7a237e7ce",
+            "reference": "e4a9198b656c8c93551a4f2c42efb7a7a237e7ce",
             "shasum": ""
         },
         "require": {
@@ -194,7 +194,7 @@
             "php": ">=5.4.0",
             "symfony/css-selector": "2.5.*"
         },
-        "time": "2014-10-10 14:40:41",
+        "time": "2014-10-13 11:10:08",
         "type": "library",
         "extra": {
             "branch-alias": {

@@ -1,3 +1,0 @@
-[submodule "readerrules"]
-      path = application/libraries/reader-rules
-      url = git://github.com/squallstar/xpath-articles-rules.git

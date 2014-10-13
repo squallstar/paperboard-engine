@@ -13,12 +13,17 @@
 class Service_Controller extends CI_Controller
 {
   const SLEEP_TIME_JOBS = 30;
-  const SLEEP_TIME_RUNNER = 300;
+  const SLEEP_TIME_RUNNER = 180;
   const SLEEP_TIME_DOWNLOADER = 10;
   const SLEEP_TIME_FOLLOWERS = 400;
   const SLEEP_TIME_TWEETS = 8;
   const SLEEP_TIME_EXPANDER = 5;
   const SLEEP_TIME_IMAGES = 10;
+
+  const IMAGES_TO_PROCESS_PER_CYCLE = 25;
+
+  const CLEANUP_FEEDS_LIMIT = 25;
+  const CLEANUP_ARTICLES_LIMIT = 300;
 
   public function __construct()
   {
@@ -58,8 +63,11 @@ class Service_Controller extends CI_Controller
     {
       _log("Stats updated for " . $this->runner->update_collections_metadata() . " collections");
 
-      $res = $this->feeds->cleanup_unused_articles(20, 250);
+      $res = $this->feeds->cleanup_unused_articles(self::CLEANUP_FEEDS_LIMIT, self::CLEANUP_ARTICLES_LIMIT);
       _log("Removed " . $res['feeds'] . " unused sources with " . $res['articles'] . " articles.");
+
+      $removed = $this->feeds->cleanup_old_articles();
+      _log("Removed " . $removed . " old articles.");
 
       # Keep-alive heroku
       file_get_contents("https://cronycle-web-hhvm.herokuapp.com/");
@@ -136,7 +144,7 @@ class Service_Controller extends CI_Controller
   {
     $this->load->model('model_images_processor', 'images');
 
-    $n = 25;
+    $n = self::IMAGES_TO_PROCESS_PER_CYCLE;
 
     while (true)
     {
