@@ -175,6 +175,8 @@ class Model_articles_expander extends CI_Model
     $data = $this->_goose->extractContent($article['url'], $html);
 
     $article['name'] = trim($data->getTitle());
+    if (!strlen($article['name'])) unset($article['name']);
+
     $article['url_host'] = $data->getDomain();
 
     if ($data->getMetaDescription()) $article['description'] = $data->getMetaDescription();

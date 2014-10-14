@@ -15,7 +15,8 @@ $route['v3/collections/(p?[A-z0-9]+)/follow'] = 'v3/collections/follow/$1';
 $route['v3/collections/(p?[A-z0-9]+)/source_management'] = 'v1/source_management/collection_nodes/$1';
 $route['v3/search_collection/links'] = 'v3/collections/search_links';
 
-$route['v3/articles/([A-z0-9\-]+)/similar'] = 'v3/articles/suggested/$1';
+$route['v3/articles/([A-z0-9\-]+)/suggested'] = 'v3/articles/suggested/$1';
+$route['v3/articles/([A-z0-9\-]+)/siblings'] = 'v3/articles/siblings/$1';
 $route['v3/articles/([A-z0-9\-]+)'] = 'v3/articles/view/$1';
 
 $route['v3/favourite_collection'] = 'v3/collections/favourite_collection';

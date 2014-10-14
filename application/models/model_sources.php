@@ -92,7 +92,7 @@ Class Model_sources extends CI_Model
       'type' => 'instagram_user',
       'can_be_deleted' => false,
       'can_be_hidden' => true,
-      'external_id' => intval($data->id),
+      'external_id' => $data->id,
       'external_key' => strtolower($data->username),
       'avatar' => $data->profile_picture
     ));

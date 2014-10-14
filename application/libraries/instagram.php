@@ -644,7 +644,7 @@ class Instagram {
         'images_processed' => false,
         'sources' => array(
           [
-            'external_id' => intval($pic->user->id),
+            'external_id' => $pic->user->id,
             'full_name' => $pic->user->full_name,
             'screen_name' => $pic->user->username,
             'type' => 'InstagramUser',

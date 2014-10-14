@@ -228,6 +228,8 @@ Class Twitter
 
 		$now = time();
 
+		$url_media = false;
+
 		foreach ($data as &$tweet)
 		{
 			$url = false;
@@ -245,6 +247,7 @@ Class Twitter
 						if ($media->type == 'photo')
 						{
 							$url = $media->media_url;
+							$url_media = true;
 							break;
 						}
 					}
@@ -289,6 +292,12 @@ Class Twitter
 					]
 				)
 			);
+
+			if ($url_media == true)
+			{
+				$d['fetched'] = true;
+				$d['fetched_at'] = time();
+			}
 
 			if (isset($tweet->entities->media))
 			{

@@ -37,6 +37,9 @@ class Articles_Controller extends Cronycle_Controller
 
   public function suggested($article_id)
   {
+    $limit = intval($this->input->get('limit'));
+    if (!$limit) $limit = 10;
+
     $article = collection('articles')->findOne(['id' => $article_id], ['_id' => false, 'entities' => true]);
 
     if (!isset($article['entities']) || count($article['entities']) == 0)
@@ -59,7 +62,7 @@ class Articles_Controller extends Cronycle_Controller
         ]
       ],
       $this->collections->articles_excluded_fields()
-    )->sort(['published_at' => -1])->hint(['entities.ltext' => 1])->limit(10);
+    )->sort(['published_at' => -1])->hint(['entities.ltext' => 1])->limit($limit);
 
     $articles = [];
 
@@ -73,6 +76,32 @@ class Articles_Controller extends Cronycle_Controller
       $articles[$article['name']] = $article;
 
       if (count($articles) == 5) break;
+    }
+
+    return $this->json(200, array_values($articles));
+  }
+
+  public function siblings($article_id)
+  {
+    $limit = intval($this->input->get('limit'));
+    if (!$limit) $limit = 10;
+
+    $article = collection('articles')->findOne(['id' => $article_id], ['_id' => false, 'name' => true, 'source' => true]);
+
+    $specs = [
+      'feeds' => [$article['source']]
+    ];
+
+    $this->load->model('model_collections', 'collections');
+
+    $articles = [];
+
+    foreach ($this->collections->links_ordered($specs, $limit) as $item)
+    {
+      if ($item['id'] !== $article_id && $item['name'] !== $article['name'])
+      {
+        $articles[] = $item;
+      }
     }
 
     return $this->json(200, array_values($articles));

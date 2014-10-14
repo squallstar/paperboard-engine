@@ -158,6 +158,12 @@ class Model_images_processor extends CI_Model
 
           // 1. Medium size
           $image->clear();
+
+          if (strpos($url, '.png') !== FALSE)
+          {
+            $image->setImageBackgroundColor('white');
+          }
+
           @$image->readImage($url);
           $image->setFormat("jpeg");
           $image->setCompressionQuality(self::DEFAULT_JPEG_QUALITY);
@@ -190,7 +196,7 @@ class Model_images_processor extends CI_Model
         }
         catch (Exception $e)
         {
-          _log('Could not download image for article ' . $article['id'] . ': ' . $article['lead_image']['url_original']);
+          _log('Could not download image for article ' . $article['id'] . ': ' . $article['lead_image']['url_original'] . ' - ' . $e->getMessage());
           //$data['lead_image'] = null;
         }
       }

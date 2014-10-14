@@ -181,12 +181,12 @@
         "source": {
             "type": "git",
             "url": "https://github.com/squallstar/php-goose.git",
-            "reference": "e4a9198b656c8c93551a4f2c42efb7a7a237e7ce"
+            "reference": "9022355981f4867a6175edaeba32abb2d633cc38"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/squallstar/php-goose/zipball/e4a9198b656c8c93551a4f2c42efb7a7a237e7ce",
-            "reference": "e4a9198b656c8c93551a4f2c42efb7a7a237e7ce",
+            "url": "https://api.github.com/repos/squallstar/php-goose/zipball/9022355981f4867a6175edaeba32abb2d633cc38",
+            "reference": "9022355981f4867a6175edaeba32abb2d633cc38",
             "shasum": ""
         },
         "require": {
@@ -194,7 +194,7 @@
             "php": ">=5.4.0",
             "symfony/css-selector": "2.5.*"
         },
-        "time": "2014-10-13 11:10:08",
+        "time": "2014-10-14 11:52:00",
         "type": "library",
         "extra": {
             "branch-alias": {

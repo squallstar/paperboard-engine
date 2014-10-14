@@ -326,13 +326,15 @@ Class Model_feeds extends CI_Model
           {
             $ex_id = $tweet['sources'][0]['external_id'];
 
-            if (!count($sources) || !in_array($ex_id, array_keys($sources)))
+            if (!count($sources) || !isset($sources[$ex_id]))
             {
               // Find source on db
               $source = collection('feeds')->findOne(
                 array('type' => 'twitter_user', 'external_id' => $ex_id),
                 array('_id' => true)
               );
+
+              _log("twitter source exist? " . $ex_id . ', ' . ($source ? 'yes' : 'no'));
 
               if (!$source)
               {
@@ -599,10 +601,10 @@ Class Model_feeds extends CI_Model
 
     foreach (collection('feeds')->find([], ['_id' => 1])->limit($feeds_limit) as $feed)
     {
-      if (collection('category_children')->count(['feed_id' => $feed['_id']]) == 0)
-      {
-        $feed_id = $feed['_id']->{'$id'};
+      $feed_id = $feed['_id']->{'$id'};
 
+      if (collection('category_children')->count(['feed_id' => $feed_id]) == 0)
+      {
         $count = collection('articles')->count(['source' => $feed_id, 'has_image' => false]);
 
         if ($count)
