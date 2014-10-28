@@ -334,7 +334,7 @@ Class Model_feeds extends CI_Model
                 array('_id' => true)
               );
 
-              _log("twitter source exist? " . $ex_id . ', ' . ($source ? 'yes' : 'no'));
+              #_log("twitter source exist? " . $ex_id . ', ' . ($source ? 'yes' : 'no'));
 
               if (!$source)
               {

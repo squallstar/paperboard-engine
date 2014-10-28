@@ -172,6 +172,8 @@ class Model_articles_expander extends CI_Model
       return false;
     }
 
+    _log("Extracting " . $article['url']);
+
     $data = $this->_goose->extractContent($article['url'], $html);
 
     $article['name'] = trim($data->getTitle());
@@ -210,11 +212,11 @@ class Model_articles_expander extends CI_Model
     }
 
     $article['entities'] = [];
-    $tags = $data->getPopularWords(6);
+    $tags = $data->getPopularWords(20);
 
     if (count($tags))
     {
-      foreach ($tags as $word => &$frequency)
+      foreach ($tags as $word => $frequency)
       {
         $article['entities'][] = [
           'text' => $word,
@@ -223,6 +225,8 @@ class Model_articles_expander extends CI_Model
         ];
       }
     }
+
+    $article['extractor'] = 'goose';
 
     return true;
   }

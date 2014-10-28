@@ -272,7 +272,7 @@ Class Twitter
 				'fetched_at' => 0,
 				'processed_at' => $now,
 				'published_at' => $ts,
-				'name' => $tweet->text,
+				'name' => preg_replace("/https?:\/\/\S+/", '', $tweet->text),
 				'description' => "",
 				'content' => "",
 				'url' => $url,

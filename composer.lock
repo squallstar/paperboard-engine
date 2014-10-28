@@ -130,12 +130,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/squallstar/php-goose.git",
-                "reference": "9022355981f4867a6175edaeba32abb2d633cc38"
+                "reference": "b8f29386e47428989311a549b5485cb221251451"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/squallstar/php-goose/zipball/9022355981f4867a6175edaeba32abb2d633cc38",
-                "reference": "9022355981f4867a6175edaeba32abb2d633cc38",
+                "url": "https://api.github.com/repos/squallstar/php-goose/zipball/b8f29386e47428989311a549b5485cb221251451",
+                "reference": "b8f29386e47428989311a549b5485cb221251451",
                 "shasum": ""
             },
             "require": {
@@ -177,7 +177,7 @@
             "support": {
                 "source": "https://github.com/squallstar/php-goose/tree/master"
             },
-            "time": "2014-10-14 11:52:00"
+            "time": "2014-10-15 11:19:37"
         },
         {
             "name": "symfony/css-selector",

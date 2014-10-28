@@ -55,13 +55,16 @@ class Articles_Controller extends Cronycle_Controller
       if (count($entities) >= 2) break;
     }
 
+    $fields = $this->collections->articles_excluded_fields();
+    if (isset($fields['sources'])) unset($fields['sources']);
+
     $result = collection('articles')->find(
         [
         'entities.ltext' => [
           '$in' => $entities
         ]
       ],
-      $this->collections->articles_excluded_fields()
+      $fields
     )->sort(['published_at' => -1])->hint(['entities.ltext' => 1])->limit($limit);
 
     $articles = [];

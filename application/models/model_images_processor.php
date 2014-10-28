@@ -24,12 +24,15 @@ class Model_images_processor extends CI_Model
 
   private $_bucket;
 
+  private $_reduce_uploaded_images;
+
   public function __construct()
   {
     parent::__construct();
 
     $this->load->library('S3', [$this->config->item('aws_consumer_key'), $this->config->item('aws_consumer_secret')]);
     $this->_bucket = $this->config->item('aws_bucket_name');
+    $this->_reduce_uploaded_images = $this->config->item('aws_reduce_uploaded_images');
   }
 
   public function delete_asset($asset)
@@ -176,10 +179,18 @@ class Model_images_processor extends CI_Model
           $normal_uploaded = S3::putObject("$image", $this->_bucket, $medium_name, S3::ACL_PUBLIC_READ, array(), array('Content-Type' => 'image/jpeg'));
 
           // 2. Thumbnail
-          $image->thumbnailImage(self::DEFAULT_WIDTH_THUMBNAIL, 0);
-          $thumb_name = $s3path . '_s.jpg';
+          if (!$this->_reduce_uploaded_images)
+          {
+            $image->thumbnailImage(self::DEFAULT_WIDTH_THUMBNAIL, 0);
+            $thumb_name = $s3path . '_s.jpg';
 
-          $thumb_uploaded = S3::putObject("$image", $this->_bucket, $thumb_name, S3::ACL_PUBLIC_READ, array(), array('Content-Type' => 'image/jpeg'));
+            $thumb_uploaded = S3::putObject("$image", $this->_bucket, $thumb_name, S3::ACL_PUBLIC_READ, array(), array('Content-Type' => 'image/jpeg'));
+          }
+          else
+          {
+            $thumb_uploaded = true;
+            $thumb_name = $medium_name;
+          }
 
           if ($normal_uploaded || $thumb_uploaded)
           {

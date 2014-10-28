@@ -53,9 +53,10 @@ $config['instagram_consumer_secret'] = '70dc2060a027422a88f4c541d60983c7';
 |--------------------------------------------------------------------------
 |
 */
-$config['aws_consumer_key'] = 'AKIAJ7GVISSR34Y3CSIA';
-$config['aws_consumer_secret'] = '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';
-$config['aws_bucket_name'] = 'paperboard';
+$config['aws_consumer_key'] = 'AKIAJ5FQSNCBTNAZIQ6A';
+$config['aws_consumer_secret'] = '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';
+$config['aws_bucket_name'] = 'paperboard-b';
+$config['aws_reduce_uploaded_images'] = true;
 
 /*
 |--------------------------------------------------------------------------
