@@ -32,8 +32,8 @@ $config['client_base_url'] = 'https://hhvm.cronycle.com/mycronycle';
 | https://apps.twitter.com/app/6413682/keys
 |
 */
-$config['twitter_consumer_key'] = '6MMo4l9jicpOKGAOZubTWTgq4';
-$config['twitter_consumer_secret'] = 'FiBsNbjAul4nVqo1mrkuIs0l2mKEEZHaEwEN6m1NHRSub1SXwG';
+$config['twitter_consumer_key'] = '';
+$config['twitter_consumer_secret'] = '';
 
 /*
 |--------------------------------------------------------------------------
@@ -44,8 +44,8 @@ $config['twitter_consumer_secret'] = 'FiBsNbjAul4nVqo1mrkuIs0l2mKEEZHaEwEN6m1NHR
 | Callback url: http://hhvm.squallstar.it/v1/source_management/add_instagram_account
 |
 */
-$config['instagram_consumer_key'] = '06e900c1a6914071940fdcd03f53d061';
-$config['instagram_consumer_secret'] = '70dc2060a027422a88f4c541d60983c7';
+$config['instagram_consumer_key'] = '';
+$config['instagram_consumer_secret'] = '';
 
 /*
 |--------------------------------------------------------------------------
@@ -53,8 +53,8 @@ $config['instagram_consumer_secret'] = '70dc2060a027422a88f4c541d60983c7';
 |--------------------------------------------------------------------------
 |
 */
-$config['aws_consumer_key'] = 'AKIAJ5FQSNCBTNAZIQ6A';
-$config['aws_consumer_secret'] = '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';
+$config['aws_consumer_key'] = '';
+$config['aws_consumer_secret'] = '';
 $config['aws_bucket_name'] = 'paperboard-b';
 $config['aws_reduce_uploaded_images'] = true;
 
@@ -66,7 +66,7 @@ $config['aws_reduce_uploaded_images'] = true;
 */
 $config['feedly_api_url'] = 'https://sandbox.feedly.com';
 $config['feedly_client_id'] = 'sandbox';
-$config['feedly_client_secret'] = 'A0SXFX54S3K0OC9GNCXG';
+$config['feedly_client_secret'] = '';
 $config['feedly_redirect_uri'] = 'http://api.paperboard.me/v1/source_management/add_feedly_account';
 
 /*
